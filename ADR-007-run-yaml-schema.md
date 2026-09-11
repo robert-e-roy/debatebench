@@ -3,7 +3,8 @@
 **Status:** Accepted
 **Date:** 2026-09-11
 **Amended:** 2026-09-11 — added §6, the validation details B1 needs (paths,
-unknown and duplicate keys, phase names, team-file fields, types)
+unknown and duplicate keys, phase names, team-file fields, types), and §7,
+each team's side of the motion (`side: pro` / `side: con`)
 **Depends on:** ADR-002 ("Config", "CLI shape"), ADR-003 (token-budget enforcement
 findings), `debate-formats-research.md`
 **Resolves:** OPEN-QUESTIONS.md items 3, 8, 10 (schema-level slice), 11
@@ -120,8 +121,9 @@ they stay open, tracked under a narrowed item 11 in OPEN-QUESTIONS.
 Writing B1's validation turned up details §1–§5 didn't settle:
 
 - **Required:** `topic`, `format.phases`, `teams` and `output` in `run.yaml`;
-  `team`, `model`, `base_url` and `budget` in each `teams:` entry. `prep_budget`
-  follows §2. `seed` and `sources` are optional.
+  `team`, `side`, `model`, `base_url` and `budget` in each `teams:` entry.
+  `prep_budget` follows §2 and `side` follows §7. `seed` and `sources` are
+  optional.
 - **Paths resolve from the directory containing `run.yaml`**, not the working
   directory. That applies to each team's `team:` and to `output:`, so a `run.yaml`
   behaves the same wherever `debate` is run from. `~` expands to the home
@@ -154,6 +156,27 @@ Writing B1's validation turned up details §1–§5 didn't settle:
     servers read `-1` as "pick one at random".
 
   A boolean is never accepted where an integer is expected (ADR-008).
+
+### 7. Each team's side of the motion (added 2026-09-11)
+
+- **Every `teams:` entry has a required `side`.** `pro` argues for the motion in
+  `topic`; `con` argues against it. One team must be `pro` and the other `con`.
+  Any other value is an error, including `Pro`, `for` and `against`.
+- **It lives in `run.yaml`, not the team file**, for the same reason `model` does:
+  a team file is reused across topics, and the side it argues changes from run to
+  run. Swapping sides (OPEN-QUESTIONS item 9) is then a one-line edit. A `side`
+  field in a team file is an error.
+- **A team file's `stance` (e.g. `liberal`) stays part of the persona.** It is not
+  a position on the motion.
+- **List order doesn't imply a side.** Either team may be listed first. Who speaks
+  first is B2's question (alternating initiative, ADR-001).
+
+Why: in B1's first live run, on "We should ban AI.", both personas argued against
+the motion. Nothing assigned a side, so each model worked one out from its
+persona. The spec already assumed sides were assigned: ADR-002's
+stance-consistency check verifies a turn "still entails its assigned stance", and
+item 9 swaps sides between runs. The labels `pro`/`con` follow formal debate
+usage.
 
 ## Why
 

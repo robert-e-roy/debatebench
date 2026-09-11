@@ -82,6 +82,17 @@ The context ceiling is consistent with the 4,096 tokens per session stated in Xc
   `base_url`, and `judge` takes an optional `--base-url`.
 - **Dev platform floor:** macOS 27 on Apple-Intelligence-capable hardware. The tool
   itself stays general-purpose; only the dev default needs this.
+- **AFM doesn't reliably argue the side it's assigned.** Observed during B1
+  (2026-09-11), one sample per case at temperature 0. The system prompt said "you
+  argue FOR [or AGAINST] the motion, whatever your own view".
+  - "We should ban AI.": it argued against in all four persona/side combinations,
+    including both where it was told to argue for.
+  - "Cities should ban cars from their centers.": it complied three times out of
+    four, failing when the conservative persona was told to argue for.
+
+  That's a signal, not a measurement. AFM is still fine for plumbing, but a dummy
+  debate on it may show two sides that agree. Holding an assigned side is worth
+  measuring for real candidate models (ADR-002's stance-consistency check).
 - **Manual setup:** `fm serve` must already be running, like `mlx_lm.server`.
   B7's gate now allows for that. Having the tool start and stop servers itself
   would need a new ADR.

@@ -66,14 +66,15 @@ async def dummy_replies(config: RunConfig, backends: Sequence[Backend]) -> list[
 def dummy_request(topic: str, side: Side) -> GenerationRequest:
     """A placeholder prompt that proves the pipe works. Real prompts are B2's."""
     team = side.team
+    position = "for" if side.side == "pro" else "against"
     return GenerationRequest(
         messages=(
             Message(
                 "system",
-                f"You are {team.name}, arguing the {team.stance} side of a debate. "
-                f"Your voice: {team.voice}.",
+                f"You are {team.name}. In this debate you argue {position} the motion, "
+                f"whatever your own view. Your voice: {team.voice}.",
             ),
-            Message("user", f"Topic: {topic}\n\nState your position in one or two sentences."),
+            Message("user", f"Motion: {topic}\n\nState your position in one or two sentences."),
         ),
         max_completion_tokens=side.budget,
     )
@@ -83,7 +84,7 @@ def _log_reply(side: Side, result: GenerationResult) -> None:
     # B1 only reports an overshoot; what it means for the turn is ADR-003's open question.
     over = " (over budget)" if result.completion_tokens > side.budget else ""
     _log(
-        f"side {side.index}, {side.team.name} ({side.model}): "
+        f"side {side.index} ({side.side}), {side.team.name} ({side.model}): "
         f"{result.completion_tokens} of {side.budget} completion tokens{over}, "
         f"{result.prompt_tokens} prompt tokens, finish_reason {result.finish_reason}, "
         f"{result.latency_ms} ms"

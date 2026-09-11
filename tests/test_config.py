@@ -50,6 +50,7 @@ def test_valid_file_loads(run_dir: Path):
 
     first, second = config.sides
     assert (first.index, second.index) == (0, 1)
+    assert (first.side, second.side) == ("pro", "con")
     assert first.model == "qwen3-8b"
     assert first.base_url == "http://127.0.0.1:8080/v1"
     assert (first.budget, first.prep_budget) == (2000, 1500)
@@ -77,6 +78,15 @@ def test_absent_seed_is_generated_and_flagged(run_dir: Path):
 def test_absent_sources_is_allowed(run_dir: Path):
     edit_yaml(run_dir / "run.yaml", _drop("sources"))
     assert load_run(run_dir / "run.yaml").sources == ()
+
+
+def test_con_may_be_listed_first(run_dir: Path):
+    # List order doesn't imply a side (ADR-007 §7).
+    def swap(data):
+        data["teams"][0]["side"], data["teams"][1]["side"] = "con", "pro"
+
+    edit_yaml(run_dir / "run.yaml", swap)
+    assert [side.side for side in load_run(run_dir / "run.yaml").sides] == ["con", "pro"]
 
 
 def test_repeated_phases_are_allowed(run_dir: Path):
@@ -126,6 +136,12 @@ RUN_FAILURES = [
      "teams[1].prep_budget is required because format.phases includes 'prep'"),
     ("one team", lambda d: d["teams"].pop(), "exactly two teams (ADR-007), found 1"),
     ("three teams", lambda d: d["teams"].append(dict(d["teams"][0])), "exactly two teams (ADR-007), found 3"),
+    # side of the motion (ADR-007 §7)
+    ("missing side", _drop("teams", 0, "side"), "teams[0].side is required: 'pro' argues for the motion"),
+    ("side is 'for'", _set("teams", 0, "side", value="for"), "teams[0].side must be 'pro' or 'con', got 'for'"),
+    ("side is capitalized", _set("teams", 1, "side", value="Con"), "teams[1].side must be 'pro' or 'con', got 'Con'"),
+    ("both pro", _set("teams", 1, "side", value="pro"), "teams[0] and teams[1] are both 'pro'"),
+    ("both con", _set("teams", 0, "side", value="con"), "teams[0] and teams[1] are both 'con'"),
     # missing required fields
     ("missing topic", _drop("topic"), "topic is required"),
     ("missing format", _drop("format"), "format is required"),
@@ -216,6 +232,7 @@ def test_run_yaml_that_is_a_list(tmp_path: Path):
 TEAM_FAILURES = [
     ("model in team file", _set("model", value="qwen3-8b"), "model is a run-time setting"),
     ("budget in team file", _set("budget", value=2000), "budget is a run-time setting"),
+    ("side in team file", _set("side", value="pro"), "side is a run-time setting"),
     ("missing voice", _drop("voice"), "voice is required"),
     ("missing values", _drop("values"), "values is required"),
     ("unknown key", _set("tone", value="calm"), "unknown key 'tone'"),

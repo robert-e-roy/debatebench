@@ -102,7 +102,8 @@ against it.
 Two file types — see ADR-002 and ADR-007 for full schema and rationale:
 - `run.yaml` — one per run: topic, `format.phases` (the only source of truth
   for whether `prep` runs — no separate `prep`/`rounds` flags), per-team
-  `model`, **`base_url` (required, no default — see ADR-007)**, `budget`
+  **`side` (`pro` or `con`, required, one of each — ADR-007 §7)**, `model`,
+  **`base_url` (required, no default — see ADR-007)**, `budget`
   (per-phase cap, completion tokens), `prep_budget` (required iff `"prep"`
   is in `phases`; a validation error either way if it's set without `prep`
   present, or missing while `prep` is present), `sources`, `seed` (optional —

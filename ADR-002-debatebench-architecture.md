@@ -75,11 +75,13 @@ format:
   phases: [prep, opening, rebuttal, retort, rebuttal, conclusion]
 teams:
   - team: teams/liberal.yaml
+    side: pro
     model: qwen3-8b
     base_url: http://127.0.0.1:8080/v1
     budget: 2000
     prep_budget: 1500
   - team: teams/conservative.yaml
+    side: con
     model: mistral-small
     base_url: http://127.0.0.1:8081/v1
     budget: 2000

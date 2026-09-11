@@ -129,8 +129,9 @@ ADR-007 "CLI invocation" for why. The `judge:` block is dropped from
   topic", or from judge bias. LLM judges have documented position (order) biases,
   and may lean by stance.
 - **Minimum fix:** a documented protocol rather than a feature — run each pairing
-  twice with stances swapped, and vary the order in which the judge sees the
-  sides. A built-in sweep would be new scope, needing an ADR.
+  twice with sides swapped, and vary the order in which the judge sees the
+  sides. Swapping is a one-line edit: flip each team's `side:` in `run.yaml`
+  (ADR-007 §7). A built-in sweep would be new scope, needing an ADR.
 - **Blocks:** interpreting any model comparison. Nothing in B0–B7 strictly.
 
 ### 10. `sources` vs `corpus`, and how Prep retrieves — SCHEMA SLICE RESOLVED by ADR-007

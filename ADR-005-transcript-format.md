@@ -27,7 +27,7 @@ release.
       { "index": 0,
         "team_file": "teams/liberal.yaml",
         "team": { "id": "liberal-climate", "name": "...", "stance": "liberal" },  // full team-file contents
-        "model": "qwen3-8b", "base_url": "http://127.0.0.1:8080/v1", "budget": 2000, "prep_budget": 1500 },
+        "side": "pro", "model": "qwen3-8b", "base_url": "http://127.0.0.1:8080/v1", "budget": 2000, "prep_budget": 1500 },
       { "index": 1, "...": "..." }
     ]
   },

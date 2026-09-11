@@ -11,7 +11,7 @@ from __future__ import annotations
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlsplit
 
 import yaml
@@ -19,10 +19,11 @@ import yaml
 from .yaml_loader import load_yaml
 
 PHASES = ("prep", "opening", "rebuttal", "retort", "conclusion")
+MOTION_SIDES = ("pro", "con")  # for and against the motion (ADR-007 §7)
 
 _RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output"}
 _FORMAT_KEYS = {"phases"}
-_SIDE_KEYS = {"team", "model", "base_url", "budget", "prep_budget"}
+_SIDE_KEYS = {"team", "side", "model", "base_url", "budget", "prep_budget"}
 _TEAM_KEYS = {"id", "name", "voice", "stance", "values", "corpus"}
 
 # Keys ADR-007 removed, with what replaced them.
@@ -34,7 +35,7 @@ _REMOVED_FORMAT_KEYS = {
     "rounds": "format.rounds was removed (ADR-007); repeat phase names in format.phases instead",
 }
 # Run-time settings, which belong in run.yaml and never in a team file (ADR-002).
-_RUNTIME_KEYS = {"model", "base_url", "budget", "prep_budget"}
+_RUNTIME_KEYS = {"side", "model", "base_url", "budget", "prep_budget"}
 
 # Generated seeds stay below 2**31 so servers with 32-bit seeds accept them.
 _GENERATED_SEED_BOUND = 2**31
@@ -63,6 +64,7 @@ class Side:
 
     index: int
     team: Team
+    side: Literal["pro", "con"]  # for or against the motion (ADR-007 §7)
     model: str
     base_url: str
     budget: int
@@ -98,6 +100,12 @@ def load_run(path: str | Path) -> RunConfig:
     if len(teams) != 2:
         raise _fail(run_path, f"teams must list exactly two teams (ADR-007), found {len(teams)}")
     first, second = (_side(run_path, entry, index, has_prep) for index, entry in enumerate(teams))
+    if first.side == second.side:
+        raise _fail(
+            run_path,
+            f"teams[0] and teams[1] are both {first.side!r}; "
+            "one team must be pro and the other con (ADR-007)",
+        )
 
     sources = _opt_str_list(run_path, data, "sources", "sources") or ()
     seed = _opt_int(run_path, data, "seed", "seed", minimum=0)
@@ -177,6 +185,7 @@ def _side(run_path: Path, entry: Any, index: int, has_prep: bool) -> Side:
     _check_keys(run_path, entry, _SIDE_KEYS, where)
 
     team_text = _str(run_path, entry, "team", f"{where}.team")
+    side = _motion_side(run_path, entry, f"{where}.side")
     model = _str(run_path, entry, "model", f"{where}.model")
     base_url = _base_url(run_path, entry, f"{where}.base_url")
     budget = _int(run_path, entry, "budget", f"{where}.budget", minimum=1)
@@ -198,11 +207,21 @@ def _side(run_path: Path, entry: Any, index: int, has_prep: bool) -> Side:
     return Side(
         index=index,
         team=load_team(team_path),
+        side=side,
         model=model,
         base_url=base_url,
         budget=budget,
         prep_budget=prep_budget,
     )
+
+
+def _motion_side(path: Path, data: dict[str, Any], where: str) -> Literal["pro", "con"]:
+    if "side" not in data:
+        raise _fail(path, f"{where} is required: 'pro' argues for the motion, 'con' against it (ADR-007)")
+    value = data["side"]
+    if value not in MOTION_SIDES:
+        raise _fail(path, f"{where} must be 'pro' or 'con', got {_describe(value)}")
+    return value
 
 
 def _base_url(path: Path, data: dict[str, Any], where: str) -> str:

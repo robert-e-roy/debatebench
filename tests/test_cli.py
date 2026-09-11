@@ -51,14 +51,16 @@ def test_dummy_replies_one_per_side(run_dir: Path, capfd):
     results = asyncio.run(dummy_replies(config, fakes))
 
     assert [r.text for r in results] == ["For the tax.", "Against the tax."]
-    for side, fake in zip(config.sides, fakes):
+    for side, fake, position in zip(config.sides, fakes, ["for", "against"]):
         (request,) = fake.requests
         assert request.max_completion_tokens == side.budget
         system, user = request.messages
         assert side.team.name in system.content
+        assert f"you argue {position} the motion" in system.content  # pro, then con
         assert config.topic in user.content
     out, err = capfd.readouterr()
     assert out == ""  # Hard Rule 7
+    assert "side 0 (pro)" in err and "side 1 (con)" in err
     assert "For the tax." in err and "Against the tax." in err
     assert not config.output.exists()  # no transcript until B3 (ADR-005 is still Proposed)
 
