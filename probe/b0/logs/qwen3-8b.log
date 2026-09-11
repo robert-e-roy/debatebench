@@ -1,0 +1,67 @@
+2026-09-11 11:27:47,018 - INFO - HTTP Request: GET https://huggingface.co/api/models/mlx-community/Qwen3-8B-4bit/revision/main "HTTP/1.1 200 OK"
+Calling `python -m mlx_lm.server...` directly is deprecated. Use `mlx_lm.server...` or `python -m mlx_lm server ...` instead.
+
+Fetching 9 files:   0%|          | 0/9 [00:00<?, ?it/s]
+Fetching 9 files: 100%|██████████| 9/9 [00:00<00:00, 150393.37it/s]
+<venv>/lib/python3.14/site-packages/mlx_lm/server.py:1723: UserWarning: mlx_lm.server is not recommended for production as it only implements basic security checks.
+  warnings.warn(
+2026-09-11 11:28:21,850 - INFO - Starting httpd at 127.0.0.1 on port 8081...
+127.0.0.1 - - [11/Sep/2026 11:28:21] "GET /v1/models HTTP/1.1" 200 -
+2026-09-11 11:28:21,931 - INFO - Prompt Cache: 0 sequences, 0.00 GB
+2026-09-11 11:28:21,931 - INFO - - assistant: 0 sequences, 0.00 GB
+2026-09-11 11:28:21,931 - INFO - - user: 0 sequences, 0.00 GB
+2026-09-11 11:28:21,931 - INFO - - system: 0 sequences, 0.00 GB
+127.0.0.1 - - [11/Sep/2026 11:28:21] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-09-11 11:28:23,153 - INFO - Prompt processing progress: 11/15
+2026-09-11 11:28:23,282 - INFO - Prompt processing progress: 14/15
+2026-09-11 11:28:23,374 - INFO - Prompt processing progress: 15/15
+2026-09-11 11:28:23,536 - INFO - Prompt Cache: 1 sequences, 0.00 GB
+2026-09-11 11:28:23,536 - INFO - - assistant: 1 sequences, 0.00 GB
+2026-09-11 11:28:23,536 - INFO - - user: 0 sequences, 0.00 GB
+2026-09-11 11:28:23,536 - INFO - - system: 0 sequences, 0.00 GB
+127.0.0.1 - - [11/Sep/2026 11:28:23] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-09-11 11:28:23,910 - INFO - Prompt processing progress: 31/63
+2026-09-11 11:28:24,121 - INFO - Prompt processing progress: 59/63
+2026-09-11 11:28:24,195 - INFO - Prompt processing progress: 62/63
+2026-09-11 11:28:24,231 - INFO - Prompt processing progress: 63/63
+2026-09-11 11:28:26,100 - INFO - Prompt Cache: 2 sequences, 0.02 GB
+2026-09-11 11:28:26,100 - INFO - - assistant: 2 sequences, 0.02 GB
+2026-09-11 11:28:26,100 - INFO - - user: 0 sequences, 0.00 GB
+2026-09-11 11:28:26,100 - INFO - - system: 0 sequences, 0.00 GB
+127.0.0.1 - - [11/Sep/2026 11:28:26] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-09-11 11:28:26,255 - INFO - Prompt processing progress: 1/1
+2026-09-11 11:28:28,118 - INFO - Prompt Cache: 2 sequences, 0.02 GB
+2026-09-11 11:28:28,118 - INFO - - assistant: 2 sequences, 0.02 GB
+2026-09-11 11:28:28,118 - INFO - - user: 0 sequences, 0.00 GB
+2026-09-11 11:28:28,118 - INFO - - system: 0 sequences, 0.00 GB
+127.0.0.1 - - [11/Sep/2026 11:28:28] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-09-11 11:28:28,416 - INFO - Prompt processing progress: 25/29
+2026-09-11 11:28:28,488 - INFO - Prompt processing progress: 28/29
+2026-09-11 11:28:28,519 - INFO - Prompt processing progress: 29/29
+2026-09-11 11:28:36,063 - INFO - Prompt Cache: 3 sequences, 0.07 GB
+2026-09-11 11:28:36,063 - INFO - - assistant: 3 sequences, 0.07 GB
+2026-09-11 11:28:36,063 - INFO - - user: 0 sequences, 0.00 GB
+2026-09-11 11:28:36,063 - INFO - - system: 0 sequences, 0.00 GB
+127.0.0.1 - - [11/Sep/2026 11:28:36] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-09-11 11:28:36,354 - INFO - Prompt processing progress: 25/29
+2026-09-11 11:28:36,424 - INFO - Prompt processing progress: 28/29
+2026-09-11 11:28:36,454 - INFO - Prompt processing progress: 29/29
+2026-09-11 11:28:44,021 - INFO - Prompt Cache: 4 sequences, 0.12 GB
+2026-09-11 11:28:44,021 - INFO - - assistant: 4 sequences, 0.12 GB
+2026-09-11 11:28:44,021 - INFO - - user: 0 sequences, 0.00 GB
+2026-09-11 11:28:44,021 - INFO - - system: 0 sequences, 0.00 GB
+127.0.0.1 - - [11/Sep/2026 11:28:44] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-09-11 11:28:44,314 - INFO - Prompt processing progress: 25/29
+2026-09-11 11:28:44,386 - INFO - Prompt processing progress: 28/29
+2026-09-11 11:28:44,417 - INFO - Prompt processing progress: 29/29
+2026-09-11 11:28:51,994 - INFO - Prompt Cache: 5 sequences, 0.16 GB
+2026-09-11 11:28:51,995 - INFO - - assistant: 5 sequences, 0.16 GB
+2026-09-11 11:28:51,995 - INFO - - user: 0 sequences, 0.00 GB
+2026-09-11 11:28:51,995 - INFO - - system: 0 sequences, 0.00 GB
+127.0.0.1 - - [11/Sep/2026 11:28:51] "POST /v1/chat/completions HTTP/1.1" 200 -
+2026-09-11 11:29:04,161 - INFO - Prompt processing progress: 2048/4022
+2026-09-11 11:29:16,655 - INFO - Prompt processing progress: 4018/4022
+2026-09-11 11:29:16,785 - INFO - Prompt processing progress: 4021/4022
+2026-09-11 11:29:16,843 - INFO - Prompt processing progress: 4022/4022
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/loky-15436-g5n6cnrd'}
+  warnings.warn(

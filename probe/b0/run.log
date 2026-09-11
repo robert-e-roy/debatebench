@@ -1,0 +1,15 @@
+[11:27:19] baseline: used 14.8 GiB, compressed 7.4 GiB, swap 0.00 GiB, disk free 32.3 GiB
+[11:27:22] === stage S1_afm_solo ===
+[11:27:22] starting fm serve
+[11:27:44] stopped afm
+[11:27:44] === stage S2_qwen_solo ===
+[11:27:44] starting qwen3-8b on :8081
+[11:28:23] qwen3-8b ready: port 37.6s, first response 39.2s
+[11:28:28] token-count method probe: {'stream_usage_present': True, 'stream_chunks': 64, 'nonstream_completion_tokens': 64, 'stream_completion_tokens': 64}
+[11:29:20] stopped qwen3-8b
+[11:29:20] === stage S3_mistral_solo ===
+[11:29:20] starting mistral-small-24b on :8082
+[11:29:27] note: memory pressure WARN during stage S3_mistral_solo
+[11:29:28] ABORT: swap grew to 1.82 GiB (limit +1.0 GiB over baseline) — killing all model servers
+[11:29:30] stopped mistral-small-24b
+[11:29:33] done — raw results in probe/b0/b0_raw.json

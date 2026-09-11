@@ -1,0 +1,16 @@
+
+Fetching 11 files:   0%|          | 0/11 [00:00<?, ?it/s]
+Fetching 11 files:   9%|▉         | 1/11 [00:00<00:01,  5.21it/s]
+Fetching 11 files:  27%|██▋       | 3/11 [00:00<00:00, 11.43it/s]
+Fetching 11 files:  45%|████▌     | 5/11 [00:00<00:00, 12.28it/s]
+Fetching 11 files:  45%|████▌     | 5/11 [00:20<00:00, 12.28it/s]
+Fetching 11 files:  55%|█████▍    | 6/11 [00:55<01:14, 14.94s/it]
+Fetching 11 files: 100%|██████████| 11/11 [00:55<00:00,  5.08s/it]
+DONE mlx-community/Qwen3-8B-4bit -> ~/.cache/huggingface/hub/models--mlx-community--Qwen3-8B-4bit/snapshots/545dc4251c05440727734bcd94334791f6ab0192 in 56.1s
+
+Fetching 10 files:   0%|          | 0/10 [00:00<?, ?it/s]
+Fetching 10 files:  10%|█         | 1/10 [00:00<00:02,  3.12it/s]
+Fetching 10 files:  40%|████      | 4/10 [02:18<03:44, 37.44s/it]
+Fetching 10 files: 100%|██████████| 10/10 [02:18<00:00, 13.86s/it]
+DONE mlx-community/Mistral-Small-24B-Instruct-2501-4bit -> ~/.cache/huggingface/hub/models--mlx-community--Mistral-Small-24B-Instruct-2501-4bit/snapshots/51ed0c6d2f98a25d8a60f19994f0e86c944995e0 in 138.8s
+ALL DOWNLOADS DONE
