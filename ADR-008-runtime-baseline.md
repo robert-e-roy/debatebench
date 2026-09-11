@@ -2,6 +2,8 @@
 
 **Status:** Accepted
 **Date:** 2026-09-11
+**Amended:** 2026-09-11 — the PyYAML consequence was wrong: type-checking alone doesn't
+catch YAML 1.1's coercions. Corrected below.
 **Depends on:** ADR-001 (dependency scope), ADR-003 (adapter), ADR-004 (tests), ADR-007 (config)
 **Resolves:** ADR-003 open question 2 (HTTP client); ADR-004 open question 1
 (minimum Python version); the choice of YAML parser
@@ -48,12 +50,20 @@ checked on this machine (httpx 0.28.1, PyYAML 6.0.3):
   their own, so the default would kill real turns. The adapter must set explicit
   timeouts: generous or unlimited for reads, short for connecting. A timeout that
   does fire is a failed turn (Hard Rule 1).
-- **PyYAML follows YAML 1.1.** `safe_load` turns bare `yes`/`no`/`on`/`off` into
-  booleans (`model: no` loads as `False`), and a leading zero makes an integer
-  octal (`seed: 042` loads as 34). B1's validation must type-check every field —
-  strings must be strings, integers must be integers — and reject mismatches
-  rather than coerce them. That turns these quirks into loud errors instead of
-  silently wrong runs.
+- **PyYAML follows YAML 1.1, and type-checking alone doesn't catch its
+  coercions.** `safe_load` turns bare `yes`/`no`/`on`/`off` into booleans
+  (`model: no` loads as `False`), and a leading zero makes an integer octal
+  (`seed: 042` loads as 34). Both slip past a plain type check: 34 is a valid
+  `int`, and `budget: yes` loads as `True`, which passes an `int` check because
+  `bool` is a subclass of `int`. So B1 must:
+  - load config with a stricter loader that treats only `true`/`false` as
+    booleans and rejects leading-zero integers;
+  - reject `bool` wherever an integer is expected;
+  - type-check every other field (strings must be strings), rejecting
+    mismatches rather than coercing them.
+
+  The loader is B1's to implement. The obvious one-line fix, dropping PyYAML's
+  boolean resolver entirely, over-corrects: `true` becomes the string `"true"`.
 
 Also:
 
