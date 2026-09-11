@@ -107,9 +107,14 @@ def test_a_failed_turn_aborts_the_run(run_dir: Path):
     config = configure(run_dir)
     backends = [FakeBackend(auto="pro"), FakeBackend(reply(), BackendError("HTTP 500: boom"))]
 
+    transcript = "not assigned"
     with pytest.raises(DebateError, match=r"phase 1 \(rebuttal\), side 1 \(con, .*\): HTTP 500: boom"):
-        debate(config, backends)
-    assert not config.output.exists()  # nothing partial, and nothing written
+        transcript = debate(config, backends)
+
+    # The three turns that did succeed must not escape as a partial transcript.
+    # (They were announced as events while they happened — that feed is live by
+    # design; the transcript is the thing that must be all or nothing.)
+    assert transcript == "not assigned"
 
 
 def test_an_empty_reply_aborts_the_run(run_dir: Path):

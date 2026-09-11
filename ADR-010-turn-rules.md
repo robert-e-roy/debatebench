@@ -83,10 +83,11 @@ ADR-005 already keys turns this way.
   the same role, which alternating initiative produces. That was checked and is
   false for the model we'd actually use: `Mistral-Small-24B-Instruct-2501`'s
   template rejects only unknown roles, and Qwen3-8B's has no role-order check.
-  The reasons that do hold: this tool targets any `openai-compatible` server, and
-  some published templates (older Mistral instruct versions among them) do require
-  alternation; both sides then get an identically shaped prompt; and each phase
-  needs a label that chat roles alone can't carry.
+  The reasons that do hold: a `base_url` can point at any server, whose chat
+  template we neither control nor see, so a system message plus one user message
+  is the shape least likely to hit a template's role rules; both sides get an
+  identically shaped prompt; and each turn needs a phase label that a chat role
+  can't carry.
 - **B4 must keep pro opening the first argument phase** when `prep` joins the
   phase list, since prep isn't an argument phase.
 - **B5 reads `hit_budget`** when judging a turn that may have been cut off.
