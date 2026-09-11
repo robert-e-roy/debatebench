@@ -43,11 +43,14 @@ discretion during prep. Adopt both, as two distinct fields per side:
   (the unit ADR-003 found reliably honored via `max_completion_tokens`;
   `max_tokens` is silently ignored by at least one target backend). Applies
   independently to every non-prep phase.
-- **`prep_budget`** (new field, per side) — a single pool, in completion
-  tokens, for the whole Prep phase, spent however Prep's retrieval/generation
-  logic uses it. **Required if `"prep"` appears in the phase list** (see
-  #4 below); validation error if missing, no silent default, per `CLAUDE.md`'s
-  "don't pick a default silently" rule.
+- **`prep_budget`** (new field, per side, optional) — a single pool, in
+  completion tokens, for the whole Prep phase, spent however Prep's
+  retrieval/generation logic uses it. **Required if `"prep"` appears in the
+  phase list; validation error if `prep_budget` is set but `"prep"` is not in
+  `phases`** — no silent default in either direction, no silent ignore. That
+  combination is almost always a stale config (prep removed from `phases`
+  without removing its budget, or vice versa), and B1 should reject it rather
+  than guess which side of the mistake is the truth.
 
 Both are enforced by the orchestrator, not trusted from the backend — Hard
 Rule 5 applies to `prep_budget` exactly as it does to `budget`.
@@ -93,6 +96,23 @@ sequence steelmanning actually happens. Those are B2 (the orchestration
 loop / prompt construction) questions, not B1 (config parsing) questions —
 they stay open, tracked under a narrowed item 11 in OPEN-QUESTIONS.
 
+### 5. `seed` is optional; `base_url` per team is required, no default
+
+- **`seed`** is optional. If omitted, the tool generates one at run start,
+  logs it to stderr immediately, and records the actual value used in
+  `run.seed` in the output transcript (ADR-005). Every run stays fully
+  reproducible from its own transcript regardless of whether a seed was
+  chosen up front — this isn't a silent default in the sense `CLAUDE.md`
+  warns against (an unresolved architecture question), it's an optional
+  input whose actual value is always captured, never guessed and hidden.
+- **`base_url` is required for every team, no default.** The backend variety
+  this tool targets, `fm serve` (a manually-chosen local port), `mlx_lm.server`,
+  a remote Ollama host, LM Studio, each listens somewhere different, and
+  nothing about a bare `model` name like `qwen3-8b` says which one to reach.
+  Guessing a default (e.g. always `localhost:8080`) risks silently talking to
+  nothing, or to the wrong server. Missing `base_url` is a B1 validation
+  error, same tier as a missing `output` or malformed `teams:` entry.
+
 ## Why
 
 All four of these were blocking B1 for the same underlying reason: `run.yaml`
@@ -107,11 +127,14 @@ explicit enough for B1 to validate against.
 
 - ADR-002's `run.yaml` and team-file examples need updating: `prep: true` and
   `rounds: 3` removed from `format`; `judge:` block removed entirely;
-  `prep_budget` added per side, conditional on `"prep"` being in `phases`.
+  `prep_budget` and a required `base_url` added per side, `prep_budget`
+  conditional on `"prep"` being in `phases`.
 - `CLAUDE.md`'s "Config" section needs the same corrections.
 - BUILD-GUIDE B1's exit gate can now name concrete validation cases: missing
-  `output`, missing `prep_budget` when `prep` is in `phases`, a `teams:` list
-  with other than two entries, and the existing malformed-YAML/missing-field
-  cases.
+  `output`, missing `base_url` on any team, `prep_budget` set without
+  `"prep"` in `phases` (or vice versa), a `teams:` list with other than two
+  entries, and the existing malformed-YAML/missing-field cases. `seed`
+  absence is explicitly *not* a validation error — it's a generate-and-record
+  case, not a failure case.
 - OPEN-QUESTIONS items 3, 8, and the B1-relevant slices of 10 and 11 are
   resolved. Item 11 stays open, narrowed to its B2-only questions.

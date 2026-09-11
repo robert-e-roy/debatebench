@@ -75,10 +75,12 @@ format:
 teams:
   - team: teams/liberal.yaml
     model: qwen3-8b
+    base_url: http://127.0.0.1:8080/v1
     budget: 2000
     prep_budget: 1500
   - team: teams/conservative.yaml
     model: mistral-small
+    base_url: http://127.0.0.1:8081/v1
     budget: 2000
     prep_budget: 1500
 sources: [args-me, debatesum]

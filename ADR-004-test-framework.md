@@ -76,5 +76,5 @@ caught it. Using the `FakeBackend`:
 
 ## Open questions
 
-1. **Minimum Python version.** Sets `requires-python` and what the tests may use.
+1. **Minimum Python version — resolved by ADR-008:** 3.11.
 2. **Coverage tooling.** None proposed; add it once there's code worth measuring.

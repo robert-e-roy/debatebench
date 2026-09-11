@@ -91,8 +91,7 @@ The context ceiling is consistent with the 4,096 tokens per session stated in Xc
 1. **Budget overshoot policy.** `max_completion_tokens` overshot by 1–2 tokens. Is
    a budget a hard cap (any overshoot fails the turn), a cap with a stated
    tolerance, or enforced by the orchestrator cutting a streamed reply itself?
-2. **HTTP client.** Stdlib `urllib` under `asyncio.to_thread` (allowed by Hard Rule
-   4, and keeps the adapter dependency-free) or an async client such as `httpx`.
+2. **HTTP client — resolved by ADR-008:** `httpx`, with explicit timeouts.
 3. **Transport.** TCP on `127.0.0.1`, the same shape as every other provider, or
    `fm serve --socket`, which its help text recommends for local Python bindings
    but which no other provider uses.

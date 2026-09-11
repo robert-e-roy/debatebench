@@ -175,10 +175,9 @@ required, enforced by B1 validation.
 | ADR-002, "Hardware" | A separate inference engine for prefill-heavy prep |
 | ADR-002, "Scope discipline" | A source for the ~25% Aragora scope-creep figure — cite or drop |
 | ADR-002, "Language split" | DebateKit's license (a later, separate decision) |
-| ADR-003 | Budget overshoot policy; HTTP client; TCP vs socket; guardrail refusals |
-| ADR-004 | Minimum Python version; coverage tooling |
+| ADR-003 | Budget overshoot policy; TCP vs socket; guardrail refusals |
+| ADR-004 | Coverage tooling |
 | ADR-005 | An existing file at the output path; what counts as a valid turn; what "round" means; a human-readable view |
-| ADR-007 (gaps B1 must settle) | A `prep_budget` given when `prep` isn't in `phases`: error or ignored? Is `seed` required? Is a team's `base_url` required, and if not, what's the default? ADR-007 doesn't say |
 | BUILD-GUIDE B4 | Static corpora only, or live retrieval too |
 | BUILD-GUIDE B6 | Fact-checker inside `debate` or as its own command (see item 4) |
 

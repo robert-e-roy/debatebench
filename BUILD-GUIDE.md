@@ -59,8 +59,14 @@ constructs backend instances per team, and can generate one dummy response per
 side through the `Protocol` — no phases, no orchestration loop yet.
 
 **Exit gate:** config validation has a real test case for each failure mode
-listed above, plus the valid-file case, and each fails or succeeds correctly.
-Backend Protocol produces a real response from AFM.
+below, plus the valid-file case, and each fails or succeeds correctly (see
+ADR-007 for the full reasoning behind each): missing `output`; missing
+`base_url` on any team; `prep_budget` set without `"prep"` in `phases`, and
+the reverse; a `teams:` list with other than two entries; the existing
+malformed-YAML/missing-required-field cases. `seed` absent is explicitly
+**not** a failure case — confirm the loader generates one and it's ready to
+be recorded, not that validation rejects it. Backend Protocol produces a real
+response from AFM.
 
 ---
 
@@ -95,23 +101,25 @@ caught it.
 
 **Depends on:** B2.
 
-**Scope:** CLI wrapper around the orchestration loop. `debate <run.yaml>` takes
-no flags (ADR-007); the `output:` path in the file gets the transcript as JSON;
-all logging/errors go to stderr only, verified
-by literally asserting the output file is valid JSON with nothing else mixed
-in. Wire in the `openai-compatible base_url` adapter so real MLX models
-(`mlx_lm.server`), Ollama, and LM Studio all work through the same backend
-implementation used for AFM in B1.
+**Scope:** CLI wrapper around the orchestration loop. The `output:` path from
+`run.yaml` (per ADR-007 — required, no `--output` flag) is where the
+transcript gets written as JSON; all logging/errors go to stderr only,
+verified by literally asserting the output file is valid JSON with nothing
+else mixed in. Wire in the `openai-compatible base_url` adapter so real MLX
+models (`mlx_lm.server`), Ollama, and LM Studio all work through the same
+backend implementation used for AFM in B1.
 
-**Deliverable:** `debate run.yaml` works against both AFM and a real local MLX
-model.
+**Deliverable:** `debate run.yaml` (per ADR-007 — a single config-file
+argument, no flags) works against both AFM and a real local MLX model,
+resolving each team's `base_url`.
 
-**Exit gate:** run the same `run.yaml` (same `seed:`) twice against AFM and confirm each
-turn's generated text is identical across the two runs. Compare turn text, not
-whole files, since run metadata such as timestamps can legitimately differ.
-`fm serve` returned identical output for repeated requests with the same `seed`
-when probed one request at a time (see ADR-003's probe results), so the old
-"document why not" fallback shouldn't be needed for AFM.
+**Exit gate:** run the same `run.yaml` twice against AFM (its `seed` field
+fixes the value for both runs — there is no `--seed` flag) and confirm each
+turn's generated text is identical across the two runs. Compare turn text,
+not whole files, since run metadata such as timestamps can legitimately
+differ. `fm serve` returned identical output for repeated requests with the
+same seed when probed one request at a time (see ADR-003's probe results),
+so the old "document why not" fallback shouldn't be needed for AFM.
 
 ---
 

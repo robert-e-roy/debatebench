@@ -15,14 +15,16 @@ code. See ADR-002 for full scope.
 ## Documents and where work stands
 
 - `ADR-001`, `ADR-002`, `ADR-003` (AFM via `fm serve`), `ADR-004` (test
-  framework), `ADR-006`, `ADR-007` (`run.yaml` schema and CLI invocation) —
-  accepted; together they are the spec.
+  framework), `ADR-006`, `ADR-007` (`run.yaml` schema and CLI invocation),
+  `ADR-008` (Python 3.11+, `httpx`, PyYAML) — accepted; together they are the
+  spec.
 - `ADR-005` (transcript format) — **Proposed**, not yet accepted. Don't build on
   it until it is.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
-  **Next: B1**, once the ADR-007 gaps listed in `OPEN-QUESTIONS.md` are settled.
+  **Next: B1.** Its config questions are settled (ADR-007) and its runtime
+  baseline is fixed (ADR-008).
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
@@ -69,9 +71,9 @@ ADR-001). Rule 7 predates that review (ADR-002, "CLI shape"); R0 found nothing
 against it.
 
 1. **Never let a phase fail silently.** Every configured phase must get a
-   response from every side, or the run aborts and nothing is written to the
-   `output:` path. No default-to-first-side fallback, no `continue`-past-a-failure
-   with just a log line.
+   response from every side, or the run aborts and no file is written to
+   `run.yaml`'s `output:` path. No default-to-first-side fallback, no
+   `continue`-past-a-failure with just a log line.
 2. **Key all transcript/state by `(round, side)`, never by side alone.**
    Overwriting per-round state is a real bug we found and are explicitly
    avoiding.
@@ -87,25 +89,33 @@ against it.
    claim is worse than no budget claim for a benchmarking tool.
 6. **Phases are data, not control flow.** The orchestration loop iterates a
    configured phase list. Do not branch on round number in the loop body.
-7. **`debate` writes only to the `output:` path in its `run.yaml`** (ADR-007;
-   `debate` takes no flags). Never mix logging or errors into that file's
-   stream; never rely on shell redirection to keep it clean.
+7. **`debate` writes only to the `output:` path from `run.yaml`** (required
+   field, no `--output` flag — see ADR-007). Never mix logging or errors into
+   that file's stream; never rely on shell redirection to keep it clean.
 
 ## Config
 
-Two file types — see ADR-002 for rationale and ADR-007 for the `run.yaml`
-schema:
-- `run.yaml` — one per run: topic, `format.phases`, exactly two teams (each a
-  team-file path plus `model`, `base_url`, `budget` and, when `prep` runs,
-  `prep_budget` — budgets in completion tokens), `sources`, `seed`, and a
-  required `output:`. No judge settings: `judge` takes `--model` and `--output`
-  (both required), an optional `--base-url`, and `--fact-check` /
-  `--no-fact-check` (default on).
+Two file types — see ADR-002 and ADR-007 for full schema and rationale:
+- `run.yaml` — one per run: topic, `format.phases` (the only source of truth
+  for whether `prep` runs — no separate `prep`/`rounds` flags), per-team
+  `model`, **`base_url` (required, no default — see ADR-007)**, `budget`
+  (per-phase cap, completion tokens), `prep_budget` (required iff `"prep"`
+  is in `phases`; a validation error either way if it's set without `prep`
+  present, or missing while `prep` is present), `sources`, `seed` (optional —
+  generated and recorded in the transcript if omitted, never silently
+  guessed-and-hidden), and a **required** `output` path. Exactly two entries
+  in `teams:`. No `judge:` block — nothing reads it.
 - `teams/*.yaml` — durable persona files (`id`, `name`, `voice`, `stance`,
   `corpus`, `values`), **hand-authored for now** (see ADR-006 — no
   PersonaForge/PersonaKit dependency exists yet; the earlier "compatible"
   claim was checked and found false). **No `model` or `budget` field here,
   ever** — that's a run-time concern, not identity.
+
+`debate` takes exactly one argument, the path to a `run.yaml`. No other flags
+— see ADR-007. `judge` takes a transcript path plus flags: `--model` and
+`--output` (both required), an optional `--base-url`, and `--fact-check` /
+`--no-fact-check` (default on). The asymmetry is deliberate, not an oversight
+(ADR-007, "CLI invocation").
 
 ## Backend
 
@@ -115,8 +125,9 @@ Single-method `async` `Protocol` as the LLM seam (not a multi-method ABC). One
 build separate bespoke adapters per provider unless a provider genuinely can't
 fit that shape.
 
-AFM goes through that same adapter via `fm serve` (ADR-003), and its measured
-quirks bind the adapter:
+The adapter uses `httpx` (ADR-008). Set explicit timeouts: httpx's 5-second
+default kills real turns. AFM goes through the same adapter via `fm serve`
+(ADR-003), and its measured quirks bind the adapter:
 - send `"stream": false` explicitly;
 - send budgets as `max_completion_tokens`, never `max_tokens`;
 - check `usage.completion_tokens` against the budget yourself — `finish_reason`
@@ -154,4 +165,4 @@ All source projects are MIT — see ADR-001 for exact attribution requirements.
 
 Per ADR-004 (accepted): pytest, with a scripted `FakeBackend` for every default
 test, and live-model tests opt-in behind `DEBATEBENCH_LIVE_TESTS=1`. CI is
-deferred to B7.
+deferred to B7. Python ≥ 3.11 (ADR-008).
