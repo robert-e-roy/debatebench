@@ -2,6 +2,8 @@
 
 **Status:** Accepted
 **Date:** 2026-09-11
+**Amended:** 2026-09-11 — added §6, the validation details B1 needs (paths,
+unknown and duplicate keys, phase names, team-file fields, types)
 **Depends on:** ADR-002 ("Config", "CLI shape"), ADR-003 (token-budget enforcement
 findings), `debate-formats-research.md`
 **Resolves:** OPEN-QUESTIONS.md items 3, 8, 10 (schema-level slice), 11
@@ -112,6 +114,46 @@ they stay open, tracked under a narrowed item 11 in OPEN-QUESTIONS.
   Guessing a default (e.g. always `localhost:8080`) risks silently talking to
   nothing, or to the wrong server. Missing `base_url` is a B1 validation
   error, same tier as a missing `output` or malformed `teams:` entry.
+
+### 6. Validation details (added 2026-09-11)
+
+Writing B1's validation turned up details §1–§5 didn't settle:
+
+- **Required:** `topic`, `format.phases`, `teams` and `output` in `run.yaml`;
+  `team`, `model`, `base_url` and `budget` in each `teams:` entry. `prep_budget`
+  follows §2. `seed` and `sources` are optional.
+- **Paths resolve from the directory containing `run.yaml`**, not the working
+  directory. That applies to each team's `team:` and to `output:`, so a `run.yaml`
+  behaves the same wherever `debate` is run from. `~` expands to the home
+  directory. A team file that doesn't exist is an error.
+- **`sources` and `corpus` are kept exactly as written.** ADR-002's example lists
+  `sources` as dataset names (`args-me`, `debatesum`), not paths, and whether an
+  entry is a name or a path is B4's question (§3). B1 checks only that `sources`,
+  if present, is a list of non-empty strings, and `corpus`, if present, is a
+  non-empty string. Whether a pool must exist when `prep` runs is also B4's.
+- **Unknown keys are an error:** in `run.yaml`, its `format:` and `teams:`
+  entries, and team files. Otherwise a typo such as `seeed: 42` is ignored and
+  the run quietly generates a seed. The keys this ADR removed (`format.prep`,
+  `format.rounds`, `judge:`) get errors that say what replaced them.
+- **Duplicate keys are an error.** YAML parsers silently keep the last value, so
+  `budget: 100` followed by `budget: 2000` is the same class of mistake as an
+  unknown key.
+- **Phase names come from a fixed list:** `prep`, `opening`, `rebuttal`, `retort`,
+  `conclusion`. The list must not be empty, and any other name is an error.
+  `prep` may appear at most once and must come first; the others may repeat (§4).
+  What each phase means stays with B2.
+- **Team files** require `id`, `name`, `voice` and `stance` (non-empty strings)
+  and `values` (a list of strings). `corpus` is optional. A `model` or `budget`
+  field is an error that points to `run.yaml`: those are run-time settings, not
+  identity (ADR-002).
+- **Types:**
+  - `topic` and `model` are non-empty strings;
+  - `base_url` is an `http` or `https` URL;
+  - `budget` and `prep_budget` are integers of at least 1;
+  - `seed` is an integer of at least 0. Negative seeds are rejected because some
+    servers read `-1` as "pick one at random".
+
+  A boolean is never accepted where an integer is expected (ADR-008).
 
 ## Why
 

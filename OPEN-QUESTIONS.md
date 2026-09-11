@@ -178,6 +178,7 @@ required, enforced by B1 validation.
 | ADR-002, "Language split" | DebateKit's license (a later, separate decision) |
 | ADR-003 | Budget overshoot policy; TCP vs socket; guardrail refusals |
 | ADR-004 | Coverage tooling |
+| ADR-009 | How `seed` reaches each request (one value or derived per turn), and whether temperature gets a config field. Blocks B3 |
 | ADR-005 | An existing file at the output path; what counts as a valid turn; what "round" means; a human-readable view |
 | BUILD-GUIDE B4 | Static corpora only, or live retrieval too |
 | BUILD-GUIDE B6 | Fact-checker inside `debate` or as its own command (see item 4) |

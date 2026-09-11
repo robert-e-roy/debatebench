@@ -2,6 +2,7 @@
 
 **Status:** Accepted (2026-09-11)
 **Date:** 2026-09-11
+**Amended:** 2026-09-11 — the live AFM tests start `fm serve` themselves
 **Depends on:** ADR-001, ADR-002, ADR-003, ADR-007
 
 ## Decision
@@ -18,6 +19,10 @@
 - **Live tests are opt-in behind `DEBATEBENCH_LIVE_TESTS=1`**, following the
   workspace convention (HomesteadAI's `HOMESTEAD_LIVE_TESTS=1`). They hit a real
   `fm serve` (ADR-003) or `mlx_lm.server` and run locally only.
+- **The live AFM tests start `fm serve` themselves**, on a free local port, and
+  stop it afterwards. That's test setup, not the tool: ADR-003's rule that the
+  tool never starts servers still holds. With `DEBATEBENCH_LIVE_TESTS=1` set, a
+  missing `/usr/bin/fm` fails those tests rather than skipping them.
 - **Layout:** `tests/` at the repo root; hand-written fixtures (`run.yaml`, team
   files, transcripts) under `tests/fixtures/`.
 - **CI is deferred to B7.** Hosted CI runners can't be assumed to have Apple

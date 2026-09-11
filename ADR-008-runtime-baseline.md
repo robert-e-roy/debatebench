@@ -57,7 +57,9 @@ checked on this machine (httpx 0.28.1, PyYAML 6.0.3):
   `int`, and `budget: yes` loads as `True`, which passes an `int` check because
   `bool` is a subclass of `int`. So B1 must:
   - load config with a stricter loader that treats only `true`/`false` as
-    booleans and rejects leading-zero integers;
+    booleans and rejects leading-zero integers, along with YAML 1.1's other
+    non-decimal integer forms: hex (`0x1F`), binary (`0b101`), base 60 (`1:30`
+    loads as 90) and underscores (`1_000`);
   - reject `bool` wherever an integer is expected;
   - type-check every other field (strings must be strings), rejecting
     mismatches rather than coercing them.

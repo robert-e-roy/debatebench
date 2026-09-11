@@ -16,8 +16,8 @@ code. See ADR-002 for full scope.
 
 - `ADR-001`, `ADR-002`, `ADR-003` (AFM via `fm serve`), `ADR-004` (test
   framework), `ADR-006`, `ADR-007` (`run.yaml` schema and CLI invocation),
-  `ADR-008` (Python 3.11+, `httpx`, PyYAML) — accepted; together they are the
-  spec.
+  `ADR-008` (Python 3.11+, `httpx`, PyYAML), `ADR-009` (backend request and
+  result types) — accepted; together they are the spec.
 - `ADR-005` (transcript format) — **Proposed**, not yet accepted. Don't build on
   it until it is.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
@@ -112,6 +112,11 @@ Two file types — see ADR-002 and ADR-007 for full schema and rationale:
   claim was checked and found false). **No `model` or `budget` field here,
   ever** — that's a run-time concern, not identity.
 
+Validation is strict (ADR-007 §6): unknown or duplicate keys are errors, phase
+names come from a fixed list, and paths resolve from `run.yaml`'s directory.
+Load YAML only through the package's strict loader, never plain `safe_load`
+(ADR-008 lists the YAML 1.1 coercions it blocks).
+
 `debate` takes exactly one argument, the path to a `run.yaml`. No other flags
 — see ADR-007. `judge` takes a transcript path plus flags: `--model` and
 `--output` (both required), an optional `--base-url`, and `--fact-check` /
@@ -120,7 +125,9 @@ Two file types — see ADR-002 and ADR-007 for full schema and rationale:
 
 ## Backend
 
-Single-method `async` `Protocol` as the LLM seam (not a multi-method ABC). One
+Single-method `async` `Protocol` as the LLM seam (not a multi-method ABC). Its
+request and result types are fixed in ADR-009: the result carries token usage,
+and a reply without usage is an error, never zeros. One
 `openai-compatible` adapter with configurable `base_url` should cover MLX
 (`mlx_lm.server`), Ollama, LM Studio, and OpenAI through one code path — don't
 build separate bespoke adapters per provider unless a provider genuinely can't
