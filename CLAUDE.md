@@ -24,8 +24,11 @@ code. See ADR-002 for full scope.
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
   The pair is unmeasured, not ruled out: a quiet-machine B0 rerun comes before
-  anything trusts it. **Next: B1.** Its config questions are settled (ADR-007)
-  and its runtime baseline is fixed (ADR-008).
+  anything trusts it. **B1 is done** (2026-09-11): config loading and
+  validation, the backend seam (ADR-009) and the `openai-compatible` adapter,
+  with its exit gate met, including a live reply from AFM. **Next: B2**, which
+  first needs ADR-005 accepted, OPEN-QUESTIONS item 11 settled, and ADR-003's
+  overshoot policy decided.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.

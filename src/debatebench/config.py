@@ -1,0 +1,330 @@
+"""Load and validate run.yaml and the team files it names (ADR-002, ADR-007).
+
+Every problem is a ConfigError naming the file and the key, and nothing the
+user didn't write gets a default. The one generated value is ``seed``, which
+ADR-007 §5 makes optional: when it's absent, one is generated here and flagged
+so the caller logs it and records it.
+"""
+
+from __future__ import annotations
+
+import secrets
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlsplit
+
+import yaml
+
+from .yaml_loader import load_yaml
+
+PHASES = ("prep", "opening", "rebuttal", "retort", "conclusion")
+
+_RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output"}
+_FORMAT_KEYS = {"phases"}
+_SIDE_KEYS = {"team", "model", "base_url", "budget", "prep_budget"}
+_TEAM_KEYS = {"id", "name", "voice", "stance", "values", "corpus"}
+
+# Keys ADR-007 removed, with what replaced them.
+_REMOVED_RUN_KEYS = {
+    "judge": "the judge: block was removed (ADR-007); judge settings are flags on the judge command",
+}
+_REMOVED_FORMAT_KEYS = {
+    "prep": "format.prep was removed (ADR-007); list 'prep' in format.phases to run Prep",
+    "rounds": "format.rounds was removed (ADR-007); repeat phase names in format.phases instead",
+}
+# Run-time settings, which belong in run.yaml and never in a team file (ADR-002).
+_RUNTIME_KEYS = {"model", "base_url", "budget", "prep_budget"}
+
+# Generated seeds stay below 2**31 so servers with 32-bit seeds accept them.
+_GENERATED_SEED_BOUND = 2**31
+
+
+class ConfigError(Exception):
+    """A run.yaml or team file that can't be used as written."""
+
+
+@dataclass(frozen=True)
+class Team:
+    """A team file: the side's identity (ADR-002). No model or budget, ever."""
+
+    path: Path
+    id: str
+    name: str
+    voice: str
+    stance: str
+    values: tuple[str, ...]
+    corpus: str | None  # as written; resolving it is B4's (ADR-007 §6)
+
+
+@dataclass(frozen=True)
+class Side:
+    """One entry in run.yaml's teams list, with its team file loaded."""
+
+    index: int
+    team: Team
+    model: str
+    base_url: str
+    budget: int
+    prep_budget: int | None  # set exactly when phases include prep (ADR-007 §2)
+
+
+@dataclass(frozen=True)
+class RunConfig:
+    path: Path
+    topic: str
+    phases: tuple[str, ...]
+    sides: tuple[Side, Side]
+    sources: tuple[str, ...]  # as written; resolving them is B4's (ADR-007 §6)
+    seed: int
+    seed_generated: bool  # run.yaml had no seed: log this one and record it (ADR-007 §5)
+    output: Path
+
+
+def load_run(path: str | Path) -> RunConfig:
+    run_path = Path(path).expanduser().resolve()
+    data = _load_mapping(run_path, "run config")
+    _check_keys(run_path, data, _RUN_KEYS, "", _REMOVED_RUN_KEYS)
+
+    topic = _str(run_path, data, "topic", "topic")
+    phases = _phases(run_path, data)
+    has_prep = "prep" in phases
+
+    if "teams" not in data:
+        raise _fail(run_path, "teams is required")
+    teams = data["teams"]
+    if not isinstance(teams, list):
+        raise _fail(run_path, f"teams must be a list of two team entries, got {_describe(teams)}")
+    if len(teams) != 2:
+        raise _fail(run_path, f"teams must list exactly two teams (ADR-007), found {len(teams)}")
+    first, second = (_side(run_path, entry, index, has_prep) for index, entry in enumerate(teams))
+
+    sources = _opt_str_list(run_path, data, "sources", "sources") or ()
+    seed = _opt_int(run_path, data, "seed", "seed", minimum=0)
+    seed_generated = seed is None
+    if seed is None:
+        seed = secrets.randbelow(_GENERATED_SEED_BOUND)
+    output = _resolve(run_path, _str(run_path, data, "output", "output"))
+
+    return RunConfig(
+        path=run_path,
+        topic=topic,
+        phases=phases,
+        sides=(first, second),
+        sources=sources,
+        seed=seed,
+        seed_generated=seed_generated,
+        output=output,
+    )
+
+
+def load_team(path: Path) -> Team:
+    data = _load_mapping(path, "team file")
+    for key in data:
+        if key in _RUNTIME_KEYS:
+            raise _fail(
+                path,
+                f"{key} is a run-time setting; set it on this team's entry in run.yaml, "
+                "not in the team file (ADR-002)",
+            )
+    _check_keys(path, data, _TEAM_KEYS, "")
+    return Team(
+        path=path,
+        id=_str(path, data, "id", "id"),
+        name=_str(path, data, "name", "name"),
+        voice=_str(path, data, "voice", "voice"),
+        stance=_str(path, data, "stance", "stance"),
+        values=_str_list(path, data, "values", "values"),
+        corpus=_opt_str(path, data, "corpus", "corpus"),
+    )
+
+
+def _phases(path: Path, data: dict[str, Any]) -> tuple[str, ...]:
+    if "format" not in data:
+        raise _fail(path, "format is required (it holds format.phases)")
+    fmt = data["format"]
+    if not isinstance(fmt, dict):
+        raise _fail(path, f"format must be a mapping, got {_describe(fmt)}")
+    _check_keys(path, fmt, _FORMAT_KEYS, "format", _REMOVED_FORMAT_KEYS)
+    if "phases" not in fmt:
+        raise _fail(path, "format.phases is required")
+    phases = fmt["phases"]
+    if not isinstance(phases, list):
+        raise _fail(path, f"format.phases must be a list of phase names, got {_describe(phases)}")
+    if not phases:
+        raise _fail(path, "format.phases must list at least one phase")
+    for index, phase in enumerate(phases):
+        if phase not in PHASES:
+            raise _fail(
+                path,
+                f"format.phases[{index}] is {_describe(phase)}, not a known phase "
+                f"({', '.join(PHASES)})",
+            )
+    if phases.count("prep") > 1:
+        raise _fail(path, "format.phases: 'prep' can appear only once")
+    if "prep" in phases and phases[0] != "prep":
+        raise _fail(path, "format.phases: 'prep' must come first")
+    return tuple(phases)
+
+
+def _side(run_path: Path, entry: Any, index: int, has_prep: bool) -> Side:
+    where = f"teams[{index}]"
+    if not isinstance(entry, dict):
+        raise _fail(
+            run_path,
+            f"{where} must be a mapping with team, model, base_url and budget, got {_describe(entry)}",
+        )
+    _check_keys(run_path, entry, _SIDE_KEYS, where)
+
+    team_text = _str(run_path, entry, "team", f"{where}.team")
+    model = _str(run_path, entry, "model", f"{where}.model")
+    base_url = _base_url(run_path, entry, f"{where}.base_url")
+    budget = _int(run_path, entry, "budget", f"{where}.budget", minimum=1)
+    prep_budget = _opt_int(run_path, entry, "prep_budget", f"{where}.prep_budget", minimum=1)
+    if has_prep and prep_budget is None:
+        raise _fail(
+            run_path, f"{where}.prep_budget is required because format.phases includes 'prep' (ADR-007)"
+        )
+    if not has_prep and prep_budget is not None:
+        raise _fail(
+            run_path,
+            f"{where}.prep_budget is set but format.phases has no 'prep'; "
+            "remove it, or add 'prep' (ADR-007)",
+        )
+
+    team_path = _resolve(run_path, team_text)
+    if not team_path.is_file():
+        raise _fail(run_path, f"{where}.team: team file not found: {team_path}")
+    return Side(
+        index=index,
+        team=load_team(team_path),
+        model=model,
+        base_url=base_url,
+        budget=budget,
+        prep_budget=prep_budget,
+    )
+
+
+def _base_url(path: Path, data: dict[str, Any], where: str) -> str:
+    if "base_url" not in data:
+        raise _fail(
+            path,
+            f"{where} is required; there's no default, because nothing else says "
+            "which server this team talks to (ADR-007)",
+        )
+    value = data["base_url"]
+    if isinstance(value, str):
+        parts = urlsplit(value)
+        try:
+            parts.port  # raises on a malformed port
+        except ValueError:
+            pass
+        else:
+            if parts.scheme in ("http", "https") and parts.hostname:
+                return value
+    raise _fail(
+        path,
+        f"{where} must be an http:// or https:// URL such as http://127.0.0.1:8080/v1, "
+        f"got {_describe(value)}",
+    )
+
+
+def _load_mapping(path: Path, what: str) -> dict[str, Any]:
+    try:
+        data = load_yaml(path)
+    except FileNotFoundError as e:
+        raise ConfigError(f"{what} not found: {path}") from e
+    except OSError as e:
+        raise ConfigError(f"{path}: can't read {what}: {e.strerror or e}") from e
+    except yaml.YAMLError as e:
+        raise _fail(path, f"YAML error: {e}") from e
+    if data is None:
+        raise _fail(path, f"{what} is empty")
+    if not isinstance(data, dict):
+        raise _fail(path, f"{what} must be a mapping of keys to values, got {_describe(data)}")
+    return data
+
+
+def _check_keys(
+    path: Path,
+    data: dict[Any, Any],
+    allowed: set[str],
+    where: str,
+    removed: dict[str, str] | None = None,
+) -> None:
+    for key in data:
+        if key in allowed:
+            continue
+        if removed and key in removed:
+            raise _fail(path, removed[key])
+        location = f" in {where}" if where else ""
+        raise _fail(path, f"unknown key {key!r}{location} (allowed: {', '.join(sorted(allowed))})")
+
+
+def _str(path: Path, data: dict[str, Any], key: str, where: str) -> str:
+    if key not in data:
+        raise _fail(path, f"{where} is required")
+    value = data[key]
+    if not isinstance(value, str) or not value.strip():
+        raise _fail(path, f"{where} must be a non-empty string, got {_describe(value)}")
+    return value
+
+
+def _opt_str(path: Path, data: dict[str, Any], key: str, where: str) -> str | None:
+    return _str(path, data, key, where) if key in data else None
+
+
+def _int(path: Path, data: dict[str, Any], key: str, where: str, *, minimum: int) -> int:
+    if key not in data:
+        raise _fail(path, f"{where} is required")
+    value = data[key]
+    # bool is a subclass of int, so a plain isinstance check would accept True (ADR-008).
+    if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+        raise _fail(path, f"{where} must be an integer of at least {minimum}, got {_describe(value)}")
+    return value
+
+
+def _opt_int(path: Path, data: dict[str, Any], key: str, where: str, *, minimum: int) -> int | None:
+    return _int(path, data, key, where, minimum=minimum) if key in data else None
+
+
+def _str_list(path: Path, data: dict[str, Any], key: str, where: str) -> tuple[str, ...]:
+    if key not in data:
+        raise _fail(path, f"{where} is required")
+    value = data[key]
+    if not isinstance(value, list):
+        raise _fail(path, f"{where} must be a list of strings, got {_describe(value)}")
+    for index, item in enumerate(value):
+        if not isinstance(item, str) or not item.strip():
+            raise _fail(path, f"{where}[{index}] must be a non-empty string, got {_describe(item)}")
+    return tuple(value)
+
+
+def _opt_str_list(path: Path, data: dict[str, Any], key: str, where: str) -> tuple[str, ...] | None:
+    return _str_list(path, data, key, where) if key in data else None
+
+
+def _resolve(run_path: Path, text: str) -> Path:
+    """A path from a config file, relative to that file's directory (ADR-007 §6)."""
+    path = Path(text).expanduser()
+    if not path.is_absolute():
+        path = run_path.parent / path
+    return path.resolve()
+
+
+def _fail(path: Path, message: str) -> ConfigError:
+    return ConfigError(f"{path}: {message}")
+
+
+def _describe(value: Any) -> str:
+    """A wrong value as an error shows it: the value and its YAML type."""
+    if value is None:
+        return "nothing (null)"
+    if isinstance(value, dict):
+        return "a mapping"
+    if isinstance(value, list):
+        return "a list"
+    if value == "":
+        return "an empty string"
+    kinds = {bool: "a boolean", int: "an integer", float: "a number", str: "a string"}
+    return f"{value!r} ({kinds.get(type(value), type(value).__name__)})"

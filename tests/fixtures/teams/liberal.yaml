@@ -1,0 +1,6 @@
+id: liberal-climate
+name: "Progressive Climate Advocate"
+voice: "direct, urgency-driven, cites institutional consensus"
+stance: liberal
+corpus: sources/liberal-climate-corpus/
+values: [collective-action, precaution, equity]

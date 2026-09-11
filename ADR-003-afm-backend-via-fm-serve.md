@@ -95,6 +95,12 @@ The context ceiling is consistent with the 4,096 tokens per session stated in Xc
 3. **Transport.** TCP on `127.0.0.1`, the same shape as every other provider, or
    `fm serve --socket`, which its help text recommends for local Python bindings
    but which no other provider uses.
-4. **Guardrail refusals.** How a refusal surfaces over the API hasn't been
-   observed yet. Whether it counts as a response belongs to the same open question
-   as truncation.
+4. **Guardrail refusals.** Partly observed during B1 (2026-09-11). A prompt of
+   "word " repeated 6,000 times got HTTP 500 with the message "The model's safety
+   guardrails were triggered.", before any context-size check. So a guardrail
+   refusal of the input arrives the same way as context overflow and genuine
+   server faults: status 500, `type: "server_error"`, distinguishable only by
+   message. The adapter treats it as a failed turn (ADR-009). Still unobserved:
+   how a refusal of the model's own output surfaces. Still open: whether a
+   refusal should count as a response, which belongs to the same question as
+   truncation.

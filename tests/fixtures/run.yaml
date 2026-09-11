@@ -1,0 +1,18 @@
+# A valid run.yaml (ADR-002, ADR-007). Tests copy this and change one thing.
+topic: "A federal carbon tax would do more good than harm."
+format:
+  phases: [prep, opening, rebuttal, retort, rebuttal, conclusion]
+teams:
+  - team: teams/liberal.yaml
+    model: qwen3-8b
+    base_url: http://127.0.0.1:8080/v1
+    budget: 2000
+    prep_budget: 1500
+  - team: teams/conservative.yaml
+    model: mistral-small
+    base_url: http://127.0.0.1:8081/v1
+    budget: 2000
+    prep_budget: 1500
+sources: [args-me, debatesum]
+seed: 42
+output: transcript.json

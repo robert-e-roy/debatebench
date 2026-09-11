@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "debatebench"
+version = "0.1.0.dev0"
+description = "Structured, multi-turn adversarial LLM debates, scored against a fixed rubric."
+requires-python = ">=3.11"
+# ADR-008: these two and nothing else without an ADR.
+dependencies = [
+    "httpx>=0.28",
+    "PyYAML>=6.0",
+]
+
+[project.scripts]
+debate = "debatebench.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
