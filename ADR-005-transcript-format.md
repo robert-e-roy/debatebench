@@ -1,7 +1,10 @@
 # ADR-005: Transcript Format — the `debate` → `judge` Contract
 
-**Status:** Proposed
+**Status:** Accepted (2026-09-11)
 **Date:** 2026-09-11
+**Amended:** 2026-09-11 — accepted with ADR-010, which settles what counts as a
+valid turn and adds `hit_budget` and `budget_tolerance`. Two questions about
+writing the file moved to B3.
 **Depends on:** ADR-001 (never key by side alone; output file only), ADR-002 (two commands, hard invariant), ADR-003 (token usage reporting), ADR-007 (`run.yaml` schema; `output:` path)
 
 ## Decision
@@ -22,6 +25,7 @@ release.
   "run": {
     "topic": "...",
     "seed": 42,
+    "budget_tolerance": 16,  // tokens a reply may exceed its budget by (ADR-010)
     "phases": ["prep", "opening", "rebuttal", "retort", "rebuttal", "conclusion"],
     "sides": [
       { "index": 0,
@@ -51,7 +55,7 @@ release.
 { "phase_index": 2, "phase": "rebuttal", "side_index": 0, "order": 1,
   "text": "...",
   "usage": { "prompt_tokens": 812, "completion_tokens": 388 },
-  "budget": 2000, "finish_reason": "stop",
+  "budget": 2000, "hit_budget": false, "finish_reason": "stop",
   "latency_ms": 5120, "started_at": "2026-09-11T14:04:02Z" }
 ```
 
@@ -65,10 +69,12 @@ release.
   legitimate benchmark configuration, and a team-id key would collide.
 - **`order`** records who spoke first within the phase (0 or 1), so alternating
   initiative can be checked after the fact.
-- **`usage` is as reported by the backend** (fields are `null` if not reported);
-  `budget` is the limit the orchestrator applied. Together they make every budget
-  claim checkable after the fact (Hard Rule 5). ADR-003 shows `finish_reason` alone
-  can't be trusted for this.
+- **`usage` is as reported by the backend**, and is never absent: a reply without
+  token usage fails the turn (ADR-009), because a budget checked against a
+  made-up zero is no check at all. `budget` is the limit the orchestrator applied,
+  and `hit_budget` says the reply reached it and may have been cut off. Together
+  they make every budget claim checkable after the fact (Hard Rule 5). ADR-003
+  shows `finish_reason` alone can't be trusted for this.
 - **A `prep` turn also carries `evidence: [...]`**, that side's recorded evidence
   set. The item shape is provisional until B4. At minimum each item has a stable
   `id`, the `source` it came from, and its `text`.
@@ -111,19 +117,22 @@ release.
 - **The `FakeBackend` (ADR-004) and hand-written test transcripts** follow this
   format.
 
-## Open questions (decide before accepting)
+## Open questions
 
-1. **An existing file at the output path.** "Nothing written on failure" doesn't stop a
-   stale transcript from an earlier run sitting at the same path, and `judge`
-   would score it without complaint. Either refuse to start if the path exists
-   (unless `--force`), or delete it at start and lose the old file even if the new
-   run fails.
-2. **What counts as a valid turn** — a refusal, empty text, or a reply that
-   reached its budget (which ADR-003 shows can't be detected from
-   `finish_reason`). This decides what `turns` may contain.
-3. **What "round" means**, given ADR-002's `rounds: 3` alongside an explicit phase
-   list. The key above works either way, but the `run` snapshot should record
-   whatever `rounds` turns out to mean.
-4. **Human-readable rendering.** ADR-001 notes aragora's paired machine- and
-   human-readable views as precedent. If wanted, it's derived from this file by a
-   separate step; `debate` writes nothing but its output file (Hard Rule 7).
+Both remaining questions are about writing the file, which is B3's work, so
+neither blocked accepting this.
+
+1. **An existing file at the output path (B3).** "Nothing written on failure"
+   doesn't stop a stale transcript from an earlier run sitting at the same path,
+   and `judge` would score it without complaint. Either refuse to start if the
+   path exists, or delete it at start and lose the old file even if the new run
+   fails. An earlier draft proposed a `--force` flag, which ADR-007 §1 rules out:
+   `debate` takes one argument and no flags.
+2. **Human-readable rendering (B3 at the earliest).** ADR-001 notes aragora's
+   paired machine- and human-readable views as precedent. If wanted, it's derived
+   from this file by a separate step; `debate` writes nothing but its output file
+   (Hard Rule 7).
+
+**Settled since this was drafted:** what counts as a valid turn (ADR-010 §3), and
+what "round" means — nothing, since ADR-007 dropped `rounds`; turns are keyed by
+`(phase_index, side_index)`.

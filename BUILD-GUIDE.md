@@ -76,7 +76,8 @@ response from AFM.
 
 **Scope:** implement the phase loop as data (not branching on round number),
 per-side budget enforcement at the orchestrator level, alternating initiative,
-transcript state keyed by `(round, side)`, and the hard-fail invariant (any
+transcript state keyed by `(phase_index, side_index)` (ADR-010 §4), and the
+turn rules in ADR-010, and the hard-fail invariant (any
 missing phase response aborts the run, nothing partial gets written). Wire in
 the typed event system (`EventType`/dataclass dispatch, per ADR-001) even
 though nothing consumes the events yet — this is the seam the future live

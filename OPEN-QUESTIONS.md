@@ -144,22 +144,18 @@ what `prep_budget` is spent on mechanically — and, per ADR-004, this also
 blocks writing a `prep_budget`-enforcement test (deliberately out of ADR-004's
 Rule 5 table for now; belongs to B4/B6 once the mechanism exists).
 
-### 11. Phase and turn semantics — NARROWED by ADR-007
+### 11. Phase and turn semantics — RESOLVED by ADR-007 and ADR-010
 
 **Resolved (B1-blocking slice):** `format.prep` is dropped — `phases` alone
 decides whether Prep runs. `format.rounds` is dropped — multi-round exchange
 is expressed by repeating a phase name in the list. Exactly two teams are
 required, enforced by B1 validation.
 
-**Still open, B2-only (the orchestration loop, not config parsing):**
-- What the second speaker in a phase sees: the first speaker's turn in the
-  same phase, or only earlier phases.
-- Which phases (if any) run both sides at once. Affects fairness, Hard Rule 4
-  and B0's load.
-- What distinguishes `retort` from `rebuttal`.
-- Where steelmanning happens. Steelman fidelity is scored and is the
-  tiebreaker, but no phase currently asks a side to steelman.
-- **Blocks:** B2 (the loop) only — no longer B1.
+**Resolved by ADR-010 (2026-09-11):** the second speaker sees the first
+speaker's turn in the same phase; no phase runs both sides at once; `retort`
+answers the rebuttal aimed at your case, while `rebuttal` attacks the
+opponent's; steelmanning happens inside each rebuttal, so there's no separate
+steelman phase.
 
 ### 12. Response length in human terms
 
@@ -187,8 +183,9 @@ required, enforced by B1 validation.
   - **Time syntax.** An unquoted `1:30` is a YAML 1.1 base-60 integer, which the
     strict loader rejects (ADR-008). Times need a string form such as `90s` or
     `2min`.
-- **Blocks:** B2 (prompt construction), plus an ADR-007 amendment and B1
-  validation for the new field.
+- **Blocks:** nothing yet. B2 goes ahead with `budget` as a cap only, and the
+  prompts say nothing about length. Adding the field later needs an ADR-007
+  amendment, B1 validation and a change to B2's prompts.
 
 ---
 
@@ -206,10 +203,10 @@ required, enforced by B1 validation.
 | ADR-002, "Hardware" | A separate inference engine for prefill-heavy prep |
 | ADR-002, "Scope discipline" | A source for the ~25% Aragora scope-creep figure — cite or drop |
 | ADR-002, "Language split" | DebateKit's license (a later, separate decision) |
-| ADR-003 | Budget overshoot policy; TCP vs socket; guardrail refusals |
+| ADR-003 | TCP vs socket; how a refusal of the model's own output surfaces |
 | ADR-004 | Coverage tooling |
 | ADR-009 | How `seed` reaches each request (one value or derived per turn), and whether temperature gets a config field. Blocks B3 |
-| ADR-005 | An existing file at the output path; what counts as a valid turn; what "round" means; a human-readable view |
+| ADR-005 | An existing file at the output path, and a human-readable view — both B3, and the old `--force` idea is ruled out by ADR-007 §1 |
 | BUILD-GUIDE B4 | Static corpora only, or live retrieval too |
 | BUILD-GUIDE B6 | Fact-checker inside `debate` or as its own command (see item 4) |
 

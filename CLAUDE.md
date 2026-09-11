@@ -17,18 +17,18 @@ code. See ADR-002 for full scope.
 - `ADR-001`, `ADR-002`, `ADR-003` (AFM via `fm serve`), `ADR-004` (test
   framework), `ADR-006`, `ADR-007` (`run.yaml` schema and CLI invocation),
   `ADR-008` (Python 3.11+, `httpx`, PyYAML), `ADR-009` (backend request and
-  result types) — accepted; together they are the spec.
-- `ADR-005` (transcript format) — **Proposed**, not yet accepted. Don't build on
-  it until it is.
+  result types), `ADR-005` (transcript format), `ADR-010` (turn order, phase
+  meanings, budget tolerance, valid turns) — accepted; together they are the
+  spec.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
   The pair is unmeasured, not ruled out: a quiet-machine B0 rerun comes before
   anything trusts it. **B1 is done** (2026-09-11): config loading and
   validation, the backend seam (ADR-009) and the `openai-compatible` adapter,
-  with its exit gate met, including a live reply from AFM. **Next: B2**, which
-  first needs ADR-005 accepted, OPEN-QUESTIONS item 11 settled, and ADR-003's
-  overshoot policy decided.
+  with its exit gate met, including a live reply from AFM. **B2 is in progress**
+  (the orchestration loop); its blockers were cleared by accepting ADR-005 and
+  ADR-010.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
@@ -78,9 +78,10 @@ against it.
    response from every side, or the run aborts and no file is written to
    `run.yaml`'s `output:` path. No default-to-first-side fallback, no
    `continue`-past-a-failure with just a log line.
-2. **Key all transcript/state by `(round, side)`, never by side alone.**
-   Overwriting per-round state is a real bug we found and are explicitly
-   avoiding.
+2. **Key all transcript/state by `(phase_index, side_index)`, never by side
+   alone.** Overwriting per-round state is a real bug we found and are explicitly
+   avoiding. This rule said `(round, side)` until ADR-007 dropped `rounds`; the
+   intent is unchanged (ADR-010 §4, ADR-005).
 3. **Never blend judge rubric dimensions into one number.** Score argument
    quality, evidence grounding, steelman fidelity, rebuttal effectiveness, and
    clarity independently. A parse failure on any dimension is an error, not a
