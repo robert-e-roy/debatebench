@@ -201,7 +201,7 @@ required, enforced by B1 validation.
 | ADR-002, "Judge design" | Stance-consistency check: a third fast pass, or folded in |
 | ADR-002, "Judge design" | `tasksource/logical-fallacy`: cleared for private validation use (authors' README grants access); redistribution/bundling still ungranted |
 | ADR-002, "Judge design" | Where the 631-speech `debate_speeches` figure came from |
-| ADR-002, "Hardware" → B0 findings | **Where the fact-checker runs.** Its designated offload target, `free`, is the dev machine itself. Options: AFM-scoped per-claim checks (≤ ~4,096 tokens per request including evidence, ADR-003), which may be enough but must be decided, not assumed; a real second machine (none identified); or a small co-resident local model. Blocks B6 |
+| ADR-002, "Hardware" → B0 findings | **Where the fact-checker runs.** Its designated offload target, `free`, is the dev machine itself. Options: AFM-scoped per-claim checks (≤ ~4,096 tokens per request including evidence, ADR-003), which may be enough but must be decided, not assumed. AFM handles one request at a time (ADR-003), so an AFM fact-checker queues behind any AFM debater; whether it runs in parallel with MLX debaters is unmeasured; a real second machine (none identified); or a small co-resident local model. Blocks B6 |
 | ADR-002, "Hardware" → B0 findings | **Does the 8B+24B debater pair fit?** Doubtful and unmeasured, not ruled out. Needs a quiet-machine B0 rerun before anything trusts the pair. Blocks any local run of the intended pairing; no B-session strictly (one model on both sides fits) |
 | ADR-002, "Hardware" | A separate inference engine for prefill-heavy prep |
 | ADR-002, "Scope discipline" | A source for the ~25% Aragora scope-creep figure — cite or drop |

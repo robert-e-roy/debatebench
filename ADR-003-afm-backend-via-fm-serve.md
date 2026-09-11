@@ -93,6 +93,17 @@ The context ceiling is consistent with the 4,096 tokens per session stated in Xc
   That's a signal, not a measurement. AFM is still fine for plumbing, but a dummy
   debate on it may show two sides that agree. Holding an assigned side is worth
   measuring for real candidate models (ADR-002's stance-consistency check).
+- **AFM runs one request at a time.** Measured 2026-09-11, over three trials of two
+  replies of about 165 tokens each:
+  - one after the other took about 8 s in total;
+  - sent at the same time, to one `fm serve` or to two on different ports, they
+    also took about 8 s. One reply finished at about 4 s and the other waited
+    until about 8 s.
+
+  Every `fm serve` reaches the same system model, so extra servers add no
+  throughput. Running both sides at once on AFM gains nothing, and an AFM
+  fact-checker would queue behind AFM debaters. Whether AFM runs in parallel with
+  an MLX model is unmeasured.
 - **Manual setup:** `fm serve` must already be running, like `mlx_lm.server`.
   B7's gate now allows for that. Having the tool start and stop servers itself
   would need a new ADR.
