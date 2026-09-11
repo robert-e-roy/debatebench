@@ -26,9 +26,12 @@ code. See ADR-002 for full scope.
   The pair is unmeasured, not ruled out: a quiet-machine B0 rerun comes before
   anything trusts it. **B1 is done** (2026-09-11): config loading and
   validation, the backend seam (ADR-009) and the `openai-compatible` adapter,
-  with its exit gate met, including a live reply from AFM. **B2 is in progress**
-  (the orchestration loop); its blockers were cleared by accepting ADR-005 and
-  ADR-010.
+  with its exit gate met, including a live reply from AFM. **B2 is done**
+  (2026-09-11): the phase loop, turn checks, the event seam and the in-memory
+  transcript, with a full eight-turn debate run live on AFM and a mid-run server
+  kill confirming the hard-fail invariant. **Next: B3** (`debate` writes the
+  transcript), which needs ADR-005's remaining question decided: what happens
+  when a file already sits at the `output:` path.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.

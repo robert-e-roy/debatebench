@@ -7,6 +7,10 @@ import pytest
 
 CASES = [
     ("debatebench.backend", {"httpx", "yaml"}),
+    ("debatebench.transcript", {"httpx", "yaml"}),
+    ("debatebench.events", {"httpx", "yaml"}),
+    ("debatebench.prompts", {"httpx", "yaml"}),
+    ("debatebench.orchestrator", {"httpx", "yaml"}),
     ("debatebench.config", {"httpx"}),
     ("debatebench.openai_compat", {"yaml"}),
 ]

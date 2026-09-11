@@ -64,6 +64,7 @@ class Side:
 
     index: int
     team: Team
+    team_file: str  # the path as written in run.yaml, which is what a transcript records
     side: Literal["pro", "con"]  # for or against the motion (ADR-007 §7)
     model: str
     base_url: str
@@ -207,6 +208,7 @@ def _side(run_path: Path, entry: Any, index: int, has_prep: bool) -> Side:
     return Side(
         index=index,
         team=load_team(team_path),
+        team_file=team_text,
         side=side,
         model=model,
         base_url=base_url,
