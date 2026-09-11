@@ -161,6 +161,35 @@ required, enforced by B1 validation.
   tiebreaker, but no phase currently asks a side to steelman.
 - **Blocks:** B2 (the loop) only — no longer B1.
 
+### 12. Response length in human terms
+
+- **Where:** ADR-007 §2 (`budget`); B2's prompt construction.
+- **Decided (2026-09-11):** users must be able to set response length in human
+  terms, either as speaking time ("1 minute", "2 minutes") or as a label
+  (`short`, `medium`, `long`), not only as a raw token count.
+- **Why it's needed:** today's `budget` is a ceiling, not a target. A large budget
+  doesn't make a reply longer, because the model writes what the prompt asks for.
+  A small one cuts the reply off mid-sentence, and AFM still reports
+  `finish_reason: stop` (ADR-003). Only a prompt that states the length makes
+  length follow the setting.
+- **Open:**
+  - **Conversion to tokens.** Time becomes words through a speaking rate, and words
+    become tokens at a rate that varies by tokenizer. Which rates, and are they
+    recorded in the transcript so a run can be reproduced?
+  - **Label values.** What `short`, `medium` and `long` mean, and whether they're
+    fixed or configurable.
+  - **Relation to `budget`.** Either the new setting replaces `budget`, or it
+    becomes the target the prompt states while `budget` stays the hard cap. Either
+    way it must resolve to a token count the orchestrator enforces (Hard Rule 5).
+  - **Per-phase lengths.** One length for every phase (as `budget` is now), or a
+    different length per phase, as real formats have (Public Forum: 4, 4, 3 and 2
+    minutes).
+  - **Time syntax.** An unquoted `1:30` is a YAML 1.1 base-60 integer, which the
+    strict loader rejects (ADR-008). Times need a string form such as `90s` or
+    `2min`.
+- **Blocks:** B2 (prompt construction), plus an ADR-007 amendment and B1
+  validation for the new field.
+
 ---
 
 ## Recorded elsewhere — index
