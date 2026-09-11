@@ -2,6 +2,8 @@
 
 import asyncio
 import socket
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -17,6 +19,14 @@ def test_no_argument_is_a_usage_error():
     with pytest.raises(SystemExit) as e:
         main([])
     assert e.value.code == 2
+
+
+def test_console_script_is_installed():
+    # Pins the pyproject entry point, which main()-level tests don't exercise.
+    script = Path(sys.executable).parent / "debate"
+    result = subprocess.run([str(script)], capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "usage: debate" in result.stderr and result.stdout == ""
 
 
 def test_flags_are_rejected(run_dir: Path):
