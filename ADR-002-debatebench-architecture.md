@@ -3,8 +3,9 @@
 **Status:** Accepted
 **Date:** 2026-09-11
 **Supersedes:** nothing. **Depends on:** ADR-001 (orchestration build vs. reuse)
-**Amended:** 2026-09-11 — cross-references, dataset facts and wording corrected; no
-decision changed.
+**Amended:** 2026-09-11 — cross-references, dataset facts and wording corrected. B0's
+hardware findings added to "Hardware", withdrawing the `free` offload option. An
+offline requirement for model servers added to "Backend abstraction".
 
 ## What this is
 
@@ -154,6 +155,15 @@ debate any good," not "does the pipe work."
 `asyncio.to_thread` — observed as a real, unnoticed bug (fake concurrency) in all
 four of `aragora-debate`'s cloud-provider agents (see ADR-001).
 
+**Model servers run offline — a requirement, not an option.** Every model server
+runs with `HF_HUB_OFFLINE=1`, and anything else that fetches from the Hugging
+Face Hub (such as `datasets` for `sources`, later) uses its equivalent offline
+setting. B0 found `mlx_lm.server` contacts huggingface.co on every start to check
+the model revision. That contradicts the offline-capable, privacy-first
+positioning this tool is built around. In offline mode, already-downloaded
+models resolve from the local cache (verified 2026-09-11). Downloading a model is
+a separate, explicit step.
+
 ## Judge design
 
 Five independently-scored rubric dimensions, never blended into one number:
@@ -237,10 +247,42 @@ compute-contention risk, not just a capacity question — Apple Silicon's GPU an
 memory bandwidth are shared, so three "simultaneous" models likely serialize
 rather than truly parallelize. Options on the table, not yet decided: offload the
 judge/fact-checker to a remote host already running inference (`free`, via
-Ollama), or load/unload models per turn rather than keeping all three resident.
+Ollama) — **withdrawn by B0, see below** — or load/unload models per turn rather
+than keeping all three resident.
 **Needs its own M0-style hardware probe (real peak memory + turn latency
 measurement) before any assumption here is trusted.** ("M0" is the MLXProbe
 session-M0 throwaway probe; results at `~/Projects/MLXProbe/RESULTS.md`.)
+
+### B0 findings (2026-09-11)
+
+B0 measured this on the dev machine (`RESULTS.md`). What it changes here:
+
+- **`free` is not a separate host: it's the dev machine itself.** The "offload
+  to `free`" option above offloads nothing, so it's withdrawn unless a genuinely
+  separate host is named. This isn't a minor correction. It invalidates a
+  specific option this ADR proposed, and it would have been silently
+  load-bearing for the rest of the build if nobody had tried to reach the host.
+  Two earlier reachability checks during B0 got it wrong before it was
+  confirmed.
+- **The judge never needs to be co-resident.** The judge runs once, post-hoc,
+  over the finished transcript (see "Fact-checking is separate from judging"),
+  so it can load after the debaters unload. That decision now does real
+  load-bearing work: the "three models at once" concern applies only to a
+  fact-checker that has to run live. This follows from the design; B0 didn't
+  measure it.
+- **The fact-checker is the one genuinely open hardware problem**, and its
+  designated offload target doesn't exist. Either it stays scoped to AFM-sized
+  checks, capped at about 4,096 tokens per request (ADR-003), which may be enough
+  for a single claim plus its evidence; or a real second machine has to be
+  found. That must be decided explicitly, not assumed (tracked in
+  OPEN-QUESTIONS).
+- **The debater pair is doubtful and unmeasured, not ruled out.**
+  Mistral-Small-24B alone tripped B0's safety cut-off (critical memory pressure
+  alongside normal desktop use) before the pair and concurrency stages ran. A
+  quiet-machine rerun comes before anything downstream trusts the pair.
+- **Load/unload per turn looks expensive at long contexts**, but that's inferred:
+  a cold 4,000-token prompt took about 25 s on the 8B model, and a full swap cycle
+  wasn't measured.
 
 Prep and argument phases may warrant different inference engines — MLX
 generally wins decode-heavy short-turn work, but long-document Prep ingestion is

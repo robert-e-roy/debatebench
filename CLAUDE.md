@@ -23,8 +23,9 @@ code. See ADR-002 for full scope.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
-  **Next: B1.** Its config questions are settled (ADR-007) and its runtime
-  baseline is fixed (ADR-008).
+  The pair is unmeasured, not ruled out: a quiet-machine B0 rerun comes before
+  anything trusts it. **Next: B1.** Its config questions are settled (ADR-007)
+  and its runtime baseline is fixed (ADR-008).
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
@@ -126,7 +127,9 @@ build separate bespoke adapters per provider unless a provider genuinely can't
 fit that shape.
 
 The adapter uses `httpx` (ADR-008). Set explicit timeouts: httpx's 5-second
-default kills real turns. AFM goes through the same adapter via `fm serve`
+default kills real turns. **Model servers must run with `HF_HUB_OFFLINE=1`**
+(ADR-002, "Backend abstraction"). Otherwise `mlx_lm.server` contacts
+huggingface.co on every start. AFM goes through the same adapter via `fm serve`
 (ADR-003), and its measured quirks bind the adapter:
 - send `"stream": false` explicitly;
 - send budgets as `max_completion_tokens`, never `max_tokens`;

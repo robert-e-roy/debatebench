@@ -214,7 +214,9 @@ def launch(name, cmd, ready_url, timeout_s=900):
     LOGS.mkdir(parents=True, exist_ok=True)
     logf = open(LOGS / f"{name}.log", "ab")
     t0 = time.time()
-    proc = subprocess.Popen(cmd, stdout=logf, stderr=subprocess.STDOUT, start_new_session=True)
+    # HF_HUB_OFFLINE: required by ADR-002; mlx_lm.server otherwise contacts huggingface.co on every start.
+    proc = subprocess.Popen(cmd, stdout=logf, stderr=subprocess.STDOUT, start_new_session=True,
+                            env={**os.environ, "HF_HUB_OFFLINE": "1"})
     RUNNING[name] = proc
     while not http_ok(ready_url):
         check_abort()

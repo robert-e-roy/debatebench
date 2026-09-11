@@ -111,8 +111,9 @@ server was killed and memory recovered within a second.
   +38 s. The cause of that gap wasn't identified. Swapping models inside one
   long-running server might avoid it; unmeasured.
 - **Every `mlx_lm.server` start contacts huggingface.co** to check the model
-  revision (visible in the log). For a privacy-first, offline-capable tool, runs
-  should set `HF_HUB_OFFLINE=1`.
+  revision (visible in the log). For a privacy-first, offline-capable tool, that's
+  not acceptable. `HF_HUB_OFFLINE=1` is now a requirement (ADR-002, "Backend
+  abstraction"), and cached models resolve fine with it.
 
 ## Caveats
 
