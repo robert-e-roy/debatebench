@@ -36,6 +36,17 @@ on whether Prep ran, which is what lets B5 genuinely run in parallel with
 B4. **This makes B5 buildable, not trustworthy — item 6 below is untouched
 and still fully blocks B7.**
 
+**ADR-015 settled what B5 hit on contact:** `--fact-check` defaults to off
+until B6 and asking for it is an error (a score file never claims a check that
+didn't run); `--base-url` is required, with no hidden default; the hit-ledger's
+statuses are ADR-002's four; the reply is JSON with a fence and a preamble
+tolerated and nothing else; the judge sees both sides' prep evidence, since
+privacy binds debaters not judges; `prep_grounded` is read off the transcript,
+never off the reply; the score file rotates like a transcript; and an absent
+`hit_ledger` reads as empty with `hit_ledger_reported: false`, because Hard
+Rule 3 forbids a *score* failing to parse, not a missing diagnostic extra.
+**Built and live-tested 2026-09-12** against Qwen3-8B on `mlx_lm.server`.
+
 ### 3. Budget semantics — RESOLVED by ADR-007
 
 Both, as two fields: `budget` (per-phase cap, completion tokens) and
@@ -207,8 +218,21 @@ a side's argument phases, not per-phase, for v1.
     models, and record which model is which.
 - **Also undecided:** whether the transcript keeps the reasoning text (v1 has no
   field, so it's dropped today), and whether the judge should ever see it.
+- **Observed 2026-09-12 (B5), Qwen3-8B judging through `mlx_lm.server`:** the
+  same problem now bites `judge --budget`, not just a debater's `budget`.
+  - 3,000 tokens was enough to score a four-turn transcript, and was entirely
+    consumed by thinking on a *prepped* one, whose evidence passages make the
+    prompt much longer. The run failed with "all reasoning and no answer".
+  - 6,000 scored every transcript, prepped included. B5's live tests default
+    there for that reason.
+  - Stating one requirement a second time (system message *and* user message)
+    pushed it from complete JSON at 3,000 to nothing but reasoning at 6,000.
+    On a reasoning model, extra instruction load buys more thinking, not more
+    compliance — recorded in ADR-015 §8 so it isn't retried.
+  - **Implication:** `judge --budget` needs a documented floor for reasoning
+    models, or the same per-team thinking switch this item already weighs.
 - **Blocks:** any fair comparison between a reasoning and a non-reasoning model.
-  Nothing in B4–B6 strictly.
+  Nothing in B4–B6 strictly, but it sets `judge --budget` in practice.
 
 ---
 

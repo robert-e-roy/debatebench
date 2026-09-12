@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 debate = "debatebench.cli:main"
+judge = "debatebench.judge_cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8"]

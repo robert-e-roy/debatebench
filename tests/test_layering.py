@@ -13,6 +13,7 @@ CASES = [
     ("debatebench.orchestrator", {"httpx", "yaml"}),
     # No dataset library either: retrieval reads plain JSONL (ADR-012 §5).
     ("debatebench.retrieval", {"httpx", "yaml", "datasets", "huggingface_hub", "pandas"}),
+    ("debatebench.judging", {"httpx", "yaml"}),  # scoring is pure; only the CLI talks HTTP
     ("debatebench.config", {"httpx"}),
     ("debatebench.openai_compat", {"yaml"}),
 ]

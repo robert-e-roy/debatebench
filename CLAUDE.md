@@ -21,9 +21,11 @@ code. See ADR-002 for full scope.
   meanings, budget tolerance, valid turns), `ADR-011` (response length,
   `short`/`medium`/`long`), `ADR-012` (Prep retrieval mechanism), `ADR-013`
   (judge scoring aggregation, winner determination, score-file format),
-  `ADR-014` (corpus format, prep privacy, empty retrieval) — accepted;
-  together they are the spec. **Not yet implemented: ADR-011** — `length` is
-  accepted but no code reads it; the prompts still state no target length.
+  `ADR-014` (corpus format, prep privacy, empty retrieval), `ADR-015` (judge
+  CLI details: fact-check default, `--base-url`, reading the model's reply) —
+  accepted; together they are the spec. **Not yet implemented: ADR-011** —
+  `length` is accepted but no code reads it; the prompts still state no target
+  length.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
@@ -42,9 +44,15 @@ code. See ADR-002 for full scope.
   spends `prep_budget` on one synthesis call per side, and records the raw
   passages as that turn's `evidence`. Its exit gate was met live on AFM — the
   pro opening cited two invented place names that exist only in its own prep
-  evidence, with the passage ids. **Next: B5 (judge)**, specified by ADR-013;
-  its scores aren't trustworthy until open question 6 (validating a judge
-  against human ratings) is settled, which also still blocks B7.
+  evidence, with the passage ids. **B5 is done** (2026-09-12): `judge` scores a
+  transcript in one call, five dimensions per side, with the total and winner
+  computed outside the model and always printed beside every score that made
+  them. Its exit gate was met live on Qwen3-8B via `mlx_lm.server` — a lopsided
+  debate (91 against 32), an evenly matched one, and transcripts with and
+  without prep. **Its scores are not yet trustworthy**: open question 6
+  (correlating a judge against human ratings) is untouched and still blocks B7.
+  **Next: B6 (fact-checker)**, which needs open question 4 (where the
+  fact-checker lives) settled first.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
@@ -144,8 +152,10 @@ Load YAML only through the package's strict loader, never plain `safe_load`
 
 `debate` takes exactly one argument, the path to a `run.yaml`. No other flags
 — see ADR-007. `judge` takes a transcript path plus flags: `--model`,
-`--budget` and `--output` (all required), an optional `--base-url`, and
-`--fact-check` / `--no-fact-check` (default on). The asymmetry is deliberate, not an oversight
+`--base-url`, `--budget` and `--output` (all required — `--base-url` has no
+default, so a score file always says which server produced it), and
+`--fact-check` / `--no-fact-check` (**default off until B6**, and asking for
+`--fact-check` is an error while nothing can honour it — ADR-015 §1). The asymmetry is deliberate, not an oversight
 (ADR-007, "CLI invocation").
 
 ## Prep (ADR-012, ADR-014)
@@ -202,6 +212,29 @@ Models (AFM) or another very small/instant model.** Don't reach for a real MLX
 candidate model while iterating on plumbing, config parsing, or output format —
 save real models for once the harness is proven and the actual question is
 debate quality, not whether the pipe works.
+
+## Judge (ADR-013, ADR-015)
+
+One backend call per judging run, given the whole transcript, returning five
+independently-scored dimensions per side — argument quality (30), evidence
+grounding (25), steelman fidelity (20), rebuttal effectiveness (15), clarity
+(10). **The model never returns a total**: the sum and the winner are computed
+here and are always written beside every score that produced them (Hard Rule
+3). Winner is higher total, then steelman fidelity, then an explicit `draw`.
+
+`prep_grounded` is read off the transcript, never off the reply — it says
+whether claims were checkable against recorded prep evidence, so an unverified
+score can't look verified. The judge sees both sides' evidence: prep privacy
+binds debaters, not judges. An absent `hit_ledger` reads as empty and records
+`hit_ledger_reported: false`; a ledger that is present is validated strictly
+(statuses: open, conceded, rebutted, dodged). The reply must be JSON — a code
+fence and a preamble are tolerated, nothing else, and there is no retry, because
+a model that can't hold the format is a finding about that model.
+
+**Budgets bite here.** A reasoning judge spends the budget thinking: 3,000
+tokens scored a four-turn transcript but was entirely consumed by thinking on a
+prepped one; 6,000 scored everything (OPEN-QUESTIONS 13). The score file
+rotates to `<output>.1` like a transcript.
 
 ## Explicitly out of scope — do not add without a new ADR
 

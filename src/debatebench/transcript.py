@@ -150,13 +150,18 @@ def _turn_dict(turn: Turn) -> dict:
 
 
 def write_transcript(transcript: Transcript, path: Path) -> Path | None:
-    """Write the transcript to ``path``, rotating any file already there to ``<path>.1``.
+    """Write the transcript to ``path``, rotating any file already there to ``<path>.1``."""
+    return write_json(as_json_dict(transcript), path)
+
+
+def write_json(document: dict, path: Path) -> Path | None:
+    """Write one JSON document, rotating any file already there to ``<path>.1``.
 
     The new file is written in full first, so a failure while serializing leaves
     everything untouched. Returns the backup's path, or None if there was no file
-    to rotate (ADR-005, "Writing").
+    to rotate (ADR-005, "Writing"; ADR-015 §7 applies the same rule to score files).
     """
-    text = json.dumps(as_json_dict(transcript), allow_nan=False, ensure_ascii=False, indent=2)
+    text = json.dumps(document, allow_nan=False, ensure_ascii=False, indent=2)
     handle, temporary = tempfile.mkstemp(dir=path.parent, prefix=f"{path.name}.", suffix=".tmp")
     try:
         with os.fdopen(handle, "w", encoding="utf-8") as file:
@@ -172,6 +177,107 @@ def write_transcript(transcript: Transcript, path: Path) -> Path | None:
     except BaseException:
         Path(temporary).unlink(missing_ok=True)
         raise
+
+
+class TranscriptError(Exception):
+    """A transcript file that can't be read as the document ADR-005 defines."""
+
+
+def load_transcript(path: Path) -> Transcript:
+    """Read a written transcript back. This document is judge's only interface (ADR-005)."""
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as e:
+        raise TranscriptError(f"{path}: cannot be read: {e}") from e
+    except ValueError as e:
+        raise TranscriptError(f"{path}: not valid JSON: {e}") from e
+    if not isinstance(document, dict):
+        raise TranscriptError(f"{path}: the top level must be a JSON object")
+
+    version = document.get("schema_version")
+    if version != SCHEMA_VERSION:
+        raise TranscriptError(
+            f"{path}: schema_version is {version!r}, and this build reads {SCHEMA_VERSION}"
+        )
+
+    def need(holder: dict, key: str, kind: type, where: str):
+        value = holder.get(key)
+        if not isinstance(value, kind) or isinstance(value, bool) and kind is int:
+            raise TranscriptError(f"{path}: {where}{key} is {value!r}, not {kind.__name__}")
+        return value
+
+    run = need(document, "run", dict, "")
+    sides = []
+    for index, side in enumerate(need(run, "sides", list, "run.")):
+        where = f"run.sides[{index}]."
+        if not isinstance(side, dict):
+            raise TranscriptError(f"{path}: run.sides[{index}] is not an object")
+        team = need(side, "team", dict, where)
+        sides.append(
+            SideSnapshot(
+                index=need(side, "index", int, where),
+                team_file=need(side, "team_file", str, where),
+                team=TeamSnapshot(
+                    id=need(team, "id", str, f"{where}team."),
+                    name=need(team, "name", str, f"{where}team."),
+                    voice=need(team, "voice", str, f"{where}team."),
+                    stance=need(team, "stance", str, f"{where}team."),
+                    values=tuple(team.get("values") or ()),
+                    corpus=team.get("corpus"),
+                ),
+                side=need(side, "side", str, where),
+                model=need(side, "model", str, where),
+                base_url=need(side, "base_url", str, where),
+                budget=need(side, "budget", int, where),
+                prep_budget=side.get("prep_budget"),
+            )
+        )
+
+    turns = []
+    for index, turn in enumerate(need(document, "turns", list, "")):
+        where = f"turns[{index}]."
+        if not isinstance(turn, dict):
+            raise TranscriptError(f"{path}: turns[{index}] is not an object")
+        usage = need(turn, "usage", dict, where)
+        turns.append(
+            Turn(
+                phase_index=need(turn, "phase_index", int, where),
+                phase=need(turn, "phase", str, where),
+                side_index=need(turn, "side_index", int, where),
+                order=need(turn, "order", int, where),
+                text=need(turn, "text", str, where),
+                usage=Usage(
+                    prompt_tokens=need(usage, "prompt_tokens", int, f"{where}usage."),
+                    completion_tokens=need(usage, "completion_tokens", int, f"{where}usage."),
+                ),
+                budget=need(turn, "budget", int, where),
+                hit_budget=bool(turn.get("hit_budget")),
+                finish_reason=need(turn, "finish_reason", str, where),
+                latency_ms=need(turn, "latency_ms", int, where),
+                started_at=need(turn, "started_at", str, where),
+                evidence=tuple(
+                    Evidence(id=item["id"], source=item["source"], text=item["text"])
+                    for item in turn.get("evidence", ())
+                ),
+            )
+        )
+    if not turns:
+        raise TranscriptError(f"{path}: the transcript has no turns, so there is nothing to judge")
+
+    return Transcript(
+        run=RunSnapshot(
+            topic=need(run, "topic", str, "run."),
+            seed=need(run, "seed", int, "run."),
+            budget_tolerance=need(run, "budget_tolerance", int, "run."),
+            phases=tuple(need(run, "phases", list, "run.")),
+            sides=tuple(sides),
+        ),
+        turns=tuple(turns),
+        started_at=need(document, "started_at", str, ""),
+        finished_at=need(document, "finished_at", str, ""),
+        schema_version=version,
+        debatebench_version=str(document.get("debatebench_version", "")),
+    )
 
 
 def snapshot(config: RunConfig, budget_tolerance: int) -> RunSnapshot:
