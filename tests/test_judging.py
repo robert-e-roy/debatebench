@@ -318,7 +318,7 @@ def test_the_score_file_is_the_adr_013_document(run_dir: Path, prepared_sources)
     assert write_scores(sheet, output) is None  # nothing to rotate
     document = json.loads(output.read_text(encoding="utf-8"))
 
-    assert document["schema_version"] == 1
+    assert document["schema_version"] == 2  # 2 since ADR-015 added the fact_check section
     assert document["debatebench_version"]
     assert document["judged_at"].endswith("Z")
     assert document["judge_model"] == "judge-model"

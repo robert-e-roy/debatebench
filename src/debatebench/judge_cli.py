@@ -13,7 +13,17 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from .judging import JudgeError, ScoreSheet, score_debate, write_scores
+from collections import Counter
+from dataclasses import replace
+
+from .judging import (
+    VERDICTS,
+    JudgeError,
+    ScoreSheet,
+    fact_check_debate,
+    score_debate,
+    write_scores,
+)
 from .openai_compat import OpenAICompatibleBackend, open_client
 from .transcript import Transcript, TranscriptError, load_transcript
 
@@ -28,19 +38,27 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--model", required=True, help="the judging model, ideally neither debater")
     parser.add_argument("--base-url", required=True, help="the judging model's server (ADR-017)")
     parser.add_argument(
-        "--budget", required=True, type=int, help="completion-token cap for the one scoring call"
+        "--budget",
+        required=True,
+        type=int,
+        help="completion-token cap, applied to the scoring call and to the fact-check on its own",
     )
     parser.add_argument("--output", required=True, help="where to write the score file")
-    parser.add_argument("--fact-check", action="store_true", help="not built yet; arrives in B6")
     parser.add_argument(
-        "--no-fact-check", action="store_true", help="the default until B6 ships (ADR-017 §1)"
+        "--fact-check",
+        dest="fact_check",
+        action="store_true",
+        default=True,
+        help="audit each claim against the recorded evidence (the default; ADR-015)",
+    )
+    parser.add_argument(
+        "--no-fact-check",
+        dest="fact_check",
+        action="store_false",
+        help="score only, skipping the second call",
     )
     args = parser.parse_args(argv)
 
-    # Honouring --fact-check would mean writing that a check ran when none did (ADR-017 §1).
-    if args.fact_check:
-        _log("fact-checking arrives in B6; until then judge runs with --no-fact-check")
-        return 1
     if args.budget < 1:
         _log(f"--budget must be at least 1, got {args.budget}")
         return 1
@@ -77,11 +95,20 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 async def _score(transcript: Transcript, args: argparse.Namespace) -> ScoreSheet:
+    """The scoring call, then the fact-check call when it's on (ADR-015 §3)."""
     async with open_client() as client:
         backend = OpenAICompatibleBackend(client, args.base_url, args.model)
-        return await score_debate(
-            transcript, backend, model=args.model, budget=args.budget, fact_check_enabled=False
+        sheet = await score_debate(
+            transcript,
+            backend,
+            model=args.model,
+            budget=args.budget,
+            fact_check_enabled=args.fact_check,
         )
+        if not args.fact_check:
+            return sheet
+        checked = await fact_check_debate(transcript, backend, budget=args.budget)
+        return replace(sheet, fact_check=checked)
 
 
 def _report(sheet: ScoreSheet) -> None:
@@ -92,6 +119,12 @@ def _report(sheet: ScoreSheet) -> None:
             _log(f"    {dimension.name}: {dimension.score} of {dimension.max}")
     verdict = "a draw" if sheet.winner == "draw" else f"{sheet.winner} wins"
     _log(f"{verdict} ({sheet.winner_reason.replace('_', ' ')})")
+    if sheet.fact_check is not None:
+        counts = Counter(claim.verdict for claim in sheet.fact_check.claims)
+        tally = ", ".join(f"{counts[name]} {name}" for name in VERDICTS if counts[name])
+        _log(f"fact-check: {len(sheet.fact_check.claims)} claims — {tally or 'none found'}")
+        if sheet.fact_check.note:
+            _log(f"    {sheet.fact_check.note}")
 
 
 def _log(message: str) -> None:

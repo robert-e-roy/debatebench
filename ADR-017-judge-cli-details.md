@@ -28,6 +28,12 @@ while nothing ran — was rejected outright. A score file that claims a check
 that never happened is the unearned confidence this whole project is built
 against. **B6 flips the default back to on** and deletes the error.
 
+**Amended 2026-09-12 — B6 shipped.** The fact-check pass now exists inside
+`judge` (ADR-015), so the default is on again and the explicit-flag error is
+gone. This section stands as the record of the interim, not as current
+behaviour: what it actually fixed is that no score file ever claimed a check
+that hadn't run.
+
 ### 2. `--base-url` is **required**
 
 ADR-007 §1 called it optional and never said what it would default to. It is

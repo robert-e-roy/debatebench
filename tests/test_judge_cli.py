@@ -11,6 +11,7 @@ from debatebench import judge_cli
 from debatebench.judge_cli import main
 from debatebench.transcript import write_transcript
 from fakes import FakeBackend, reply
+from test_fact_check import claim, claims_reply
 from test_judging import debated, judge_reply, side
 
 
@@ -25,11 +26,12 @@ def transcript_file(run_dir: Path) -> Path:
 def fake_judge(monkeypatch):
     """Answer the one scoring call without a server."""
 
-    def install(text: str) -> list[FakeBackend]:
+    def install(*texts: str) -> list[FakeBackend]:
+        """One backend answers both calls, so script the scoring reply then the audit."""
         made: list[FakeBackend] = []
 
         def build(client, base_url, model):
-            made.append(FakeBackend(reply(text, completion_tokens=400)))
+            made.append(FakeBackend(*[reply(t, completion_tokens=400) for t in texts]))
             return made[-1]
 
         monkeypatch.setattr(judge_cli, "OpenAICompatibleBackend", build)
@@ -38,10 +40,12 @@ def fake_judge(monkeypatch):
     return install
 
 
-def run(transcript: Path, output: Path, *extra: str) -> int:
+def run(transcript: Path, output: Path, *extra: str, fact_check: bool = False) -> int:
+    # Most of these tests are about scoring, so they skip the second call (ADR-015 §3).
     return main([
         str(transcript), "--model", "judge-model", "--base-url", "http://127.0.0.1:9/v1",
-        "--budget", "4000", "--output", str(output), *extra,
+        "--budget", "4000", "--output", str(output),
+        "--fact-check" if fact_check else "--no-fact-check", *extra,
     ])
 
 
@@ -82,18 +86,33 @@ def test_base_url_has_no_default(transcript_file: Path, tmp_path: Path, capfd):
     assert "--base-url" in capfd.readouterr().err
 
 
-def test_asking_for_a_fact_check_is_an_error(transcript_file: Path, run_dir: Path, capfd):
-    # ADR-017 §1: nothing can fact-check until B6, so it says so instead of pretending.
-    assert run(transcript_file, run_dir / "score.json", "--fact-check") == 1
-    out, err = capfd.readouterr()
-    assert "fact-checking arrives in B6" in err and out == ""
-    assert not (run_dir / "score.json").exists()
+def test_the_fact_check_runs_by_default(transcript_file: Path, run_dir: Path, fake_judge, capfd):
+    # ADR-015 §1: on by default, as a second call after scoring.
+    made = fake_judge(judge_reply(side(0), side(1)), claims_reply(claim(verdict="unsupported")))
+    output = run_dir / "score.json"
+
+    assert main([
+        str(transcript_file), "--model", "judge-model", "--base-url", "http://127.0.0.1:9/v1",
+        "--budget", "4000", "--output", str(output),
+    ]) == 0
+
+    document = json.loads(output.read_text(encoding="utf-8"))
+    assert document["fact_check_enabled"] is True
+    assert document["fact_check"]["checked_against"] == "recorded_evidence"
+    assert len(made[0].requests) == 2  # scoring, then the audit
+    assert "fact-check: 1 claims" in capfd.readouterr().err
 
 
-def test_no_fact_check_is_accepted(transcript_file: Path, run_dir: Path, fake_judge, capfd):
-    fake_judge(judge_reply(side(0), side(1)))
-    assert run(transcript_file, run_dir / "score.json", "--no-fact-check") == 0
-    assert json.loads((run_dir / "score.json").read_text())["fact_check_enabled"] is False
+def test_no_fact_check_skips_the_second_call(
+    transcript_file: Path, run_dir: Path, fake_judge, capfd
+):
+    made = fake_judge(judge_reply(side(0), side(1)))
+    assert run(transcript_file, run_dir / "score.json") == 0
+
+    document = json.loads((run_dir / "score.json").read_text())
+    assert document["fact_check_enabled"] is False
+    assert "fact_check" not in document  # absent, not an empty section (ADR-015 §4)
+    assert len(made[0].requests) == 1
 
 
 def test_a_budget_below_one_is_rejected(transcript_file: Path, run_dir: Path, capfd):

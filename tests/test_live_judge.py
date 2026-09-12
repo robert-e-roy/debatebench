@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from debatebench.judge_cli import main
+from debatebench.judging import VERDICTS
 from debatebench.orchestrator import run_debate
 from debatebench.transcript import write_transcript
 from fakes import FakeBackend, reply
@@ -70,10 +71,12 @@ def server():
     _reachable()
 
 
-def _judge(transcript_path: Path, output: Path) -> int:
+def _judge(transcript_path: Path, output: Path, *, fact_check: bool = False) -> int:
+    # The scoring tests skip the audit, so each exercises one call (ADR-015 §3).
     return main([
         str(transcript_path), "--model", MODEL, "--base-url", BASE_URL,
         "--budget", str(BUDGET), "--output", str(output),
+        "--fact-check" if fact_check else "--no-fact-check",
     ])
 
 
@@ -164,3 +167,64 @@ def test_a_prepped_debate_is_scored_as_grounded(run_dir: Path, prepared_sources,
 
     for entry in document["sides"]:
         assert entry["dimensions"]["evidence_grounding"]["prep_grounded"] is True
+
+
+# --- B6's gate: the fact-check pass against a real model (ADR-015) -----------
+
+# Three claims chosen against the fixture pool: am-1 records Brindlewick's 14%
+# on the pro side, am-7 records that rural drivers have no substitute on the con
+# side, and the third is an opinion no passage can bear on.
+PRO_OPENING = (
+    "Brindlewick cut household emissions by 14 percent in two years after adopting a "
+    "carbon tax. Rural drivers have plenty of alternatives to driving, so the price "
+    "signal reaches them too. This is the most important moral question of our time."
+)
+CON_OPENING = (
+    "A carbon tax is regressive before any rebate arrives, and the households least able "
+    "to absorb it pay first."
+)
+
+
+def test_the_fact_check_audits_claims_against_the_record(
+    run_dir: Path, prepared_sources, capfd
+):
+    config, transcript, _ = prep_debate(
+        run_dir,
+        ("prep", "opening"),
+        backends=[
+            FakeBackend(reply("Pro prep notes.", completion_tokens=40),
+                        reply(PRO_OPENING, completion_tokens=90)),
+            FakeBackend(reply("Con prep notes.", completion_tokens=40),
+                        reply(CON_OPENING, completion_tokens=60)),
+        ],
+    )
+    write_transcript(transcript, config.output)
+    output = run_dir / "score.json"
+
+    assert _judge(config.output, output, fact_check=True) == 0, capfd.readouterr().err
+    document = json.loads(output.read_text(encoding="utf-8"))
+    audit = document["fact_check"]
+    recorded = {item["id"] for turn in document.get("turns", []) for item in turn.get("evidence", [])}
+
+    with capfd.disabled():
+        print(f"\nchecked against: {audit['checked_against']}")
+        for entry in audit["claims"]:
+            print(f"  [{entry['verdict']:>14}] {entry['claim'][:80]} {entry['evidence_ids']}")
+
+    assert audit["checked_against"] == "recorded_evidence"
+    assert audit["claims"], "the audit found no claims at all"
+    assert all(entry["verdict"] in VERDICTS for entry in audit["claims"])
+
+    verdicts = {entry["verdict"] for entry in audit["claims"]}
+    cited = {i for entry in audit["claims"] for i in entry["evidence_ids"]}
+    # Every id survived parsing, so none was invented; this pins that in the gate too.
+    assert not cited - _transcript_evidence_ids(config.output)
+    assert "supported" in verdicts, "nothing was traced to a passage that backs it"
+    # BUILD-GUIDE B6's second check: the finding prep_grounded can never produce.
+    assert "contradicted" in verdicts, "the opponent's evidence never contradicted anything"
+    assert "not_checkable" in verdicts, "the opinion was not recognised as one"
+
+
+def _transcript_evidence_ids(path: Path) -> set[str]:
+    document = json.loads(path.read_text(encoding="utf-8"))
+    return {item["id"] for turn in document["turns"] for item in turn.get("evidence", [])}

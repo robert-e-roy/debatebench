@@ -9,16 +9,30 @@ that went into them. Standard library only (ADR-008).
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
 from .backend import Backend, BackendError, GenerationRequest, Message
 from .transcript import Transcript, package_version, utc_now, write_json
 
-__all__ = ["JudgeError", "ScoreSheet", "score_debate", "write_scores"]
+__all__ = [
+    "Claim",
+    "FactCheck",
+    "JudgeError",
+    "ScoreSheet",
+    "fact_check_debate",
+    "score_debate",
+    "write_scores",
+]
 
-SCORE_SCHEMA_VERSION = 1
+# 2 adds the optional fact_check section (ADR-015 §4).
+SCORE_SCHEMA_VERSION = 2
+
+# What a fact-check verdict may be (ADR-015 §2). Checked against the record —
+# both sides' evidence and turns — never against the model's own knowledge.
+VERDICTS = ("supported", "contradicted", "unsupported", "not_checkable")
+CHECKED_AGAINST = "recorded_evidence"
 
 # The rubric (ADR-002, "Judge design"). The weights are each dimension's maximum,
 # so the weighting is the scale itself and there is nothing else to blend.
@@ -60,6 +74,24 @@ class DimensionScore:
 
 
 @dataclass(frozen=True)
+class Claim:
+    """One factual claim a turn made, and how the record bears on it (ADR-015 §2)."""
+
+    phase_index: int
+    side_index: int
+    claim: str
+    verdict: str
+    evidence_ids: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class FactCheck:
+    checked_against: str  # always CHECKED_AGAINST in v1: the record, never the world
+    claims: tuple[Claim, ...]
+    note: str | None = None  # why every verdict is not_checkable, when that happens
+
+
+@dataclass(frozen=True)
 class SideScore:
     side_index: int
     side: str
@@ -78,6 +110,7 @@ class ScoreSheet:
     winner_reason: str
     schema_version: int = SCORE_SCHEMA_VERSION
     debatebench_version: str = ""
+    fact_check: FactCheck | None = None  # absent, not empty, when disabled (ADR-015 §4)
 
 
 async def score_debate(
@@ -351,6 +384,168 @@ def _json_object(text: str, *, truncated: bool) -> dict:
     return payload
 
 
+# --- the fact-check pass (ADR-015) ------------------------------------------
+
+
+_NO_EVIDENCE_NOTE = (
+    "this transcript has no prep evidence, so nothing was recorded to check a claim "
+    "against; every factual claim is not_checkable rather than unsupported"
+)
+
+
+async def fact_check_debate(transcript: Transcript, backend: Backend, *, budget: int) -> FactCheck:
+    """The second call: each turn's factual claims, judged against the record (ADR-015 §3).
+
+    Never against the model's own knowledge — that is used only to tell a factual
+    claim from an opinion. A transcript with no recorded evidence still gets its
+    claims listed, all ``not_checkable``, with a note saying why (ADR-015 §2).
+    """
+    known = _evidence_ids(transcript)
+    request = build_fact_check_request(transcript, budget)
+    try:
+        result = await backend.generate(request)
+    except BackendError as e:
+        raise JudgeError(str(e)) from e
+    if result.completion_tokens > budget + BUDGET_TOLERANCE:
+        raise JudgeError(
+            f"the fact-check returned {result.completion_tokens} completion tokens for a "
+            f"budget of {budget}, over the {BUDGET_TOLERANCE}-token tolerance (Hard Rule 5)"
+        )
+
+    claims = parse_claims(
+        result.text, transcript, known, truncated=result.completion_tokens >= budget
+    )
+    if not known:
+        # Nothing recorded to check against: say so once, rather than per claim.
+        claims = tuple(replace(claim, verdict="not_checkable", evidence_ids=()) for claim in claims)
+        return FactCheck(CHECKED_AGAINST, claims, note=_NO_EVIDENCE_NOTE)
+    return FactCheck(CHECKED_AGAINST, claims)
+
+
+def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationRequest:
+    known = sorted(_evidence_ids(transcript))
+    available = (
+        f"The recorded passage ids you may cite: {', '.join(known)}."
+        if known
+        else "Nothing was recorded to check against: this debate had no prep phase."
+    )
+    system = "\n".join([
+        "You are auditing a finished debate. For each argument turn, list every "
+        "assertion it makes, then give each one a verdict. Filter nothing out: an "
+        "assertion that turns out not to be factual is still listed, and its verdict "
+        "is not_checkable.",
+        "",
+        "Judge each assertion ONLY against what the transcript records: the passages "
+        "each side retrieved, and what either side said. Never treat your own "
+        "knowledge as proof that a claim is true or false; use it only to tell a "
+        "factual claim from an opinion.",
+        "",
+        "Before settling on unsupported, read every listed passage from BOTH sides. A "
+        "claim one side makes is often contradicted by a passage the other side "
+        "retrieved, and catching that is the point of this audit.",
+        "",
+        "- supported: a recorded passage backs the claim. Cite its id.",
+        "- contradicted: a recorded passage contradicts it, including one the "
+        "opponent retrieved. Cite its id.",
+        "- unsupported: it is a factual claim, but nothing recorded bears on it "
+        "either way. Cite nothing.",
+        "- not_checkable: an opinion, a prediction or a value judgement rather than a "
+        "factual claim. Cite nothing.",
+        "",
+        available,
+        "",
+        "Answer with one JSON object and nothing else:",
+        _CLAIM_SHAPE,
+    ])
+    return GenerationRequest(
+        messages=(
+            Message("system", system),
+            Message("user", f"{render(transcript)}\n\nAudit this debate's factual claims."),
+        ),
+        max_completion_tokens=budget,
+        seed=transcript.run.seed,
+    )
+
+
+_CLAIM_SHAPE = """{
+  "claims": [
+    {"phase_index": 1, "side_index": 0, "claim": "what was asserted",
+     "verdict": "supported", "evidence_ids": ["am-1"]}
+  ]
+}"""
+
+
+def parse_claims(
+    text: str, transcript: Transcript, known: frozenset[str], *, truncated: bool = False
+) -> tuple[Claim, ...]:
+    """The claims ledger, checked as hard as the score sheet is."""
+    payload = _json_object(text, truncated=truncated)
+    listed = payload.get("claims")
+    if not isinstance(listed, list):
+        raise JudgeError("the fact-check reply has no claims list")
+
+    turns = {(turn.phase_index, turn.side_index) for turn in transcript.turns}
+    claims = []
+    for position, entry in enumerate(listed):
+        where = f"claims[{position}]"
+        if not isinstance(entry, dict):
+            raise JudgeError(f"{where} is not a JSON object")
+        phase_index, side_index = entry.get("phase_index"), entry.get("side_index")
+        if (phase_index, side_index) not in turns:
+            raise JudgeError(
+                f"{where} points at phase {phase_index!r}, side {side_index!r}, "
+                "which is not a turn in this transcript"
+            )
+        claim = entry.get("claim")
+        if not isinstance(claim, str) or not claim.strip():
+            raise JudgeError(f"{where} has no claim text")
+        verdict = entry.get("verdict")
+        if verdict not in VERDICTS:
+            raise JudgeError(
+                f"{where} verdict is {verdict!r}, not one of {', '.join(VERDICTS)}"
+            )
+        ids = _evidence_citations(entry.get("evidence_ids"), where, verdict, known)
+        claims.append(
+            Claim(
+                phase_index=phase_index,
+                side_index=side_index,
+                claim=claim.strip(),
+                verdict=verdict,
+                evidence_ids=ids,
+            )
+        )
+    return tuple(claims)
+
+
+def _evidence_citations(
+    cited: Any, where: str, verdict: str, known: frozenset[str]
+) -> tuple[str, ...]:
+    """Ids a verdict rests on, which must be ids the transcript actually recorded.
+
+    A supported or contradicted verdict citing nothing, or citing a passage that
+    isn't in the record, is unfalsifiable — exactly what this pass exists to avoid.
+    """
+    if cited is None:
+        cited = []
+    if not isinstance(cited, list) or not all(isinstance(item, str) for item in cited):
+        raise JudgeError(f"{where} evidence_ids is {cited!r}, not a list of ids")
+    unknown = [item for item in cited if item not in known]
+    if unknown:
+        raise JudgeError(
+            f"{where} cites {', '.join(repr(item) for item in unknown)}, which "
+            "the transcript never recorded"
+        )
+    if verdict in ("supported", "contradicted") and not cited:
+        raise JudgeError(f"{where} is {verdict} but cites no passage, so nothing can check it")
+    if verdict in ("unsupported", "not_checkable") and cited:
+        raise JudgeError(f"{where} is {verdict} but cites {len(cited)} passage(s)")
+    return tuple(cited)
+
+
+def _evidence_ids(transcript: Transcript) -> frozenset[str]:
+    return frozenset(item.id for turn in transcript.turns for item in turn.evidence)
+
+
 # --- writing the score file --------------------------------------------------
 
 
@@ -376,6 +571,27 @@ def as_json_dict(sheet: ScoreSheet) -> dict:
         ],
         "winner": sheet.winner,
         "winner_reason": sheet.winner_reason,
+        # Absent when disabled, never an empty section (ADR-015 §4).
+        **(
+            {
+                "fact_check": {
+                    "checked_against": sheet.fact_check.checked_against,
+                    **({"note": sheet.fact_check.note} if sheet.fact_check.note else {}),
+                    "claims": [
+                        {
+                            "phase_index": claim.phase_index,
+                            "side_index": claim.side_index,
+                            "claim": claim.claim,
+                            "verdict": claim.verdict,
+                            "evidence_ids": list(claim.evidence_ids),
+                        }
+                        for claim in sheet.fact_check.claims
+                    ],
+                }
+            }
+            if sheet.fact_check is not None
+            else {}
+        ),
     }
 
 

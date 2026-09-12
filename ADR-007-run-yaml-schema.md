@@ -29,8 +29,11 @@ a `run.yaml` missing it. There is no `--output` flag on `debate`.
 `judge` takes one positional argument, a transcript path, plus flags:
 `--model` (required, no default), `--budget` (required, no default — added
 by ADR-013 §2, the completion-token cap for its one scoring call),
-`--base-url` (optional), `--fact-check` /
-`--no-fact-check` (default: on), `--output <path>` (required).
+`--base-url` (**required**, no default — amended by ADR-017 §2, so a score
+file always says which server produced it), `--fact-check` /
+`--no-fact-check` (default: on — ADR-017 §1 turned it off in the interim
+before B6 existed; B6 shipped the pass and restored the default),
+`--output <path>` (required).
 
 This isn't an inconsistency, it reflects what each command's config actually
 is. `debate`'s config is multi-part and fixed for that run — a file fits.
