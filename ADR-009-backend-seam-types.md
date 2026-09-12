@@ -55,13 +55,16 @@ class BackendError(Exception): ...
 - **The `Protocol` is the whole seam.** Construction (`base_url`, `model`, the HTTP
   client) and closing connections stay outside it.
 - **The `openai-compatible` adapter sends exactly** `model`, `messages`,
-  `max_completion_tokens` and `"stream": false`, per ADR-003.
-- **No sampling parameters yet.** `run.yaml` has a run-level `seed` (ADR-007 §5),
-  but how it reaches each request is B3's question, because B3's gate is where
-  reproducibility gets tested: one value for every turn, or a different one derived
-  for each turn. Temperature has no config field at all, so each server's default
-  applies until one exists. Adding either is a one-field change to
-  `GenerationRequest`.
+  `max_completion_tokens`, `"stream": false`, per ADR-003, and `seed` when the
+  request carries one.
+- **The run's `seed` goes with every request** (decided in B3, 2026-09-11):
+  `GenerationRequest` carries `seed`, and the adapter sends it when it's set.
+  `run.yaml` has one run-level seed (ADR-007 §5) and every turn is sent that same
+  value; nothing derives a per-turn seed, because the turns differ by prompt
+  already. `fm serve` honours `seed` (ADR-003's probe) and so does
+  `mlx_lm.server`, which reads it from the request body.
+- **Temperature still has no config field**, so each server's own default applies.
+  Adding one is an ADR-007 amendment plus a one-field change here.
 
 ## Why
 
@@ -99,5 +102,5 @@ class BackendError(Exception): ...
 
 ## Open questions
 
-1. **Seed and temperature pass-through.** Settled in B3, with its reproducibility
-   gate.
+None. Seed pass-through was settled in B3 and is recorded above; temperature
+stays out until `run.yaml` has a field for it.

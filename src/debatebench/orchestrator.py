@@ -86,7 +86,7 @@ async def _take_turn(
         DebateEvent(EventType.TURN_STARTED, phase_index=phase_index, phase=phase, side_index=side_index)
     )
     started_at = utc_now()
-    request = build_request(config.topic, side, phase, config.sides, turns)
+    request = build_request(config.topic, side, phase, config.sides, turns, config.seed)
     try:
         result = await backends[side_index].generate(request)
     except BackendError as e:

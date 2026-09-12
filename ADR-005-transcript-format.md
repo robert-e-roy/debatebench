@@ -85,10 +85,18 @@ release.
 ### Writing
 
 - The document is written only after every configured phase has a response from
-  every side (Hard Rule 1). On failure, nothing is written to the output path.
+  every side (Hard Rule 1). On failure nothing is written, and any file already at
+  the output path is left exactly as it was.
+- **An existing transcript is rotated, not overwritten** (open question 1,
+  decided 2026-09-11). Immediately before the new file takes its place, whatever
+  sits at the output path is moved to `<output>.1`, replacing whatever `.1` held.
+  A run therefore never destroys the previous run's transcript, and `judge`
+  reading the output path always gets the newest one. Only one generation is
+  kept: a second successful run replaces the backup.
 - It is written atomically: to a temporary file in the target's directory, flushed
   and fsynced, then moved onto the output path with `os.replace`. A crash
-  mid-write can't leave a partial file.
+  mid-write can't leave a partial file. The temporary file is written in full
+  before the rotation, so a failure while serializing changes nothing.
 - Strict JSON: `allow_nan=False`, and non-ASCII text kept as-is
   (`ensure_ascii=False`).
 
@@ -119,20 +127,14 @@ release.
 
 ## Open questions
 
-Both remaining questions are about writing the file, which is B3's work, so
-neither blocked accepting this.
-
-1. **An existing file at the output path (B3).** "Nothing written on failure"
-   doesn't stop a stale transcript from an earlier run sitting at the same path,
-   and `judge` would score it without complaint. Either refuse to start if the
-   path exists, or delete it at start and lose the old file even if the new run
-   fails. An earlier draft proposed a `--force` flag, which ADR-007 §1 rules out:
-   `debate` takes one argument and no flags.
-2. **Human-readable rendering (B3 at the earliest).** ADR-001 notes aragora's
+1. **Human-readable rendering (B3 at the earliest).** ADR-001 notes aragora's
    paired machine- and human-readable views as precedent. If wanted, it's derived
    from this file by a separate step; `debate` writes nothing but its output file
    (Hard Rule 7).
 
-**Settled since this was drafted:** what counts as a valid turn (ADR-010 §3), and
-what "round" means — nothing, since ADR-007 dropped `rounds`; turns are keyed by
-`(phase_index, side_index)`.
+**Settled since this was drafted:** what counts as a valid turn (ADR-010 §3);
+what "round" means — nothing, since ADR-007 dropped `rounds`, so turns are keyed
+by `(phase_index, side_index)`; and what happens to an existing file at the
+output path, now rotated to `<output>.1` (see "Writing"). An earlier draft
+proposed a `--force` flag for that, which ADR-007 §1 rules out: `debate` takes
+one argument and no flags.

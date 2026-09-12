@@ -29,9 +29,12 @@ code. See ADR-002 for full scope.
   with its exit gate met, including a live reply from AFM. **B2 is done**
   (2026-09-11): the phase loop, turn checks, the event seam and the in-memory
   transcript, with a full eight-turn debate run live on AFM and a mid-run server
-  kill confirming the hard-fail invariant. **Next: B3** (`debate` writes the
-  transcript), which needs ADR-005's remaining question decided: what happens
-  when a file already sits at the `output:` path.
+  kill confirming the hard-fail invariant. **B3 is done** (2026-09-11): the
+  transcript is written as JSON to the `output:` path, with any existing file
+  rotated to `<output>.1`; two AFM runs with the same seed produced identical
+  turns; and one debate ran across two servers at once, Qwen3-8B on
+  `mlx_lm.server` against AFM. **Next: B4 (prep) or B5 (judge)**, which can run
+  in either order; both still have open questions (10 and 2 respectively).
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
@@ -150,6 +153,13 @@ huggingface.co on every start. AFM goes through the same adapter via `fm serve`
 - send budgets as `max_completion_tokens`, never `max_tokens`;
 - check `usage.completion_tokens` against the budget yourself — `finish_reason`
   doesn't signal truncation.
+
+`mlx_lm.server` (verified in B3) reads `max_completion_tokens` and `seed` from
+the request body, and a team's `model` must be exactly the repo id the server
+loaded. A reasoning model there returns its thinking as a separate `reasoning`
+field and can spend a whole budget on it, leaving no answer — see
+OPEN-QUESTIONS 13. Ollama and LM Studio go through the same adapter but haven't
+been run against yet.
 
 **Default model for development/testing the CLI itself is Apple Foundation
 Models (AFM) or another very small/instant model.** Don't reach for a real MLX

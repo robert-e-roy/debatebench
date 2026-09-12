@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from dataclasses import replace
 
 import httpx
 import pytest
@@ -58,6 +59,15 @@ def test_request_shape_follows_adr_003():
     }
 
 
+def test_seed_is_sent_only_when_the_request_carries_one():
+    with_seed, without_seed = [], []
+    _generate(lambda r: with_seed.append(r) or _ok(), request=replace(REQUEST, seed=7))
+    _generate(lambda r: without_seed.append(r) or _ok())
+
+    assert json.loads(with_seed[0].content)["seed"] == 7
+    assert "seed" not in json.loads(without_seed[0].content)
+
+
 def test_trailing_slash_in_base_url():
     seen = []
     _generate(lambda r: seen.append(r) or _ok(), base_url=BASE_URL + "/")
@@ -89,6 +99,11 @@ FAILURES = [
     ("no choices", lambda r: httpx.Response(200, json={"choices": [], "usage": {}}), "malformed reply: no choices"),
     ("null content", lambda r: _ok(None), "content is not a string"),
     ("no finish_reason", lambda r: _ok(finish_reason=None), "finish_reason is missing"),
+    # A reasoning model can spend a whole budget thinking (mlx_lm.server, B3).
+    ("reasoning but no answer", lambda r: httpx.Response(200, json={
+        "choices": [{"message": {"role": "assistant", "reasoning": "Let me think…"}, "finish_reason": "length"}],
+        "usage": {"prompt_tokens": 10, "completion_tokens": 32}}),
+     "all reasoning and no answer"),
     ("not JSON", lambda r: httpx.Response(200, text="<html>"), "reply is not JSON"),
     # AFM's context overflow, as ADR-003 measured it: HTTP 500 with the reason only in the message.
     ("context overflow", lambda r: httpx.Response(500, json={"error": {

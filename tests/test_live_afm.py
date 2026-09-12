@@ -5,6 +5,7 @@ not the tool, which never starts servers (ADR-003, ADR-004).
 """
 
 import asyncio
+import json
 import os
 import shutil
 import socket
@@ -175,5 +176,26 @@ def test_debate_command_against_afm(run_dir: Path, afm_base_url, capfd):
     assert code == 0, err
     assert out == ""  # Hard Rule 7
     assert "phase 0: opening" in err and "phase 1: conclusion" in err
-    assert "4 turns over 2 phases" in err
-    assert not (run_dir / "transcript.json").exists()
+
+    written = run_dir / "transcript.json"
+    document = json.loads(written.read_text(encoding="utf-8"))  # nothing but JSON in the file
+    assert len(document["turns"]) == 4
+    assert document["run"]["seed"] == 42
+
+
+def test_the_same_seed_gives_the_same_debate(run_dir: Path, afm_base_url, capfd):
+    # B3's exit gate: run one run.yaml twice and compare each turn's text.
+    edit_yaml(run_dir / "run.yaml", _use_afm(afm_base_url, ("opening", "rebuttal"), budget=64))
+
+    assert main([str(run_dir / "run.yaml")]) == 0
+    assert main([str(run_dir / "run.yaml")]) == 0  # rotates the first run to .1
+    capfd.readouterr()
+
+    second = json.loads((run_dir / "transcript.json").read_text(encoding="utf-8"))
+    first = json.loads((run_dir / "transcript.json.1").read_text(encoding="utf-8"))
+
+    # Turn text and usage only: timestamps and latencies differ between identical
+    # runs by design (ADR-005).
+    assert [t["text"] for t in first["turns"]] == [t["text"] for t in second["turns"]]
+    assert [t["usage"] for t in first["turns"]] == [t["usage"] for t in second["turns"]]
+    print(f"\nboth runs produced the same {len(first['turns'])} turns")

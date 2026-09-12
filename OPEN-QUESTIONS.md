@@ -187,6 +187,34 @@ steelman phase.
   prompts say nothing about length. Adding the field later needs an ADR-007
   amendment, B1 validation and a change to B2's prompts.
 
+### 13. Reasoning models spend the budget on thinking
+
+- **Where:** ADR-007 §2 (`budget`); `CLAUDE.md` Hard Rule 5, which already says
+  "Budgets (token/reasoning)"; ADR-005, which has no field for reasoning.
+- **Observed 2026-09-11 (B3), Qwen3-8B through `mlx_lm.server`:** it returns its
+  thinking as a separate `reasoning` field and its answer as `content`.
+  - At a 96-token budget there was no `content` at all: the whole budget went on
+    thinking, and the turn failed.
+  - At 600 tokens it spent 421, most of them thinking, on an answer of about 30.
+  - With `chat_template_kwargs: {"enable_thinking": false}` it answered in 28
+    tokens and did no thinking.
+- **Why it matters:** `budget` counts completion tokens, which include thinking.
+  The same budget therefore buys a reasoning model far less argument than a
+  non-reasoning one, which confounds the very model comparison this tool exists
+  to make (see item 9).
+- **Options:**
+  - a per-team switch that turns thinking off, which means passing
+    `chat_template_kwargs` through a request shape that has no room for it
+    (ADR-009);
+  - count only answer tokens against `budget`, with a separate reasoning
+    allowance — which is what Hard Rule 5's "(token/reasoning)" anticipates;
+  - leave it to whoever writes the `run.yaml` to set larger budgets for reasoning
+    models, and record which model is which.
+- **Also undecided:** whether the transcript keeps the reasoning text (v1 has no
+  field, so it's dropped today), and whether the judge should ever see it.
+- **Blocks:** any fair comparison between a reasoning and a non-reasoning model.
+  Nothing in B4–B6 strictly.
+
 ---
 
 ## Recorded elsewhere — index

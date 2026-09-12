@@ -30,7 +30,12 @@ PHASE_INSTRUCTIONS = {
 
 
 def build_request(
-    topic: str, side: Side, phase: str, sides: tuple[Side, ...], turns: list[Turn]
+    topic: str,
+    side: Side,
+    phase: str,
+    sides: tuple[Side, ...],
+    turns: list[Turn],
+    seed: int | None = None,
 ) -> GenerationRequest:
     position = "for" if side.side == "pro" else "against"
     team = side.team
@@ -46,6 +51,7 @@ def build_request(
             Message("user", f"{render_debate(sides, turns)}\n\n{PHASE_INSTRUCTIONS[phase]}"),
         ),
         max_completion_tokens=side.budget,
+        seed=seed,
     )
 
 

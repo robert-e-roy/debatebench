@@ -23,6 +23,7 @@ class Message:
 class GenerationRequest:
     messages: tuple[Message, ...]
     max_completion_tokens: int  # the per-phase budget
+    seed: int | None = None  # the run's seed, sent with every request (ADR-009)
 
 
 @dataclass(frozen=True)

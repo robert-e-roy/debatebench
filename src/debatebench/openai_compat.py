@@ -48,6 +48,8 @@ class OpenAICompatibleBackend:
             # fm serve streams when this is omitted (ADR-003).
             "stream": False,
         }
+        if request.seed is not None:
+            body["seed"] = request.seed
         started = time.monotonic()
         try:
             response = await self._client.post(self._url, json=body)
@@ -93,6 +95,13 @@ def _parse(payload: Any, latency_ms: int, url: str) -> GenerationResult:
     message = choice.get("message")
     text = message.get("content") if isinstance(message, dict) else None
     if not isinstance(text, str):
+        # A reasoning model can spend a whole budget thinking and never answer.
+        # mlx_lm.server reports the thinking separately, as `reasoning`.
+        if isinstance(message, dict) and message.get("reasoning"):
+            raise BackendError(
+                f"{url}: the reply is all reasoning and no answer — the budget was spent "
+                "thinking. Raise the budget, or turn the model's thinking off."
+            )
         raise malformed("choices[0].message.content is not a string")
     finish_reason = choice.get("finish_reason")
     if not isinstance(finish_reason, str):

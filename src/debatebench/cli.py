@@ -1,8 +1,9 @@
 """The ``debate`` command: one argument, the path to a run.yaml (ADR-007).
 
-At B2 it runs every configured phase and builds the transcript in memory. B3
-writes it to the `output:` path; until then nothing is written there. Everything
-the command says goes to stderr (Hard Rule 7).
+It runs every configured phase, then writes the transcript as JSON to the
+`output:` path, rotating any file already there to `<output>.1` (ADR-005).
+Nothing but that JSON goes to the file; everything the command says goes to
+stderr (Hard Rule 7).
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from .config import ConfigError, RunConfig, load_run
 from .events import DebateEvent, EventBus, EventType
 from .openai_compat import OpenAICompatibleBackend, open_client
 from .orchestrator import DebateError, Transcript, run_debate
+from .transcript import write_transcript
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -35,6 +37,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
     if config.seed_generated:
         _log(f"run.yaml sets no seed; generated seed {config.seed}")
+    # Checked before the debate, so a missing directory can't waste a whole run.
+    if not config.output.parent.is_dir():
+        _log(f"config error: the output directory does not exist: {config.output.parent}")
+        return 1
 
     events = EventBus()
     events.subscribe(log_event)
@@ -44,11 +50,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         _log(f"debate failed: {e}")
         return 1
 
-    _log(
-        f"{len(transcript.turns)} turns over {len(config.phases)} phases. "
-        f"B2 keeps the transcript in memory, so nothing was written to {config.output} "
-        "(B3 writes it)."
-    )
+    try:
+        backup = write_transcript(transcript, config.output)
+    except OSError as e:
+        _log(f"could not write the transcript to {config.output}: {e}")
+        return 1
+    if backup is not None:
+        _log(f"moved the previous transcript to {backup.name}")
+    _log(f"wrote {len(transcript.turns)} turns over {len(config.phases)} phases to {config.output}")
     return 0
 
 

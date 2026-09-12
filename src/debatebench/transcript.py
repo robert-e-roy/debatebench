@@ -7,8 +7,12 @@ JSON. Standard library only (ADR-008).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import json
+import os
+import tempfile
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit, urlunsplit
@@ -111,6 +115,43 @@ class Transcript:
             if (turn.phase_index, turn.side_index) == (phase_index, side_index):
                 return turn
         raise KeyError((phase_index, side_index))
+
+
+def as_json_dict(transcript: Transcript) -> dict:
+    """The document ADR-005 specifies, with its keys in the order that ADR shows."""
+    return {
+        "schema_version": transcript.schema_version,
+        "debatebench_version": transcript.debatebench_version,
+        "started_at": transcript.started_at,
+        "finished_at": transcript.finished_at,
+        "run": asdict(transcript.run),
+        "turns": [asdict(turn) for turn in transcript.turns],
+    }
+
+
+def write_transcript(transcript: Transcript, path: Path) -> Path | None:
+    """Write the transcript to ``path``, rotating any file already there to ``<path>.1``.
+
+    The new file is written in full first, so a failure while serializing leaves
+    everything untouched. Returns the backup's path, or None if there was no file
+    to rotate (ADR-005, "Writing").
+    """
+    text = json.dumps(as_json_dict(transcript), allow_nan=False, ensure_ascii=False, indent=2)
+    handle, temporary = tempfile.mkstemp(dir=path.parent, prefix=f"{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as file:
+            file.write(text + "\n")
+            file.flush()
+            os.fsync(file.fileno())
+        backup = None
+        if path.exists():
+            backup = path.with_name(f"{path.name}.1")
+            os.replace(path, backup)
+        os.replace(temporary, path)
+        return backup
+    except BaseException:
+        Path(temporary).unlink(missing_ok=True)
+        raise
 
 
 def snapshot(config: RunConfig, budget_tolerance: int) -> RunSnapshot:
