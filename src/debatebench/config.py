@@ -21,6 +21,7 @@ from .yaml_loader import load_yaml
 
 PHASES = ("prep", "opening", "rebuttal", "retort", "conclusion")
 MOTION_SIDES = ("pro", "con")  # for and against the motion (ADR-007 §7)
+LENGTHS = ("short", "medium", "long")  # a phase entry's :suffix (ADR-016 §1)
 
 _RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output"}
 _FORMAT_KEYS = {"phases"}
@@ -34,6 +35,11 @@ _REMOVED_RUN_KEYS = {
 _REMOVED_FORMAT_KEYS = {
     "prep": "format.prep was removed (ADR-007); list 'prep' in format.phases to run Prep",
     "rounds": "format.rounds was removed (ADR-007); repeat phase names in format.phases instead",
+}
+# Keys ADR-016 removed from a teams: entry, with what replaced them.
+_REMOVED_SIDE_KEYS = {
+    "length": "a per-team length was superseded by ADR-016; put it on the phase instead, "
+    "as a suffix like 'rebuttal:long' in format.phases",
 }
 # Run-time settings, which belong in run.yaml and never in a team file (ADR-002).
 _RUNTIME_KEYS = {"side", "model", "base_url", "budget", "prep_budget"}
@@ -78,7 +84,8 @@ class Side:
 class RunConfig:
     path: Path
     topic: str
-    phases: tuple[str, ...]
+    phases: tuple[str, ...]  # bare names; a transcript records these (ADR-016 §6)
+    lengths: tuple[str | None, ...]  # each phase's :suffix, or None (ADR-016 §1)
     sides: tuple[Side, Side]
     sources: tuple[str, ...]  # as written; resolving them is B4's (ADR-007 §6)
     seed: int
@@ -92,7 +99,7 @@ def load_run(path: str | Path) -> RunConfig:
     _check_keys(run_path, data, _RUN_KEYS, "", _REMOVED_RUN_KEYS)
 
     topic = _str(run_path, data, "topic", "topic")
-    phases = _phases(run_path, data)
+    phases, lengths = _phases(run_path, data)
     has_prep = "prep" in phases
 
     if "teams" not in data:
@@ -121,6 +128,7 @@ def load_run(path: str | Path) -> RunConfig:
         path=run_path,
         topic=topic,
         phases=phases,
+        lengths=lengths,
         sides=(first, second),
         sources=sources,
         seed=seed,
@@ -170,7 +178,8 @@ def _sources(run_path: Path, data: dict[str, Any]) -> tuple[str, ...]:
     return sources
 
 
-def _phases(path: Path, data: dict[str, Any]) -> tuple[str, ...]:
+def _phases(path: Path, data: dict[str, Any]) -> tuple[tuple[str, ...], tuple[str | None, ...]]:
+    """The phase list as bare names, plus each entry's length suffix (ADR-016 §5)."""
     if "format" not in data:
         raise _fail(path, "format is required (it holds format.phases)")
     fmt = data["format"]
@@ -179,23 +188,58 @@ def _phases(path: Path, data: dict[str, Any]) -> tuple[str, ...]:
     _check_keys(path, fmt, _FORMAT_KEYS, "format", _REMOVED_FORMAT_KEYS)
     if "phases" not in fmt:
         raise _fail(path, "format.phases is required")
-    phases = fmt["phases"]
-    if not isinstance(phases, list):
-        raise _fail(path, f"format.phases must be a list of phase names, got {_describe(phases)}")
-    if not phases:
+    entries = fmt["phases"]
+    if not isinstance(entries, list):
+        raise _fail(path, f"format.phases must be a list of phase names, got {_describe(entries)}")
+    if not entries:
         raise _fail(path, "format.phases must list at least one phase")
-    for index, phase in enumerate(phases):
-        if phase not in PHASES:
+
+    names: list[str] = []
+    lengths: list[str | None] = []
+    for index, entry in enumerate(entries):
+        where = f"format.phases[{index}]"
+        if isinstance(entry, dict) and len(entry) == 1:
+            # 'rebuttal: long' is a YAML mapping; the string wanted is 'rebuttal:long'.
+            (key, value), = entry.items()
             raise _fail(
                 path,
-                f"format.phases[{index}] is {_describe(phase)}, not a known phase "
-                f"({', '.join(PHASES)})",
+                f"{where} is a mapping, not a phase name: YAML read '{key}: {value}' as a "
+                f"key and value. Remove the space after the colon to write '{key}:{value}' "
+                "(ADR-016 §5)",
             )
-    if phases.count("prep") > 1:
+        if not isinstance(entry, str):
+            raise _fail(
+                path,
+                f"{where} is {_describe(entry)}, not a known phase ({', '.join(PHASES)})",
+            )
+        if entry.count(":") > 1:
+            raise _fail(path, f"{where} is {entry!r}: a phase entry has at most one ':' (ADR-016)")
+        name, colon, length = entry.partition(":")
+        if name not in PHASES:
+            raise _fail(
+                path,
+                f"{where} is {_describe(entry)}, not a known phase ({', '.join(PHASES)})",
+            )
+        if colon and length not in LENGTHS:
+            raise _fail(
+                path,
+                f"{where} asks for length {length!r}, which is not one of "
+                f"{', '.join(LENGTHS)} (ADR-016 §5)",
+            )
+        if colon and name == "prep":
+            raise _fail(
+                path,
+                f"{where}: prep takes no length — it is bounded by prep_budget alone "
+                "(ADR-016 §4)",
+            )
+        names.append(name)
+        lengths.append(length if colon else None)
+
+    if names.count("prep") > 1:
         raise _fail(path, "format.phases: 'prep' can appear only once")
-    if "prep" in phases and phases[0] != "prep":
+    if "prep" in names and names[0] != "prep":
         raise _fail(path, "format.phases: 'prep' must come first")
-    return tuple(phases)
+    return tuple(names), tuple(lengths)
 
 
 def _side(run_path: Path, entry: Any, index: int, has_prep: bool) -> Side:
@@ -205,7 +249,7 @@ def _side(run_path: Path, entry: Any, index: int, has_prep: bool) -> Side:
             run_path,
             f"{where} must be a mapping with team, model, base_url and budget, got {_describe(entry)}",
         )
-    _check_keys(run_path, entry, _SIDE_KEYS, where)
+    _check_keys(run_path, entry, _SIDE_KEYS, where, _REMOVED_SIDE_KEYS)
 
     team_text = _str(run_path, entry, "team", f"{where}.team")
     side = _motion_side(run_path, entry, f"{where}.side")

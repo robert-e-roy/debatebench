@@ -34,6 +34,10 @@ PHASE_INSTRUCTIONS = {
     "conclusion": "Give your conclusion: sum up why your side should win. Introduce no new arguments.",
 }
 
+# What a phase's :length suffix asks for (ADR-011 §2, carried over by ADR-016).
+# A target stated in the prompt, not a cap: `budget` stays the hard ceiling.
+LENGTH_SENTENCES = {"short": 2, "medium": 5, "long": 10}
+
 
 def build_request(
     topic: str,
@@ -42,14 +46,16 @@ def build_request(
     sides: tuple[Side, ...],
     turns: list[Turn],
     seed: int | None = None,
+    length: str | None = None,
 ) -> GenerationRequest:
+    instruction = PHASE_INSTRUCTIONS[phase]
+    if length is not None:
+        # Both sides get the same target for the same phase (ADR-016 §1).
+        instruction += f" Answer in about {LENGTH_SENTENCES[length]} sentences."
     return GenerationRequest(
         messages=(
             Message("system", system_prompt(topic, side)),
-            Message(
-                "user",
-                f"{render_debate(sides, turns, side.index)}\n\n{PHASE_INSTRUCTIONS[phase]}",
-            ),
+            Message("user", f"{render_debate(sides, turns, side.index)}\n\n{instruction}"),
         ),
         max_completion_tokens=side.budget,
         seed=seed,

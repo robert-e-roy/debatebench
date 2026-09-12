@@ -2,6 +2,11 @@
 
 **Status:** Accepted
 **Date:** 2026-09-12
+**Amended:** 2026-09-12 — §1 (the per-team `length` field) and §6 ("one
+length per side, not per phase") are superseded by ADR-016: length is now a
+`name:length` suffix on each entry in `format.phases`, applying to both sides.
+§2–§5 stand unchanged. The consequence below that `run.sides` gains a
+`length` field is withdrawn; ADR-016 §6 puts `length` on each turn instead.
 **Depends on:** ADR-002 ("Asymmetry"), ADR-005 (transcript `sides` snapshot),
 ADR-007 (`run.yaml` schema, validation), ADR-010 (`hit_budget`)
 **Resolves:** OPEN-QUESTIONS.md item 12

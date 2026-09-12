@@ -36,17 +36,6 @@ on whether Prep ran, which is what lets B5 genuinely run in parallel with
 B4. **This makes B5 buildable, not trustworthy — item 6 below is untouched
 and still fully blocks B7.**
 
-**ADR-015 settled what B5 hit on contact:** `--fact-check` defaults to off
-until B6 and asking for it is an error (a score file never claims a check that
-didn't run); `--base-url` is required, with no hidden default; the hit-ledger's
-statuses are ADR-002's four; the reply is JSON with a fence and a preamble
-tolerated and nothing else; the judge sees both sides' prep evidence, since
-privacy binds debaters not judges; `prep_grounded` is read off the transcript,
-never off the reply; the score file rotates like a transcript; and an absent
-`hit_ledger` reads as empty with `hit_ledger_reported: false`, because Hard
-Rule 3 forbids a *score* failing to parse, not a missing diagnostic extra.
-**Built and live-tested 2026-09-12** against Qwen3-8B on `mlx_lm.server`.
-
 ### 3. Budget semantics — RESOLVED by ADR-007
 
 Both, as two fields: `budget` (per-phase cap, completion tokens) and
@@ -54,36 +43,18 @@ Both, as two fields: `budget` (per-phase cap, completion tokens) and
 `phases`). Unit is now explicit (completion tokens, per ADR-003's finding).
 ADR-003's overshoot-tolerance question is still separately open.
 
-### 4. Where the fact-checker lives
+### 4. Where the fact-checker lives — RESOLVED by ADR-015
 
-- **Where:** ADR-002 "CLI shape" and "Fact-checking is separate from judging"; the
-  `run.yaml` example; BUILD-GUIDE B6; ADR-005.
-- **Issue:** the docs disagree:
-  - ADR-002 "CLI shape" says `judge` scores "against the rubric plus fact-check";
-  - ADR-002 "Fact-checking is separate from judging" says it runs per turn,
-    during the debate;
-  - B6 says it isn't part of `judge`, and leaves open whether it runs inside
-    `debate` or as its own command;
-  - moot as of ADR-007: the `judge:` block (which `fact_check: true` sat
-    under) is dropped from `run.yaml` entirely, so this particular
-    contradiction is gone — but *where the fact-checker actually lives* is
-    still undecided.
-
-  ADR-005 keeps fact-check verdicts out of transcript v1 until this is settled.
-- **Also undecided:**
-  - what it checks against when the optional `prep` phase is off;
-  - its name. Checking a claim against a side's own prep evidence tests
-    grounding, not truth, and ADR-001/002 already refuse to call surface-form
-    scoring "fact-check".
-- **Options:**
-  - per-turn events inside `debate`;
-  - a re-runnable pass over a saved transcript;
-  - both.
-
-  If it runs only inside `debate`, re-checking with a different model means
-  regenerating the debate — the coupling ADR-002's two-command split exists to
-  avoid.
-- **Blocks:** B6. Also the `run.yaml` schema (B1), if the switch moves.
+Inside `judge`, post-hoc, as a second backend call switched by the existing
+`--fact-check` flag. It checks claims against **everything recorded in the
+transcript** (both sides' evidence and turns), never against the model's own
+knowledge as truth — "the world" isn't reachable offline with two
+dependencies. Verdicts: `supported` / `contradicted` / `unsupported` /
+`not_checkable`. The real-time per-turn version is the Swift app's feature,
+attaching later to the CLI's event seam. This also closes the B0 hardware
+question of where a live fact-checker would run: nothing in this repo needs
+a live one. The naming question (`prep_grounded` vs `fact_check`) was
+already settled in ADR-013 §4.
 
 ### 5. Name clash with an existing DebateBench benchmark
 
@@ -151,24 +122,15 @@ formation for the shared pool is orchestrator-driven, keyed on **`side`**
 (`pro`/`con`), not `stance` (an earlier version of this ADR used `stance` in
 error — ADR-007 §7 already established it's not a position on the motion).
 Shared-pool retrieval is topic+side metadata filtering; a team's own
-`corpus:` gets a separate topic-only keyword search. Both `args-me` and
-`debatesum` are license-checked (DebateSum: MIT;
+`corpus:` (an unlabeled local directory) gets a separate topic-only keyword
+search. Both `args-me` and `debatesum` are license-checked (DebateSum: MIT;
 args-me: CC-BY-4.0 with a stated "individual rights still apply" caveat,
 retrieval-only, never bundled) and are **not fetched at runtime** — both
 must exist locally as pre-downloaded JSONL files, a one-time manual step,
 keeping debatebench's dependencies at ADR-008's fixed two and trivially
 satisfying the offline requirement. `prep_budget` caps exactly one synthesis
-call per side.
-
-**ADR-014 settled what B4 hit on contact** with this: a team's `corpus:` is a
-JSONL file in the shared pool's row shape (minus `side`), resolved from the
-team file's own directory; prep is private to the side that wrote it; a prep
-turn's `order` is 0 for both sides, since nothing about prep is sequential;
-zero passages **after both pools** fails the run, so a corpus-only side is
-properly prepared; `DEBATEBENCH_SOURCES_DIR` overrides where the pools are
-read from; and `evidence` appears only on prep turns. **B4 was built and its
-exit gate met live on 2026-09-12**, including the `prep_budget`-enforcement
-test ADR-004's Rule 5 table was waiting on.
+call per side. B4 and the `prep_budget`-enforcement test (ADR-004, Rule 5)
+are both unblocked.
 
 ### 11. Phase and turn semantics — RESOLVED by ADR-007 and ADR-010
 
@@ -183,15 +145,16 @@ answers the rebuttal aimed at your case, while `rebuttal` attacks the
 opponent's; steelmanning happens inside each rebuttal, so there's no separate
 steelman phase.
 
-### 12. Response length in human terms — RESOLVED by ADR-011
+### 12. Response length in human terms — RESOLVED by ADR-011, revised by ADR-016
 
-Labels only, no time-based option: a new optional per-team `length` field
-(`short`=2 sentences, `medium`=5, `long`=10), fixed constants for v1. It
-states a target in the prompt; `budget` stays the unchanged hard cap. No
-cross-field validation between them — a mismatch surfaces via the existing
-`hit_budget` flag. Sentence counts sidestep both the time-to-token conversion
-question and the YAML time-syntax problem entirely. Applies uniformly across
-a side's argument phases, not per-phase, for v1.
+Labels only, no time-based option: `short`=2, `medium`=5, `long`=10
+sentences, fixed constants for v1 (ADR-011). Attached **per phase** as a
+suffix in `format.phases` — `rebuttal:long` — applying to both sides, the
+way real formats set length by speech type (ADR-016, superseding ADR-011's
+per-team field). It states a target in the prompt; `budget` stays the
+unchanged hard cap; no cross-field validation; a mismatch surfaces via
+`hit_budget`. `prep` takes no suffix. Recorded per turn in the transcript
+(`schema_version` 2).
 
 ### 13. Reasoning models spend the budget on thinking
 
@@ -218,21 +181,8 @@ a side's argument phases, not per-phase, for v1.
     models, and record which model is which.
 - **Also undecided:** whether the transcript keeps the reasoning text (v1 has no
   field, so it's dropped today), and whether the judge should ever see it.
-- **Observed 2026-09-12 (B5), Qwen3-8B judging through `mlx_lm.server`:** the
-  same problem now bites `judge --budget`, not just a debater's `budget`.
-  - 3,000 tokens was enough to score a four-turn transcript, and was entirely
-    consumed by thinking on a *prepped* one, whose evidence passages make the
-    prompt much longer. The run failed with "all reasoning and no answer".
-  - 6,000 scored every transcript, prepped included. B5's live tests default
-    there for that reason.
-  - Stating one requirement a second time (system message *and* user message)
-    pushed it from complete JSON at 3,000 to nothing but reasoning at 6,000.
-    On a reasoning model, extra instruction load buys more thinking, not more
-    compliance — recorded in ADR-015 §8 so it isn't retried.
-  - **Implication:** `judge --budget` needs a documented floor for reasoning
-    models, or the same per-team thinking switch this item already weighs.
 - **Blocks:** any fair comparison between a reasoning and a non-reasoning model.
-  Nothing in B4–B6 strictly, but it sets `judge --budget` in practice.
+  Nothing in B4–B6 strictly.
 
 ---
 
@@ -245,7 +195,6 @@ a side's argument phases, not per-phase, for v1.
 | ADR-002, "Judge design" | Stance-consistency check: a third fast pass, or folded in |
 | ADR-002, "Judge design" | `tasksource/logical-fallacy`: cleared for private validation use (authors' README grants access); redistribution/bundling still ungranted |
 | ADR-002, "Judge design" | Where the 631-speech `debate_speeches` figure came from |
-| ADR-002, "Hardware" → B0 findings | **Where the fact-checker runs.** Its designated offload target, `free`, is the dev machine itself. Options: AFM-scoped per-claim checks (≤ ~4,096 tokens per request including evidence, ADR-003), which may be enough but must be decided, not assumed. AFM handles one request at a time (ADR-003), so an AFM fact-checker queues behind any AFM debater; whether it runs in parallel with MLX debaters is unmeasured; a real second machine (none identified); or a small co-resident local model. Blocks B6 |
 | ADR-002, "Hardware" → B0 findings | **Does the 8B+24B debater pair fit?** Doubtful and unmeasured, not ruled out. Needs a quiet-machine B0 rerun before anything trusts the pair. Blocks any local run of the intended pairing; no B-session strictly (one model on both sides fits) |
 | ADR-002, "Hardware" | A separate inference engine for prefill-heavy prep |
 | ADR-002, "Scope discipline" | A source for the ~25% Aragora scope-creep figure — cite or drop |
@@ -255,7 +204,6 @@ a side's argument phases, not per-phase, for v1.
 | ADR-009 | How `seed` reaches each request (one value or derived per turn), and whether temperature gets a config field. Blocks B3 |
 | ADR-005 | An existing file at the output path, and a human-readable view — both B3, and the old `--force` idea is ruled out by ADR-007 §1 |
 | BUILD-GUIDE B4 | Static corpora only, or live retrieval too |
-| BUILD-GUIDE B6 | Fact-checker inside `debate` or as its own command (see item 4) |
 
 ---
 

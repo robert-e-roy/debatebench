@@ -10,8 +10,9 @@ offline requirement for model servers added to "Backend abstraction".
 ## What this is
 
 `debatebench` is an open-source Python CLI for running structured, multi-turn,
-adversarial LLM debates and scoring them against a fixed rubric with real-time
-fact-checking. It generalizes into a broader pattern (see the MetaTool notes,
+adversarial LLM debates and scoring them against a fixed rubric, with a
+post-hoc fact-check pass inside `judge` (ADR-015; real-time per-turn
+fact-checking is the Swift app's feature, not this repo's). It generalizes into a broader pattern (see the MetaTool notes,
 `~/Projects/metatool.md`, outside this repo) but this ADR scopes the concrete first
 implementation.
 
@@ -72,7 +73,7 @@ structured, verifiable, multi-turn tasks — not tied to the app.
 ```yaml
 topic: "..."
 format:
-  phases: [prep, opening, rebuttal, retort, rebuttal, conclusion]
+  phases: [prep, opening:short, rebuttal:long, retort:medium, rebuttal:long, conclusion:short]
 teams:
   - team: teams/liberal.yaml
     side: pro
@@ -100,9 +101,12 @@ id: liberal-climate
 name: "Progressive Climate Advocate"
 voice: "direct, urgency-driven, cites institutional consensus"
 stance: liberal
-corpus: sources/liberal-climate-corpus/
+corpus: liberal-climate-corpus.jsonl
 values: [collective-action, precaution, equity]
 ```
+
+`corpus` is a JSONL file resolved relative to the team file's own directory,
+not `run.yaml`'s — see ADR-014 §1 for the row format and why.
 
 **Deliberately no `model` field in team files.** A team file defines identity
 (voice, corpus, stance, values), not runtime execution. Keeping `model`/`budget`
@@ -224,10 +228,19 @@ choice:**
 
 ## Fact-checking is separate from judging, and runs on a different clock
 
-- **Fact-check**: fast, narrow, per-claim, runs at the end of every turn in real
-  time (UI requirement, driving the CLI's design even before UI exists) —
-  verifies a claim against the side's own recorded Prep evidence.
+**Superseded for the Python CLI by ADR-015 (2026-09-12).** The per-turn,
+real-time fact-check described below is now a feature of the future Swift
+app (`DebateKit`), attaching to the CLI's existing event seam. In this repo,
+fact-checking is a post-hoc pass inside `judge`, checked against the
+recorded evidence, not "the world" — see ADR-015 §2 for what that means
+concretely. The bullets are kept as the description of the Swift-side
+feature and of the evidence-hygiene rule, which still holds.
+
+- **Fact-check** (Swift app): fast, narrow, per-claim, runs at the end of every
+  turn in real time — verifies a claim against the side's own recorded Prep
+  evidence.
 - **Judge**: slower, holistic, runs once over the complete transcript at the end.
+  In the CLI, the fact-check pass runs here too (ADR-015 §3, a second call).
 - Regex/heuristic "evidence hygiene" (citation density, specificity — as in
   Aragora's `evidence.py`) is not a substitute for either of the above and, if
   used at all, must be labeled "evidence hygiene," never "fact-check" — it scores
@@ -272,12 +285,12 @@ B0 measured this on the dev machine (`RESULTS.md`). What it changes here:
   load-bearing work: the "three models at once" concern applies only to a
   fact-checker that has to run live. This follows from the design; B0 didn't
   measure it.
-- **The fact-checker is the one genuinely open hardware problem**, and its
-  designated offload target doesn't exist. Either it stays scoped to AFM-sized
-  checks, capped at about 4,096 tokens per request (ADR-003), which may be enough
-  for a single claim plus its evidence; or a real second machine has to be
-  found. That must be decided explicitly, not assumed (tracked in
-  OPEN-QUESTIONS).
+- **The fact-checker hardware problem is resolved for v1 by ADR-015**, not by
+  finding a host: the fact-check pass now runs inside `judge`, post-hoc, so it
+  loads when the judge does, after the debaters have unloaded. The "no
+  designated offload target" finding stands as a fact about this machine, but
+  nothing in this repo needs one anymore. The live per-turn version that
+  would need one is the Swift app's concern (ADR-015 §1).
 - **The debater pair is doubtful and unmeasured, not ruled out.**
   Mistral-Small-24B alone tripped B0's safety cut-off (critical memory pressure
   alongside normal desktop use) before the pair and concurrency stages ran. A

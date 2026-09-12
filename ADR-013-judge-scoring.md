@@ -42,9 +42,11 @@ these five qualities into one number.
 
 ### 2. Judge call structure — one call, whole transcript, both sides at once
 
-The judge makes **exactly one backend call** per judging run, with the
+The judge makes **exactly one *scoring* call** per judging run, with the
 entire transcript (both sides, every phase) as context, and returns both
-sides' five-dimension scores in that single structured response.
+sides' five-dimension scores in that single structured response. (When
+`--fact-check` is on, ADR-015 §3 adds one further call for the claims
+ledger; the scoring call is unchanged.)
 
 This isn't a detail left to "prompt wording is B5's job" (ADR-010's
 deferral pattern covers *what a prompt says*, not *whether there's one call
@@ -119,12 +121,12 @@ writes:
 
 ```jsonc
 {
-  "schema_version": 1,
+  "schema_version": 2,   // 2 adds the optional fact_check section, ADR-015 §4
   "debatebench_version": "0.1.0",
   "judged_at": "2026-09-12T10:00:00Z",
   "judge_model": "claude-sonnet-5",
   "judge_budget": 4000,
-  "fact_check_enabled": true,
+  "fact_check_enabled": true,   // when true, a "fact_check" section follows (ADR-015)
   "sides": [
     { "side_index": 0, "side": "pro", "dimensions": { /* §1 shape */ },
       "total": 76 },

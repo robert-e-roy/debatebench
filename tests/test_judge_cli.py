@@ -45,7 +45,7 @@ def run(transcript: Path, output: Path, *extra: str) -> int:
     ])
 
 
-# --- the flags ADR-007 and ADR-015 fix ---------------------------------------
+# --- the flags ADR-007 and ADR-017 fix ---------------------------------------
 
 
 def test_no_argument_is_a_usage_error():
@@ -75,7 +75,7 @@ def test_every_required_flag_is_required(transcript_file: Path, tmp_path: Path, 
 
 
 def test_base_url_has_no_default(transcript_file: Path, tmp_path: Path, capfd):
-    # ADR-015 §2: a hidden default would hide which server produced a score.
+    # ADR-017 §2: a hidden default would hide which server produced a score.
     with pytest.raises(SystemExit):
         main([str(transcript_file), "--model", "m", "--budget", "100",
               "--output", str(tmp_path / "s.json")])
@@ -83,7 +83,7 @@ def test_base_url_has_no_default(transcript_file: Path, tmp_path: Path, capfd):
 
 
 def test_asking_for_a_fact_check_is_an_error(transcript_file: Path, run_dir: Path, capfd):
-    # ADR-015 §1: nothing can fact-check until B6, so it says so instead of pretending.
+    # ADR-017 §1: nothing can fact-check until B6, so it says so instead of pretending.
     assert run(transcript_file, run_dir / "score.json", "--fact-check") == 1
     out, err = capfd.readouterr()
     assert "fact-checking arrives in B6" in err and out == ""
@@ -113,11 +113,11 @@ def test_a_missing_transcript_is_reported(run_dir: Path, capfd):
 
 def test_a_transcript_from_a_newer_build_is_refused(transcript_file: Path, run_dir: Path, capfd):
     document = json.loads(transcript_file.read_text())
-    document["schema_version"] = 2
+    document["schema_version"] = 3  # 1 and 2 are both readable (ADR-016 §6)
     transcript_file.write_text(json.dumps(document))
 
     assert run(transcript_file, run_dir / "score.json") == 1
-    assert "schema_version is 2, and this build reads 1" in capfd.readouterr().err
+    assert "schema_version is 3, and this build reads 1, 2" in capfd.readouterr().err
 
 
 def test_a_transcript_that_is_not_json_is_refused(transcript_file: Path, run_dir: Path, capfd):

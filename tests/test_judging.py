@@ -70,7 +70,7 @@ def test_the_judge_is_asked_once_for_both_sides(run_dir: Path):
 
 
 def test_the_call_carries_the_transcripts_seed(run_dir: Path):
-    # Re-judging one transcript is reproducible (ADR-015 §6).
+    # Re-judging one transcript is reproducible (ADR-017 §6).
     _, transcript = debated(run_dir)
     _, backend = judged(transcript, judge_reply(side(0), side(1)))
 
@@ -78,7 +78,7 @@ def test_the_call_carries_the_transcripts_seed(run_dir: Path):
 
 
 def test_the_judge_sees_both_sides_prep_evidence(run_dir: Path, prepared_sources):
-    # Prep privacy binds debaters, not the judge (ADR-015 §5).
+    # Prep privacy binds debaters, not the judge (ADR-017 §5).
     _, transcript, _ = prep_debate(run_dir)
     rendered = render(transcript)
 
@@ -157,7 +157,7 @@ def test_no_blended_score_is_asked_of_the_model(run_dir: Path):
     assert sheet.sides[0].total == sum(d.score for d in sheet.sides[0].dimensions)
 
 
-# --- prep_grounded is a fact about the transcript (ADR-015 §5) ---------------
+# --- prep_grounded is a fact about the transcript (ADR-017 §5) ---------------
 
 
 def test_prep_grounded_is_true_when_the_debate_prepped(run_dir: Path, prepared_sources):
@@ -242,7 +242,7 @@ def test_a_malformed_reply_fails_the_run(run_dir: Path, make, expected):
 
 
 def test_an_absent_ledger_reads_as_empty_and_says_so(run_dir: Path):
-    # ADR-015 §8: the score and its justification are there, so no dimension failed to
+    # ADR-017 §8: the score and its justification are there, so no dimension failed to
     # parse. Measured behaviour — Qwen3-8B scores well and omits the ledger.
     _, transcript = debated(run_dir, ("opening", "rebuttal"))
     sheet, _ = judged(transcript, judge_reply(_without_ledger(side(0)), side(1)))
@@ -288,7 +288,7 @@ def test_a_reply_cut_off_by_the_budget_says_so(run_dir: Path):
         judged(transcript, '{"sides": [{"side_ind', budget=100, completion_tokens=100)
 
 
-# --- the tolerated shapes (ADR-015 §4) ---------------------------------------
+# --- the tolerated shapes (ADR-017 §4) ---------------------------------------
 
 
 def test_a_fenced_reply_is_read(run_dir: Path):

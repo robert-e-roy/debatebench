@@ -22,7 +22,7 @@ def test_written_file_is_the_adr_005_document(run_dir: Path):
     assert write_transcript(transcript, config.output) is None  # nothing to rotate
     document = json.loads(config.output.read_text(encoding="utf-8"))
 
-    assert document["schema_version"] == 1
+    assert document["schema_version"] == 2  # 2 since ADR-016 added per-turn length
     assert document["debatebench_version"]
     assert document["started_at"].endswith("Z") and document["finished_at"].endswith("Z")
     assert document["run"]["topic"] == config.topic

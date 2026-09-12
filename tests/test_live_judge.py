@@ -1,4 +1,4 @@
-"""B5's live gate: a real model scoring real transcripts (ADR-013, ADR-015).
+"""B5's live gate: a real model scoring real transcripts (ADR-013, ADR-017).
 
 Opt in with DEBATEBENCH_LIVE_TESTS=1, and point DEBATEBENCH_MLX_BASE_URL at a
 running server. Unlike the AFM tests, nothing here starts the server: an 8B

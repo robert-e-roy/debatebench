@@ -7,8 +7,9 @@ precedence if anything here seems to conflict.
 ## What this project is
 
 An open-source Python CLI (`debate`, `judge`) for running structured, multi-turn,
-adversarial LLM debates and scoring them against a fixed rubric with real-time
-fact-checking. Built to evaluate MLX model + dataset choices for a companion Mac
+adversarial LLM debates and scoring them against a fixed rubric, with a post-hoc
+fact-check pass inside `judge` (ADR-015 — real-time per-turn fact-checking is the
+Swift app's feature, not this repo's). Built to evaluate MLX model + dataset choices for a companion Mac
 app, but scoped and built as a standalone, general-purpose tool — not app-specific
 code. See ADR-002 for full scope.
 
@@ -21,11 +22,12 @@ code. See ADR-002 for full scope.
   meanings, budget tolerance, valid turns), `ADR-011` (response length,
   `short`/`medium`/`long`), `ADR-012` (Prep retrieval mechanism), `ADR-013`
   (judge scoring aggregation, winner determination, score-file format),
-  `ADR-014` (corpus format, prep privacy, empty retrieval), `ADR-015` (judge
-  CLI details: fact-check default, `--base-url`, reading the model's reply) —
-  accepted; together they are the spec. **Not yet implemented: ADR-011** —
-  `length` is accepted but no code reads it; the prompts still state no target
-  length.
+  `ADR-014` (corpus format, prep privacy, empty-retrieval failure), `ADR-015`
+  (fact-check lives in `judge`; real-time deferred to the Swift app),
+  `ADR-016` (per-phase length as a `name:length` suffix; supersedes ADR-011's
+  per-team field), `ADR-017` (judge CLI details: `--base-url` required, the
+  hit-ledger vocabulary, reading the model's reply) — accepted; together they
+  are the spec.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
@@ -39,20 +41,8 @@ code. See ADR-002 for full scope.
   transcript is written as JSON to the `output:` path, with any existing file
   rotated to `<output>.1`; two AFM runs with the same seed produced identical
   turns; and one debate ran across two servers at once, Qwen3-8B on
-  `mlx_lm.server` against AFM. **B4 is done** (2026-09-12): prep retrieves
-  from the shared pool by topic+side and from a team's own corpus by topic,
-  spends `prep_budget` on one synthesis call per side, and records the raw
-  passages as that turn's `evidence`. Its exit gate was met live on AFM — the
-  pro opening cited two invented place names that exist only in its own prep
-  evidence, with the passage ids. **B5 is done** (2026-09-12): `judge` scores a
-  transcript in one call, five dimensions per side, with the total and winner
-  computed outside the model and always printed beside every score that made
-  them. Its exit gate was met live on Qwen3-8B via `mlx_lm.server` — a lopsided
-  debate (91 against 32), an evenly matched one, and transcripts with and
-  without prep. **Its scores are not yet trustworthy**: open question 6
-  (correlating a judge against human ratings) is untouched and still blocks B7.
-  **Next: B6 (fact-checker)**, which needs open question 4 (where the
-  fact-checker lives) settled first.
+  `mlx_lm.server` against AFM. **Next: B4 (prep) or B5 (judge)**, which can run
+  in either order; both still have open questions (10 and 2 respectively).
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
@@ -126,7 +116,9 @@ against it.
 
 Two file types — see ADR-002 and ADR-007 for full schema and rationale:
 - `run.yaml` — one per run: topic, `format.phases` (the only source of truth
-  for whether `prep` runs — no separate `prep`/`rounds` flags), per-team
+  for whether `prep` runs — no separate `prep`/`rounds` flags; each entry may
+  be `name:length`, e.g. `rebuttal:long`, applying to both sides — ADR-016;
+  `prep` takes no suffix; no space after the colon), per-team
   **`side` (`pro` or `con`, required, one of each — ADR-007 §7)**, `model`,
   **`base_url` (required, no default — see ADR-007)**, `budget`
   (per-phase cap, completion tokens), `prep_budget` (required iff `"prep"`
@@ -142,43 +134,15 @@ Two file types — see ADR-002 and ADR-007 for full schema and rationale:
   ever** — that's a run-time concern, not identity.
 
 Validation is strict (ADR-007 §6): unknown or duplicate keys are errors, phase
-names come from a fixed list, and paths resolve from `run.yaml`'s directory —
-except a team's `corpus`, which resolves from the **team file's** directory,
-because a team file is reused across runs (ADR-014 §1). `sources` entries must
-be names on the vetted list (`args-me`, `debatesum`), since each one's licence
-was checked by hand (ADR-012 §5).
+names come from a fixed list, and paths resolve from `run.yaml`'s directory.
 Load YAML only through the package's strict loader, never plain `safe_load`
 (ADR-008 lists the YAML 1.1 coercions it blocks).
 
 `debate` takes exactly one argument, the path to a `run.yaml`. No other flags
-— see ADR-007. `judge` takes a transcript path plus flags: `--model`,
-`--base-url`, `--budget` and `--output` (all required — `--base-url` has no
-default, so a score file always says which server produced it), and
-`--fact-check` / `--no-fact-check` (**default off until B6**, and asking for
-`--fact-check` is an error while nothing can honour it — ADR-015 §1). The asymmetry is deliberate, not an oversight
+— see ADR-007. `judge` takes a transcript path plus flags: `--model` and
+`--output` (both required), an optional `--base-url`, and `--fact-check` /
+`--no-fact-check` (default on). The asymmetry is deliberate, not an oversight
 (ADR-007, "CLI invocation").
-
-## Prep (ADR-012, ADR-014)
-
-Retrieval is deterministic and orchestrator-side: no model call forms a query,
-so a run is reproducible from config alone. The shared `sources` pool is
-filtered on **topic + `side`** (never `stance`, which is a persona label, not a
-position — ADR-007 §7); a team's own `corpus` is filtered on topic only,
-because everything in it is that side's already. Top 10 per pool, layered.
-
-Both pools are **JSONL files that must already exist on disk** — `debate`
-downloads nothing. Shared pools live in `~/.cache/debatebench/sources/<name>.jsonl`,
-overridable with **`DEBATEBENCH_SOURCES_DIR`** (ADR-014 §5); a team's `corpus`
-is a path in its own team file. A row is `id`, `text`, `topic`, `source`, plus
-`side` in a shared pool only. Preparing those files from the real datasets is a
-one-time manual step, deliberately not code this tool ships.
-
-`prep_budget` buys exactly one model call per side: retrieval itself is free.
-The prep turn records the raw passages as `evidence` and the synthesis as
-`text`, and its `budget` field holds `prep_budget`. **Prep is private** — a
-side sees its own notes in later phases, never the opponent's — and raw
-passages never reach any prompt after the synthesis call. A side that retrieves
-nothing from *either* pool fails the run rather than debating unprepared.
 
 ## Backend
 
@@ -212,29 +176,6 @@ Models (AFM) or another very small/instant model.** Don't reach for a real MLX
 candidate model while iterating on plumbing, config parsing, or output format —
 save real models for once the harness is proven and the actual question is
 debate quality, not whether the pipe works.
-
-## Judge (ADR-013, ADR-015)
-
-One backend call per judging run, given the whole transcript, returning five
-independently-scored dimensions per side — argument quality (30), evidence
-grounding (25), steelman fidelity (20), rebuttal effectiveness (15), clarity
-(10). **The model never returns a total**: the sum and the winner are computed
-here and are always written beside every score that produced them (Hard Rule
-3). Winner is higher total, then steelman fidelity, then an explicit `draw`.
-
-`prep_grounded` is read off the transcript, never off the reply — it says
-whether claims were checkable against recorded prep evidence, so an unverified
-score can't look verified. The judge sees both sides' evidence: prep privacy
-binds debaters, not judges. An absent `hit_ledger` reads as empty and records
-`hit_ledger_reported: false`; a ledger that is present is validated strictly
-(statuses: open, conceded, rebutted, dodged). The reply must be JSON — a code
-fence and a preamble are tolerated, nothing else, and there is no retry, because
-a model that can't hold the format is a finding about that model.
-
-**Budgets bite here.** A reasoning judge spends the budget thinking: 3,000
-tokens scored a four-turn transcript but was entirely consumed by thinking on a
-prepped one; 6,000 scored everything (OPEN-QUESTIONS 13). The score file
-rotates to `<output>.1` like a transcript.
 
 ## Explicitly out of scope — do not add without a new ADR
 

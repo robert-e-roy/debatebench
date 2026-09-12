@@ -20,7 +20,10 @@ from urllib.parse import urlsplit, urlunsplit
 if TYPE_CHECKING:  # only for annotations: importing config here would pull in PyYAML
     from .config import RunConfig
 
-SCHEMA_VERSION = 1
+# 2 adds each turn's optional `length` (ADR-016 §6). A v1 file migrates forward
+# by doing nothing — it simply has no length fields — so both are readable.
+SCHEMA_VERSION = 2
+READABLE_VERSIONS = (1, 2)
 
 
 def utc_now() -> str:
@@ -78,6 +81,9 @@ class Turn:
     # Only a prep turn has evidence, and only there does the written document carry
     # the key at all: an empty list elsewhere would read as "prepared, found nothing".
     evidence: tuple[Evidence, ...] = ()
+    # The length its phase asked for, present only when the entry carried a suffix
+    # (ADR-016 §6). Never on a prep turn, which takes no suffix.
+    length: str | None = None
 
 
 @dataclass(frozen=True)
@@ -142,10 +148,13 @@ def as_json_dict(transcript: Transcript) -> dict:
 
 
 def _turn_dict(turn: Turn) -> dict:
-    """A turn as written, carrying `evidence` only where it means something (ADR-014 §6)."""
+    """A turn as written, carrying `evidence` and `length` only where they mean
+    something (ADR-014 §6, ADR-016 §6): absent, never null or empty."""
     document = asdict(turn)
     if not turn.evidence:
         del document["evidence"]
+    if turn.length is None:
+        del document["length"]
     return document
 
 
@@ -159,7 +168,7 @@ def write_json(document: dict, path: Path) -> Path | None:
 
     The new file is written in full first, so a failure while serializing leaves
     everything untouched. Returns the backup's path, or None if there was no file
-    to rotate (ADR-005, "Writing"; ADR-015 §7 applies the same rule to score files).
+    to rotate (ADR-005, "Writing"; ADR-017 §7 applies the same rule to score files).
     """
     text = json.dumps(document, allow_nan=False, ensure_ascii=False, indent=2)
     handle, temporary = tempfile.mkstemp(dir=path.parent, prefix=f"{path.name}.", suffix=".tmp")
@@ -195,9 +204,10 @@ def load_transcript(path: Path) -> Transcript:
         raise TranscriptError(f"{path}: the top level must be a JSON object")
 
     version = document.get("schema_version")
-    if version != SCHEMA_VERSION:
+    if version not in READABLE_VERSIONS:
+        readable = ", ".join(str(v) for v in READABLE_VERSIONS)
         raise TranscriptError(
-            f"{path}: schema_version is {version!r}, and this build reads {SCHEMA_VERSION}"
+            f"{path}: schema_version is {version!r}, and this build reads {readable}"
         )
 
     def need(holder: dict, key: str, kind: type, where: str):
@@ -259,6 +269,7 @@ def load_transcript(path: Path) -> Transcript:
                     Evidence(id=item["id"], source=item["source"], text=item["text"])
                     for item in turn.get("evidence", ())
                 ),
+                length=turn.get("length"),  # absent in every v1 file (ADR-016 §6)
             )
         )
     if not turns:

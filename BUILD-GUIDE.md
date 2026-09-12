@@ -65,7 +65,13 @@ ADR-007 for the full reasoning behind each): missing `output`; missing
 the reverse; a `teams:` list with other than two entries; the existing
 malformed-YAML/missing-required-field cases. `seed` absent is explicitly
 **not** a failure case — confirm the loader generates one and it's ready to
-be recorded, not that validation rejects it. Backend Protocol produces a real
+be recorded, not that validation rejects it. **Added by ADR-016** (retro-edit
+to finished B1): a phase entry with a bad suffix (`rebuttal:huge`), a
+`prep:` suffix, a `length` key on a `teams:` entry, and a phase entry that
+YAML parsed as a mapping (`rebuttal: long`, space after the colon) — the last
+must fail with a hint naming the space, not a generic type error. A valid
+suffixed list (`opening:short, rebuttal:long`) must load with the lengths
+attached. Backend Protocol produces a real
 response from AFM.
 
 ---
@@ -85,6 +91,10 @@ dashboard/fact-check panel will attach to.
 
 **Deliverable:** a full dummy debate (AFM on both sides) runs end to end
 through every configured phase and produces an in-memory transcript object.
+**Added by ADR-016** (retro-edit to finished B2): each phase prompt states the
+target sentence count when its entry carried a `:length` suffix (ADR-011 §2's
+2/5/10), the same instruction to both sides; bare entries say nothing about
+length. The turn records `length` only when a suffix was present.
 Keep per-phase budgets small enough that every AFM request — instructions,
 whatever context the prompt carries, and the reply — stays under AFM's
 ~4,096-token limit. A request over it fails with HTTP 500 (measured; see
@@ -128,29 +138,47 @@ so the old "document why not" fallback shouldn't be needed for AFM.
 
 **Depends on:** B3.
 
-**Scope:** implement `prep` as a real phase per **ADR-012**: the orchestrator
-forms each shared-pool query deterministically from `topic` + that side's
-**`side`** (`pro`/`con` — not `stance`, which ADR-007 §7 says is not a
-position on the motion), retrieves the top 10 matching passages per side
-from `sources` (`args-me`, `debatesum` — both license-checked; `args-me` is
-retrieval-only, never bundled), via topic+side metadata filtering. A team's
-own `corpus`, if present, is searched separately by topic-keyword only (no
-side filter — everything in it already belongs to that side), also top 10,
-layered on top of the shared-pool results. Neither dataset is fetched at
-runtime: both must exist locally as pre-downloaded JSONL files (ADR-012 §5,
-a one-time manual step, not code this session writes). Each side then gets
-exactly one model call, capped at `prep_budget`, to synthesize its combined
-retrieved passages into prep notes. The Prep turn records both the raw
-retrieved passages (`evidence`) and the synthesis call's output (`text`),
-with that turn's `budget` field holding `prep_budget`'s value, not `budget`'s
-(ADR-012 §4).
+**Scope:** implement `prep` as a real phase per **ADR-012** and **ADR-014**:
+the orchestrator forms each shared-pool query deterministically from `topic`
++ that side's **`side`** (`pro`/`con` — not `stance`, which ADR-007 §7 says
+is not a position on the motion), retrieves the top 10 matching passages per
+side from `sources` (`args-me`, `debatesum` — both license-checked;
+`args-me` is retrieval-only, never bundled), via topic+side metadata
+filtering. A team's own `corpus`, a JSONL file resolved relative to the
+*team file's own directory* (not `run.yaml`'s — ADR-014 §1), the same row
+shape as the shared pool minus `side`, is searched separately by
+topic-keyword only, also top 10, layered on top of the shared-pool results.
+**A side that retrieves zero passages from both pools combined fails the
+run** (ADR-014 §4) — checked after both pools, not after the shared pool
+alone, since a corpus-only or sources-only match is still a properly
+prepared side. Neither dataset is fetched at runtime: both must exist
+locally as pre-downloaded JSONL files under
+`~/.cache/debatebench/sources/`, overridable via `DEBATEBENCH_SOURCES_DIR`
+(ADR-012 §5, ADR-014 §5, a one-time manual step, not code this session
+writes).
+
+Each side then gets exactly one model call, capped at `prep_budget`, to
+synthesize its combined retrieved passages into prep notes. **Prep is
+private**: a side's own prep turn feeds its own later prompts; the
+opponent's prep is never rendered to it, only recorded in the transcript for
+the judge and fact-checker to read later (ADR-014 §2) — `render_debate`
+takes the viewing side as a required argument, no default. The Prep turn
+records the raw retrieved passages (`evidence`, present only on prep turns —
+ADR-014 §6) and the synthesis call's output (`text`), with that turn's
+`budget` field holding `prep_budget`'s value and `order` set to `0` for both
+sides, since nothing about parallel, independent retrieval is sequential
+(ADR-014 §3).
 
 **Deliverable:** a debate run where each side's Prep evidence is visible in the
 transcript, separately from its argument phases.
 
 **Exit gate:** confirm a claim made during Opening can be traced back to
 something actually present in that side's own Prep evidence set — that
-traceability is the entire point of this phase.
+traceability is the entire point of this phase. Also confirm two failure
+modes ADR-014 specifies: a side whose combined retrieval (both pools) comes
+back empty aborts the run with a named error, and a debate transcript where
+one side's Opening never references or benefits from the *other* side's prep
+notes (privacy actually held, not just assumed).
 
 ---
 
@@ -182,33 +210,45 @@ explicit tiebreaker.
 winner by total), a genuinely close one (exercises the steelman tiebreak,
 including an actual `"draw"` result if totals and steelman both tie), and one
 with no `prep` in its phase list (exercises `prep_grounded: false`). Confirm
-each score breakdown explains *why*, not just *that*, a side won or the result
-was a draw — the diagnostic value is the point. **This exit gate tests that the
+each score breakdown explains *why*, not just *that*, a side won or the
+result was
+a draw — the diagnostic value is the point. **This exit gate tests that the
 mechanism works, not that the judge's scores are trustworthy** — item 6
 (correlating against human ratings) is separate and still fully open; B7
 stays blocked on it regardless of B5 passing this gate.
+a draw.
 
 ---
 
-## B6 — Fact-checker
+## B6 — Fact-check pass in `judge`
 
-**Depends on:** B4 (needs Prep evidence to check claims against) and B5 (runs
-alongside judge conceptually, but is a separate, faster pass — not part of
-`judge` itself).
+**Depends on:** B4 (recorded `evidence` to check against) and B5 (the
+`judge` command this pass lives in).
 
-**Scope:** fast, per-claim verification against the side's own recorded Prep
-evidence (not open-ended search), designed to run per-turn rather than only at
-the end. Decide whether it's invoked as part of `debate` (emitting fact-check
-events per turn) or as a related but separate command — not yet settled, make
-the call here and log it as a new ADR if it deviates from assuming it's
-event-driven inside `debate`.
+**Scope:** per **ADR-015**: a post-hoc pass inside `judge`, on by default,
+switched by the existing `--fact-check` / `--no-fact-check` flag. It is a
+**second backend call** after the scoring call, capped by the same
+`--budget` value applied on its own. It extracts each argument-phase turn's
+factual claims and gives each a verdict against **everything recorded in the
+transcript** — both sides' `evidence` passages and both sides' turns — never
+against the model's own knowledge as ground truth: `supported`,
+`contradicted`, `unsupported`, or `not_checkable`. A transcript with no prep
+gets `not_checkable` throughout, with a note saying why. Output is the
+`fact_check` section of the score file (ADR-015 §4; score-file
+`schema_version` 2). Real-time per-turn checking is *not* built here — it's
+the Swift app's feature, attaching later to the event seam B2 already wired.
 
-**Deliverable:** each turn's claims get a fact-check verdict (supported /
-unsupported / not-checkable) against that side's Prep evidence.
+**Deliverable:** a score file whose `fact_check.claims` ledger lists every
+extracted factual claim with a verdict and, where applicable, the
+`evidence_ids` that support or contradict it.
 
-**Exit gate:** deliberately have a side cite something outside its own Prep
-evidence and confirm the fact-checker catches it — this is the specific
-failure mode Prep (B4) exists to make catchable.
+**Exit gate:** three checks. (1) A side cites something present in *its own*
+prep evidence — verdict `supported`, correct `evidence_ids`. (2) A side
+asserts something that the *opponent's* recorded evidence contradicts —
+verdict `contradicted`, pointing at the opponent's passage; this is the
+finding `prep_grounded` alone can never produce, and the reason the pass
+exists. (3) A side asserts an opinion or prediction — verdict
+`not_checkable`, not a false `unsupported`.
 
 ---
 

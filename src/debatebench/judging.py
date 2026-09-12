@@ -1,4 +1,4 @@
-"""Scoring a transcript against the rubric (ADR-013, ADR-015).
+"""Scoring a transcript against the rubric (ADR-013, ADR-017).
 
 Hard Rule 3 lives here. The model returns five independently-scored dimensions
 per side and never a blended number; the total and the winner are computed here,
@@ -31,7 +31,7 @@ DIMENSIONS = (
 )
 MAXIMA = dict(DIMENSIONS)
 
-# ADR-002's vocabulary, fixed by ADR-015 §3: anything else is a parse failure.
+# ADR-002's vocabulary, fixed by ADR-017 §3: anything else is a parse failure.
 HIT_STATUSES = ("open", "conceded", "rebutted", "dodged")
 
 # How far the judge's one reply may exceed --budget, as a turn may (ADR-010 §3).
@@ -56,7 +56,7 @@ class DimensionScore:
     justification: str
     prep_grounded: bool | None = None  # evidence_grounding only (ADR-013 §4)
     hit_ledger: tuple[Hit, ...] | None = None  # rebuttal_effectiveness only
-    hit_ledger_reported: bool | None = None  # False when the judge gave none (ADR-015 §8)
+    hit_ledger_reported: bool | None = None  # False when the judge gave none (ADR-017 §8)
 
 
 @dataclass(frozen=True)
@@ -182,7 +182,7 @@ def build_request(transcript: Transcript, budget: int) -> GenerationRequest:
             Message("user", f"{render(transcript)}\n\nScore this debate."),
         ),
         max_completion_tokens=budget,
-        # The debate's own seed, so re-judging one transcript is reproducible (ADR-015 §6).
+        # The debate's own seed, so re-judging one transcript is reproducible (ADR-017 §6).
         seed=transcript.run.seed,
     )
 
@@ -206,7 +206,7 @@ _WIRE_SHAPE = """{
 def render(transcript: Transcript) -> str:
     """The whole debate as the judge sees it: both sides, every turn, all evidence.
 
-    Prep privacy binds debaters, not the judge (ADR-015 §5) — scoring whether a
+    Prep privacy binds debaters, not the judge (ADR-017 §5) — scoring whether a
     claim traces to a side's own evidence means seeing that evidence.
     """
     run = transcript.run
@@ -293,7 +293,7 @@ def _dimension_score(
         max=maximum,
         justification=justification.strip(),
         # A fact about the transcript, not a judgment, so it's taken from the
-        # transcript and never from the reply (ADR-015 §5).
+        # transcript and never from the reply (ADR-017 §5).
         prep_grounded=grounded if name == "evidence_grounding" else None,
         hit_ledger=ledger,
         hit_ledger_reported=reported,
@@ -301,7 +301,7 @@ def _dimension_score(
 
 
 def _hit_ledger(ledger: Any, where: str) -> tuple[tuple[Hit, ...], bool]:
-    """The ledger and whether the judge supplied one at all (ADR-015 §8).
+    """The ledger and whether the judge supplied one at all (ADR-017 §8).
 
     An absent ledger reads as empty: the score and its justification are both
     there, so no dimension failed to parse, and inventing a failure would throw
@@ -329,7 +329,7 @@ def _hit_ledger(ledger: Any, where: str) -> tuple[tuple[Hit, ...], bool]:
 
 
 def _json_object(text: str, *, truncated: bool) -> dict:
-    """The JSON object in a reply, tolerating a code fence and a preamble (ADR-015 §4)."""
+    """The JSON object in a reply, tolerating a code fence and a preamble (ADR-017 §4)."""
     cleaned = text.strip()
     if cleaned.startswith("```"):
         cleaned = cleaned.split("\n", 1)[-1]
@@ -397,5 +397,5 @@ def _dimension_dict(dimension: DimensionScore) -> dict:
 
 
 def write_scores(sheet: ScoreSheet, path: Path) -> Path | None:
-    """Write the score file, rotating any file already there to ``<path>.1`` (ADR-015 §7)."""
+    """Write the score file, rotating any file already there to ``<path>.1`` (ADR-017 §7)."""
     return write_json(as_json_dict(sheet), path)

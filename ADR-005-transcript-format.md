@@ -4,7 +4,18 @@
 **Date:** 2026-09-11
 **Amended:** 2026-09-11 — accepted with ADR-010, which settles what counts as a
 valid turn and adds `hit_budget` and `budget_tolerance`. Two questions about
-writing the file moved to B3.
+writing the file moved to B3. **Amended 2026-09-12** (via ADR-014): the
+`evidence` item shape is no longer provisional — fixed at `id`, `source`,
+`text` (ADR-014 §6), present only on prep turns, never as an empty list
+elsewhere; and `order` is `0` for *both* sides on a prep turn (ADR-014 §3),
+an exception to "who spoke first (0 or 1)" below, since parallel independent
+retrieval has no speaking order. A Prep turn's `budget` field holds
+`prep_budget`'s value (ADR-012 §4). No `schema_version` bump for any of
+these. **Amended 2026-09-12** (via ADR-016): each turn gains an optional
+`length` field (`"short"`/`"medium"`/`"long"`), present only when the phase
+carried a suffix, never on prep turns; `run.phases` stays bare names. This is
+a shape change and v1 files already exist, so **`schema_version` is now 2**;
+migrating a v1 transcript forward adds nothing.
 **Depends on:** ADR-001 (never key by side alone; output file only), ADR-002 (two commands, hard invariant), ADR-003 (token usage reporting), ADR-007 (`run.yaml` schema; `output:` path)
 
 ## Decision

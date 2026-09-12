@@ -7,7 +7,10 @@ unknown and duplicate keys, phase names, team-file fields, types), and §7,
 each team's side of the motion (`side: pro` / `side: con`). **Amended
 2026-09-12** (via ADR-013): `judge` gains a required `--budget` flag, the
 completion-token cap for its one scoring call — ADR-013 found this was
-genuinely missing, not just undocumented.
+genuinely missing, not just undocumented. **Amended 2026-09-12** (via
+ADR-016): each `format.phases` entry may carry a `:length` suffix
+(`rebuttal:long`); see ADR-016 §5 for the grammar and the mapping-vs-string
+hint. A `length` key in a `teams:` entry is an error.
 **Depends on:** ADR-002 ("Config", "CLI shape"), ADR-003 (token-budget enforcement
 findings), `debate-formats-research.md`
 **Resolves:** OPEN-QUESTIONS.md items 3, 8, 10 (schema-level slice), 11
@@ -148,7 +151,9 @@ Writing B1's validation turned up details §1–§5 didn't settle:
 - **Phase names come from a fixed list:** `prep`, `opening`, `rebuttal`, `retort`,
   `conclusion`. The list must not be empty, and any other name is an error.
   `prep` may appear at most once and must come first; the others may repeat (§4).
-  What each phase means stays with B2.
+  What each phase means stays with B2. An entry may be `name:length` with
+  `length` in `short`/`medium`/`long` (ADR-016 §5); `prep` may not carry one;
+  `rebuttal: long` with a space is a mapping and is rejected with a hint.
 - **Team files** require `id`, `name`, `voice` and `stance` (non-empty strings)
   and `values` (a list of strings). `corpus` is optional. A `model` or `budget`
   field is an error that points to `run.yaml`: those are run-time settings, not

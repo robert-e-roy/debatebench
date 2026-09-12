@@ -83,6 +83,9 @@ async def _take_turn(
         DebateEvent(EventType.TURN_STARTED, phase_index=phase_index, phase=phase, side_index=side_index)
     )
     started_at = utc_now()
+    # The length this phase asked for, applying to both sides (ADR-016 §1). Always
+    # None for prep, which takes no suffix.
+    length = config.lengths[phase_index]
     if phase == "prep":
         evidence = _prepare(config, phase_index, side)
         request = build_prep_request(config.topic, side, evidence, config.seed)
@@ -90,7 +93,9 @@ async def _take_turn(
         budget, order = side.prep_budget, 0
     else:
         evidence = ()
-        request = build_request(config.topic, side, phase, config.sides, turns, config.seed)
+        request = build_request(
+            config.topic, side, phase, config.sides, turns, config.seed, length
+        )
         budget = side.budget
     try:
         result = await backends[side_index].generate(request)
@@ -120,6 +125,7 @@ async def _take_turn(
         latency_ms=result.latency_ms,
         started_at=started_at,
         evidence=evidence,
+        length=length,
     )
     await bus.emit(
         DebateEvent(

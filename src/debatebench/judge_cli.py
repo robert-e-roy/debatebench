@@ -26,18 +26,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("transcript", metavar="transcript.json", help="a transcript debate wrote")
     parser.add_argument("--model", required=True, help="the judging model, ideally neither debater")
-    parser.add_argument("--base-url", required=True, help="the judging model's server (ADR-015)")
+    parser.add_argument("--base-url", required=True, help="the judging model's server (ADR-017)")
     parser.add_argument(
         "--budget", required=True, type=int, help="completion-token cap for the one scoring call"
     )
     parser.add_argument("--output", required=True, help="where to write the score file")
     parser.add_argument("--fact-check", action="store_true", help="not built yet; arrives in B6")
     parser.add_argument(
-        "--no-fact-check", action="store_true", help="the default until B6 ships (ADR-015 §1)"
+        "--no-fact-check", action="store_true", help="the default until B6 ships (ADR-017 §1)"
     )
     args = parser.parse_args(argv)
 
-    # Honouring --fact-check would mean writing that a check ran when none did (ADR-015 §1).
+    # Honouring --fact-check would mean writing that a check ran when none did (ADR-017 §1).
     if args.fact_check:
         _log("fact-checking arrives in B6; until then judge runs with --no-fact-check")
         return 1

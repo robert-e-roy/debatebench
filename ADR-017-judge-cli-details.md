@@ -1,4 +1,4 @@
-# ADR-015: Judge CLI Details — Fact-Check Default, `--base-url`, and Reading the Model's Reply
+# ADR-017: Judge CLI Details — Fact-Check Default, `--base-url`, and Reading the Model's Reply
 
 **Status:** Accepted
 **Date:** 2026-09-12
