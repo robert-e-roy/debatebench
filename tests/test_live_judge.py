@@ -54,9 +54,17 @@ WEAK = [
 
 
 def _reachable() -> None:
+    # Something answering on the port isn't enough: a stray web server on 8080 will
+    # answer too, and then every request fails as an HTTP 404 two minutes later.
     try:
-        with urllib.request.urlopen(f"{BASE_URL.rstrip('/v1')}/v1/models", timeout=5):
-            return
+        with urllib.request.urlopen(f"{BASE_URL.rstrip('/v1')}/v1/models", timeout=5) as answer:
+            listed = answer.read().decode("utf-8", "replace")
+        if MODEL not in listed:
+            pytest.fail(
+                f"something is listening at {BASE_URL} but it does not serve {MODEL}; "
+                f"it answered: {listed[:200]}"
+            )
+        return
     except OSError as e:
         # Opted in but can't run: fail, never skip (ADR-004).
         pytest.fail(
