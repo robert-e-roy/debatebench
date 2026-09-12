@@ -4,7 +4,10 @@
 **Date:** 2026-09-11
 **Amended:** 2026-09-11 — added §6, the validation details B1 needs (paths,
 unknown and duplicate keys, phase names, team-file fields, types), and §7,
-each team's side of the motion (`side: pro` / `side: con`)
+each team's side of the motion (`side: pro` / `side: con`). **Amended
+2026-09-12** (via ADR-013): `judge` gains a required `--budget` flag, the
+completion-token cap for its one scoring call — ADR-013 found this was
+genuinely missing, not just undocumented.
 **Depends on:** ADR-002 ("Config", "CLI shape"), ADR-003 (token-budget enforcement
 findings), `debate-formats-research.md`
 **Resolves:** OPEN-QUESTIONS.md items 3, 8, 10 (schema-level slice), 11
@@ -21,7 +24,9 @@ from that file. **`output:` is now a required field**; B1's validation rejects
 a `run.yaml` missing it. There is no `--output` flag on `debate`.
 
 `judge` takes one positional argument, a transcript path, plus flags:
-`--model` (required, no default), `--base-url` (optional), `--fact-check` /
+`--model` (required, no default), `--budget` (required, no default — added
+by ADR-013 §2, the completion-token cap for its one scoring call),
+`--base-url` (optional), `--fact-check` /
 `--no-fact-check` (default: on), `--output <path>` (required).
 
 This isn't an inconsistency, it reflects what each command's config actually

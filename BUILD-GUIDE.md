@@ -128,13 +128,22 @@ so the old "document why not" fallback shouldn't be needed for AFM.
 
 **Depends on:** B3.
 
-**Scope:** implement `prep` as a real phase — bounded budget, retrieval against
-configured `sources`, produces a recorded per-side evidence set that gets
-attached to the transcript and is what later phases (and the fact-checker in
-B6) draw from. Decide: static curated corpora only for v1, or also allow live
-retrieval. This question is raised here, not in ADR-002, but any live source still
-has to clear ADR-002's licensing gate ("Data sourcing"). Pick one and note it as a
-config option either way; don't hardcode an assumption silently.
+**Scope:** implement `prep` as a real phase per **ADR-012**: the orchestrator
+forms each shared-pool query deterministically from `topic` + that side's
+**`side`** (`pro`/`con` — not `stance`, which ADR-007 §7 says is not a
+position on the motion), retrieves the top 10 matching passages per side
+from `sources` (`args-me`, `debatesum` — both license-checked; `args-me` is
+retrieval-only, never bundled), via topic+side metadata filtering. A team's
+own `corpus`, if present, is searched separately by topic-keyword only (no
+side filter — everything in it already belongs to that side), also top 10,
+layered on top of the shared-pool results. Neither dataset is fetched at
+runtime: both must exist locally as pre-downloaded JSONL files (ADR-012 §5,
+a one-time manual step, not code this session writes). Each side then gets
+exactly one model call, capped at `prep_budget`, to synthesize its combined
+retrieved passages into prep notes. The Prep turn records both the raw
+retrieved passages (`evidence`) and the synthesis call's output (`text`),
+with that turn's `budget` field holding `prep_budget`'s value, not `budget`'s
+(ADR-012 §4).
 
 **Deliverable:** a debate run where each side's Prep evidence is visible in the
 transcript, separately from its argument phases.
@@ -150,19 +159,36 @@ traceability is the entire point of this phase.
 **Depends on:** B3 (can run parallel to B4 — judge scoring doesn't need Prep
 to exist yet, just a transcript).
 
-**Scope:** the five independently-scored rubric dimensions (never blended),
-the structured hit-ledger for rebuttal effectiveness (open/conceded/rebutted/
-dodged), and a separate judge-model call, ideally distinct from either
-debating model. Reads a transcript file, writes a score file.
+**Scope:** per **ADR-013**: one backend call, given the whole transcript,
+outputs five independently-scored dimensions per side plus the rebuttal
+hit-ledger, never a blended number (Hard Rule 3), capped by a new required
+`--budget` flag (ADR-007 §1, amended). The orchestrator, not the model, sums
+them into each side's total and picks a winner: higher total, then steelman
+fidelity as tiebreaker, then an explicit `"draw"` if still tied. Evidence
+grounding scores as `prep_grounded: true` (checked against the side's Prep
+evidence) or `prep_grounded: false` (general rigor only) depending on
+whether Prep ran in that transcript — this is what lets `judge` run without
+Prep ever having existed. A judge model whose context can't hold the whole
+transcript fails via the existing `BackendError` path (ADR-009), same as any
+other backend limit — no new handling needed for that case. Reads a
+transcript file, writes a score file in the shape ADR-013 §5 defines.
 
-**Deliverable:** `judge transcript.json --model <model> --output score.json`
-(ADR-007) produces a
+**Deliverable:** `judge transcript.json --model <model> --budget <n> --output
+score.json` (ADR-007, ADR-013) produces a
 per-side, per-dimension breakdown plus a winner, with steelman fidelity as the
 explicit tiebreaker.
 
-**Exit gate:** feed it a deliberately lopsided transcript (one side clearly
-weaker) and confirm the score breakdown explains *why*, not just *that*, one
-side won — the diagnostic value is the point, not just a final number.
+**Exit gate:** three transcripts, not one: a deliberately lopsided one (clear
+winner by total), a genuinely close one (exercises the steelman tiebreak,
+including an actual `"draw"` result if totals and steelman both tie), and one
+with no `prep` in its phase list (exercises `prep_grounded: false`). Confirm
+each score breakdown explains *why*, not just *that*, a side won or the
+result was
+a draw — the diagnostic value is the point. **This exit gate tests that the
+mechanism works, not that the judge's scores are trustworthy** — item 6
+(correlating against human ratings) is separate and still fully open; B7
+stays blocked on it regardless of B5 passing this gate.
+a draw.
 
 ---
 

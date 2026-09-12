@@ -52,13 +52,22 @@ class Usage:
 
 
 @dataclass(frozen=True)
+class Evidence:
+    """One retrieved passage a prep turn was given, in ADR-005's item shape."""
+
+    id: str
+    source: str
+    text: str
+
+
+@dataclass(frozen=True)
 class Turn:
     """One side's turn in one phase, keyed by (phase_index, side_index) — Hard Rule 2."""
 
     phase_index: int
     phase: str
     side_index: int
-    order: int  # 0 if this side spoke first in the phase, 1 if second
+    order: int  # 0 if this side spoke first in the phase, 1 if second; 0 on prep (ADR-014 §3)
     text: str
     usage: Usage
     budget: int
@@ -66,6 +75,9 @@ class Turn:
     finish_reason: str
     latency_ms: int
     started_at: str
+    # Only a prep turn has evidence, and only there does the written document carry
+    # the key at all: an empty list elsewhere would read as "prepared, found nothing".
+    evidence: tuple[Evidence, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -125,8 +137,16 @@ def as_json_dict(transcript: Transcript) -> dict:
         "started_at": transcript.started_at,
         "finished_at": transcript.finished_at,
         "run": asdict(transcript.run),
-        "turns": [asdict(turn) for turn in transcript.turns],
+        "turns": [_turn_dict(turn) for turn in transcript.turns],
     }
+
+
+def _turn_dict(turn: Turn) -> dict:
+    """A turn as written, carrying `evidence` only where it means something (ADR-014 §6)."""
+    document = asdict(turn)
+    if not turn.evidence:
+        del document["evidence"]
+    return document
 
 
 def write_transcript(transcript: Transcript, path: Path) -> Path | None:

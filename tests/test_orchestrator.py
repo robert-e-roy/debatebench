@@ -92,10 +92,12 @@ def test_pro_opens_even_when_listed_second(run_dir: Path):
     assert first_speaker.side_index == 1  # listed second, still opens
 
 
-def test_prep_is_rejected_before_any_model_call(run_dir: Path):
+def test_prep_needs_its_sources_prepared_before_any_model_call(run_dir: Path, monkeypatch):
+    # Datasets are a one-time manual step, so a missing one is a named error (ADR-012 §5).
+    monkeypatch.setenv("DEBATEBENCH_SOURCES_DIR", str(run_dir / "not-prepared"))
     config = configure(run_dir, ("prep", "opening"))
     backends = fakes()
-    with pytest.raises(DebateError, match="'prep', which arrives in B4"):
+    with pytest.raises(DebateError, match="source 'args-me' is not prepared"):
         debate(config, backends)
     assert all(not backend.requests for backend in backends)
 

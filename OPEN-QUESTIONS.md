@@ -23,20 +23,18 @@ PersonaKit side, not scheduled. B1 is unblocked.
 
 ## Not yet recorded in any ADR
 
-### 2. Rubric weights and winner vs Hard Rule 3
+### 2. Rubric weights and winner vs Hard Rule 3 — RESOLVED by ADR-013 (amended 2026-09-12)
 
-- **Where:** ADR-002 "Judge design"; BUILD-GUIDE B5; `CLAUDE.md` Hard Rule 3.
-- **Issue:** Rule 3 forbids blending the dimensions into one number. But the rubric
-  has weights summing to 100 (30/25/20/15/10), B5 must name a winner, and steelman
-  fidelity is a "tiebreaker". All three imply an aggregate.
-- **A reading that reconciles them:** the judge model never outputs a blended
-  score; a deterministic, documented step combines the per-dimension scores to
-  pick a winner; every per-dimension score is always reported. Either state that
-  or drop the weights and the winner.
-- **Also undecided:** what "evidence grounding" is scored against. If it's the
-  side's prep evidence, then B5 depends on B4, contradicting B5's "can run
-  parallel to B4".
-- **Blocks:** B5.
+The model outputs five independently-scored fields, never a blend (satisfies
+Hard Rule 3 literally), via one call given the whole transcript, both sides
+scored together — `judge` now takes a required `--budget` flag for that call
+(ADR-007 §1, amended). A deterministic, always-shown-with-its-inputs sum
+outside the model computes the winner: higher total, then steelman fidelity
+as tiebreaker, then an explicit **draw** if still tied. Evidence grounding
+scores in one of two labeled modes (`prep_grounded: true/false`) depending
+on whether Prep ran, which is what lets B5 genuinely run in parallel with
+B4. **This makes B5 buildable, not trustworthy — item 6 below is untouched
+and still fully blocks B7.**
 
 ### 3. Budget semantics — RESOLVED by ADR-007
 
@@ -134,15 +132,32 @@ ADR-007 "CLI invocation" for why. The `judge:` block is dropped from
   (ADR-007 §7). A built-in sweep would be new scope, needing an ADR.
 - **Blocks:** interpreting any model comparison. Nothing in B0–B7 strictly.
 
-### 10. `sources` vs `corpus`, and how Prep retrieves — SCHEMA SLICE RESOLVED by ADR-007
+### 10. `sources` vs `corpus`, and how Prep retrieves — FULLY RESOLVED by ADR-012 (amended 2026-09-12)
 
 `sources:` is a shared pool available to every side; each team's `corpus:` is
-an optional additional per-side layer on top of it. B1 validates only that
-both are well-formed. **Still open, blocks B4 only:** who forms retrieval
-queries (model vs. orchestrator), the retrieval method itself, and exactly
-what `prep_budget` is spent on mechanically — and, per ADR-004, this also
-blocks writing a `prep_budget`-enforcement test (deliberately out of ADR-004's
-Rule 5 table for now; belongs to B4/B6 once the mechanism exists).
+an optional additional per-side layer on top of it (ADR-007 §3). Query
+formation for the shared pool is orchestrator-driven, keyed on **`side`**
+(`pro`/`con`), not `stance` (an earlier version of this ADR used `stance` in
+error — ADR-007 §7 already established it's not a position on the motion).
+Shared-pool retrieval is topic+side metadata filtering; a team's own
+`corpus:` gets a separate topic-only keyword search. Both `args-me` and
+`debatesum` are license-checked (DebateSum: MIT;
+args-me: CC-BY-4.0 with a stated "individual rights still apply" caveat,
+retrieval-only, never bundled) and are **not fetched at runtime** — both
+must exist locally as pre-downloaded JSONL files, a one-time manual step,
+keeping debatebench's dependencies at ADR-008's fixed two and trivially
+satisfying the offline requirement. `prep_budget` caps exactly one synthesis
+call per side.
+
+**ADR-014 settled what B4 hit on contact** with this: a team's `corpus:` is a
+JSONL file in the shared pool's row shape (minus `side`), resolved from the
+team file's own directory; prep is private to the side that wrote it; a prep
+turn's `order` is 0 for both sides, since nothing about prep is sequential;
+zero passages **after both pools** fails the run, so a corpus-only side is
+properly prepared; `DEBATEBENCH_SOURCES_DIR` overrides where the pools are
+read from; and `evidence` appears only on prep turns. **B4 was built and its
+exit gate met live on 2026-09-12**, including the `prep_budget`-enforcement
+test ADR-004's Rule 5 table was waiting on.
 
 ### 11. Phase and turn semantics — RESOLVED by ADR-007 and ADR-010
 
@@ -157,35 +172,15 @@ answers the rebuttal aimed at your case, while `rebuttal` attacks the
 opponent's; steelmanning happens inside each rebuttal, so there's no separate
 steelman phase.
 
-### 12. Response length in human terms
+### 12. Response length in human terms — RESOLVED by ADR-011
 
-- **Where:** ADR-007 §2 (`budget`); B2's prompt construction.
-- **Decided (2026-09-11):** users must be able to set response length in human
-  terms, either as speaking time ("1 minute", "2 minutes") or as a label
-  (`short`, `medium`, `long`), not only as a raw token count.
-- **Why it's needed:** today's `budget` is a ceiling, not a target. A large budget
-  doesn't make a reply longer, because the model writes what the prompt asks for.
-  A small one cuts the reply off mid-sentence, and AFM still reports
-  `finish_reason: stop` (ADR-003). Only a prompt that states the length makes
-  length follow the setting.
-- **Open:**
-  - **Conversion to tokens.** Time becomes words through a speaking rate, and words
-    become tokens at a rate that varies by tokenizer. Which rates, and are they
-    recorded in the transcript so a run can be reproduced?
-  - **Label values.** What `short`, `medium` and `long` mean, and whether they're
-    fixed or configurable.
-  - **Relation to `budget`.** Either the new setting replaces `budget`, or it
-    becomes the target the prompt states while `budget` stays the hard cap. Either
-    way it must resolve to a token count the orchestrator enforces (Hard Rule 5).
-  - **Per-phase lengths.** One length for every phase (as `budget` is now), or a
-    different length per phase, as real formats have (Public Forum: 4, 4, 3 and 2
-    minutes).
-  - **Time syntax.** An unquoted `1:30` is a YAML 1.1 base-60 integer, which the
-    strict loader rejects (ADR-008). Times need a string form such as `90s` or
-    `2min`.
-- **Blocks:** nothing yet. B2 goes ahead with `budget` as a cap only, and the
-  prompts say nothing about length. Adding the field later needs an ADR-007
-  amendment, B1 validation and a change to B2's prompts.
+Labels only, no time-based option: a new optional per-team `length` field
+(`short`=2 sentences, `medium`=5, `long`=10), fixed constants for v1. It
+states a target in the prompt; `budget` stays the unchanged hard cap. No
+cross-field validation between them — a mismatch surfaces via the existing
+`hit_budget` flag. Sentence counts sidestep both the time-to-token conversion
+question and the YAML time-syntax problem entirely. Applies uniformly across
+a side's argument phases, not per-phase, for v1.
 
 ### 13. Reasoning models spend the budget on thinking
 
@@ -241,6 +236,11 @@ steelman phase.
 ---
 
 ## Housekeeping (actions, not design questions)
+
+- **Resolved 2026-09-12 — the ADR-008 collision.** The Prep-retrieval decision
+  drafted earlier under the label "ADR-008" is reinstated as **ADR-012**
+  (revalidated against everything accepted since, and adding the args-me/
+  DebateSum license check that draft never did). See item 10 above.
 
 - **Resolved 2026-09-11 — backed up.** This folder is a git repo, with `origin` at
   `box:Projects/DebateBench.git` via `box-backup-init.sh`. Push regularly; it's

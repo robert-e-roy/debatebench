@@ -11,6 +11,8 @@ CASES = [
     ("debatebench.events", {"httpx", "yaml"}),
     ("debatebench.prompts", {"httpx", "yaml"}),
     ("debatebench.orchestrator", {"httpx", "yaml"}),
+    # No dataset library either: retrieval reads plain JSONL (ADR-012 §5).
+    ("debatebench.retrieval", {"httpx", "yaml", "datasets", "huggingface_hub", "pandas"}),
     ("debatebench.config", {"httpx"}),
     ("debatebench.openai_compat", {"yaml"}),
 ]

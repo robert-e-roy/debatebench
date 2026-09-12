@@ -13,8 +13,9 @@ from typing import TYPE_CHECKING
 
 from .backend import Backend, BackendError
 from .events import DebateEvent, EventBus, EventType
-from .prompts import build_request
-from .transcript import Transcript, Turn, Usage, snapshot, utc_now
+from .prompts import build_prep_request, build_request
+from .retrieval import RetrievalError, retrieve
+from .transcript import Evidence, Transcript, Turn, Usage, snapshot, utc_now
 
 __all__ = ["BUDGET_TOLERANCE", "DebateError", "Transcript", "run_debate", "speaking_order"]
 
@@ -32,10 +33,6 @@ class DebateError(Exception):
 async def run_debate(
     config: RunConfig, backends: Sequence[Backend], events: EventBus | None = None
 ) -> Transcript:
-    if "prep" in config.phases:
-        raise DebateError(
-            "format.phases includes 'prep', which arrives in B4 (ADR-010); remove it for now"
-        )
     bus = events or EventBus()
     started_at = utc_now()
     turns: list[Turn] = []
@@ -86,7 +83,15 @@ async def _take_turn(
         DebateEvent(EventType.TURN_STARTED, phase_index=phase_index, phase=phase, side_index=side_index)
     )
     started_at = utc_now()
-    request = build_request(config.topic, side, phase, config.sides, turns, config.seed)
+    if phase == "prep":
+        evidence = _prepare(config, phase_index, side)
+        request = build_prep_request(config.topic, side, evidence, config.seed)
+        # Prep is capped by prep_budget, and nothing about it is sequential (ADR-014 §3).
+        budget, order = side.prep_budget, 0
+    else:
+        evidence = ()
+        request = build_request(config.topic, side, phase, config.sides, turns, config.seed)
+        budget = side.budget
     try:
         result = await backends[side_index].generate(request)
     except BackendError as e:
@@ -95,10 +100,10 @@ async def _take_turn(
     # A turn is checked before it's kept: no silent empty or over-budget turns (ADR-010 §3).
     if not result.text.strip():
         raise DebateError(f"{_where(phase_index, phase, side)}: the model returned no text")
-    if result.completion_tokens > side.budget + BUDGET_TOLERANCE:
+    if result.completion_tokens > budget + BUDGET_TOLERANCE:
         raise DebateError(
             f"{_where(phase_index, phase, side)}: {result.completion_tokens} completion tokens "
-            f"for a budget of {side.budget}, over the {BUDGET_TOLERANCE}-token tolerance "
+            f"for a budget of {budget}, over the {BUDGET_TOLERANCE}-token tolerance "
             "(Hard Rule 5)"
         )
 
@@ -109,11 +114,12 @@ async def _take_turn(
         order=order,
         text=result.text,
         usage=Usage(result.prompt_tokens, result.completion_tokens),
-        budget=side.budget,
-        hit_budget=result.completion_tokens >= side.budget,
+        budget=budget,
+        hit_budget=result.completion_tokens >= budget,
         finish_reason=result.finish_reason,
         latency_ms=result.latency_ms,
         started_at=started_at,
+        evidence=evidence,
     )
     await bus.emit(
         DebateEvent(
@@ -125,6 +131,24 @@ async def _take_turn(
         )
     )
     return turn
+
+
+def _prepare(config: RunConfig, phase_index: int, side: Side) -> tuple[Evidence, ...]:
+    """One side's retrieved passages, before its one prep call sees them (ADR-012 §§1–2)."""
+    try:
+        evidence = retrieve(config.topic, side.side, config.sources, side.team.corpus_path)
+    except RetrievalError as e:
+        raise DebateError(f"{_where(phase_index, 'prep', side)}: {e}") from e
+    if not evidence:
+        # Counted after both pools: a corpus-only side is properly prepared (ADR-014 §4).
+        searched = ", ".join(config.sources) or "no sources"
+        if side.team.corpus is not None:
+            searched += f" and its own corpus ({side.team.corpus})"
+        raise DebateError(
+            f"{_where(phase_index, 'prep', side)}: nothing matched the topic in {searched}, "
+            "so this side would go into the debate with no evidence at all"
+        )
+    return evidence
 
 
 def _where(phase_index: int, phase: str, side: Side) -> str:

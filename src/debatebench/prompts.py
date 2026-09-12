@@ -10,15 +10,21 @@ Standard library only (ADR-008).
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from .backend import GenerationRequest, Message
-from .transcript import Turn
+from .transcript import Evidence, Turn
 
 if TYPE_CHECKING:  # only for annotations: importing config here would pull in PyYAML
     from .config import Side
 
 PHASE_INSTRUCTIONS = {
+    "prep": (
+        "Read the passages above and write your prep notes: the strongest arguments "
+        "for your side, the evidence behind each one, and the passage id it came from. "
+        "These notes are yours alone — the other side never sees them."
+    ),
     "opening": "Give your opening statement: set out your case.",
     "rebuttal": (
         "Give your rebuttal. First state the other side's strongest argument fairly, in "
@@ -37,35 +43,81 @@ def build_request(
     turns: list[Turn],
     seed: int | None = None,
 ) -> GenerationRequest:
-    position = "for" if side.side == "pro" else "against"
-    team = side.team
-    system = (
-        f"You are {team.name}, a debater. Your outlook: {team.stance}. "
-        f"Your voice: {team.voice}. What you value: {', '.join(team.values)}.\n\n"
-        f"The motion is: {topic}\n"
-        f"You argue {position} the motion, whatever your own view."
-    )
     return GenerationRequest(
         messages=(
-            Message("system", system),
-            Message("user", f"{render_debate(sides, turns)}\n\n{PHASE_INSTRUCTIONS[phase]}"),
+            Message("system", system_prompt(topic, side)),
+            Message(
+                "user",
+                f"{render_debate(sides, turns, side.index)}\n\n{PHASE_INSTRUCTIONS[phase]}",
+            ),
         ),
         max_completion_tokens=side.budget,
         seed=seed,
     )
 
 
-def render_debate(sides: tuple[Side, ...], turns: list[Turn]) -> str:
-    """Every turn so far, in the order spoken, labelled by phase and side."""
-    if not turns:
+def build_prep_request(
+    topic: str,
+    side: Side,
+    passages: Sequence[Evidence],
+    seed: int | None = None,
+) -> GenerationRequest:
+    """Prep's one model call: turn the retrieved passages into this side's notes (ADR-012 §3).
+
+    The passages reach the model only here. Afterwards only the notes travel
+    forward, and only to this side (ADR-014 §2). The budget is ``prep_budget``,
+    and ADR-011's ``length`` deliberately doesn't apply to prep.
+    """
+    if side.prep_budget is None:  # config guarantees this; a wrong caller shouldn't pass silently
+        raise ValueError(f"side {side.index} has no prep_budget")
+    rendered = "\n\n".join(
+        f"[{passage.id} - {passage.source}]\n{passage.text.strip()}" for passage in passages
+    )
+    return GenerationRequest(
+        messages=(
+            Message("system", system_prompt(topic, side)),
+            Message(
+                "user",
+                f"Your research, {len(passages)} passages:\n\n{rendered}\n\n"
+                f"{PHASE_INSTRUCTIONS['prep']}",
+            ),
+        ),
+        max_completion_tokens=side.prep_budget,
+        seed=seed,
+    )
+
+
+def system_prompt(topic: str, side: Side) -> str:
+    """Who this side is and which way it argues — the same in every phase."""
+    position = "for" if side.side == "pro" else "against"
+    team = side.team
+    return (
+        f"You are {team.name}, a debater. Your outlook: {team.stance}. "
+        f"Your voice: {team.voice}. What you value: {', '.join(team.values)}.\n\n"
+        f"The motion is: {topic}\n"
+        f"You argue {position} the motion, whatever your own view."
+    )
+
+
+def render_debate(sides: tuple[Side, ...], turns: list[Turn], viewer_index: int) -> str:
+    """Every turn ``viewer_index`` is entitled to see, in the order spoken.
+
+    Prep is private (ADR-014 §2): a side sees its own prep notes and never the
+    opponent's. ``viewer_index`` is required rather than defaulted, because a
+    default is exactly how the opponent's prep would leak back in.
+    """
+    visible = [
+        turn for turn in turns if turn.phase != "prep" or turn.side_index == viewer_index
+    ]
+    if not visible:
         return "Nothing has been said yet. You speak first."
     lines = ["The debate so far:", ""]
-    for number, turn in enumerate(turns, start=1):
+    for number, turn in enumerate(visible, start=1):
         speaker = sides[turn.side_index]
-        lines.append(
-            f"[{number}. {turn.phase.capitalize()} - "
-            f"{speaker.side.upper()}, {speaker.team.name}]"
+        label = "Your prep notes" if turn.phase == "prep" else (
+            f"{turn.phase.capitalize()} - {speaker.side.upper()}, {speaker.team.name}"
         )
+        lines.append(f"[{number}. {label}]")
         lines.append(turn.text.strip())
         lines.append("")
     return "\n".join(lines).strip()

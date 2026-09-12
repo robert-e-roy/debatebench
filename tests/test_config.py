@@ -112,10 +112,30 @@ def test_tilde_expands_to_home(run_dir: Path, monkeypatch):
 
 
 def test_sources_and_corpus_are_kept_as_written(run_dir: Path):
-    # Whether these are names or paths is B4's question (ADR-007 §6).
+    # The transcript records what was authored; the resolved path is separate (ADR-014 §1).
     config = load_run(run_dir / "run.yaml")
     assert config.sources == ("args-me", "debatesum")
-    assert config.sides[0].team.corpus == "sources/liberal-climate-corpus/"
+    assert config.sides[0].team.corpus == "liberal-climate-corpus.jsonl"
+
+
+def test_corpus_resolves_from_the_team_files_own_directory(run_dir: Path):
+    # A team file is reused across runs, so its corpus travels with it (ADR-014 §1).
+    config = load_run(run_dir / "run.yaml")
+    assert config.sides[0].team.corpus_path == run_dir / "teams" / "liberal-climate-corpus.jsonl"
+    assert config.sides[1].team.corpus_path is None  # this team has none
+
+
+def test_an_unvetted_source_is_an_error(run_dir: Path):
+    # Each source's licence is checked by hand before it's allowed (ADR-012 §5).
+    edit_yaml(run_dir / "run.yaml", _set("sources", value=["args-me", "kaggle-debates"]))
+    with pytest.raises(ConfigError, match=r"sources\[1\] is 'kaggle-debates', which is not a vetted"):
+        load_run(run_dir / "run.yaml")
+
+
+def test_the_same_source_twice_is_an_error(run_dir: Path):
+    edit_yaml(run_dir / "run.yaml", _set("sources", value=["args-me", "args-me"]))
+    with pytest.raises(ConfigError, match="sources lists the same source twice"):
+        load_run(run_dir / "run.yaml")
 
 
 def test_yes_and_no_stay_strings(run_dir: Path):

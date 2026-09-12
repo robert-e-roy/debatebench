@@ -2,5 +2,5 @@ id: liberal-climate
 name: "Progressive Climate Advocate"
 voice: "direct, urgency-driven, cites institutional consensus"
 stance: liberal
-corpus: sources/liberal-climate-corpus/
+corpus: liberal-climate-corpus.jsonl
 values: [collective-action, precaution, equity]

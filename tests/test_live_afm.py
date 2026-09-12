@@ -76,12 +76,15 @@ def afm_base_url(tmp_path_factory):
         _stop(server)
 
 
-def _use_afm(base_url: str, phases, budget: int):
+def _use_afm(base_url: str, phases, budget: int, prep_budget: int | None = None):
     def mutate(data):
         data["format"]["phases"] = list(phases)
         for side in data["teams"]:
             side.update(model="system", base_url=base_url, budget=budget)
-            side.pop("prep_budget", None)
+            if "prep" in phases:
+                side["prep_budget"] = prep_budget or budget
+            else:
+                side.pop("prep_budget", None)
 
     return mutate
 
@@ -181,6 +184,41 @@ def test_debate_command_against_afm(run_dir: Path, afm_base_url, capfd):
     document = json.loads(written.read_text(encoding="utf-8"))  # nothing but JSON in the file
     assert len(document["turns"]) == 4
     assert document["run"]["seed"] == 42
+
+
+def test_a_claim_in_the_opening_traces_back_to_prep_evidence(
+    run_dir: Path, prepared_sources, afm_base_url, capfd
+):
+    """B4's exit gate: traceability from an argument back to what that side actually had.
+
+    The fixture pools carry invented place names — a real model has no other way to
+    produce "Brindlewick" than to have read it in prep, which is what makes this a
+    trace rather than a coincidence.
+    """
+    pro_only = {"Brindlewick", "Hallowfield"}  # in the pro pool and the liberal team's corpus
+    con_only = {"Ferncastle"}
+
+    edit_yaml(run_dir / "run.yaml", _use_afm(afm_base_url, ("prep", "opening"), budget=400))
+    assert main([str(run_dir / "run.yaml")]) == 0
+    document = json.loads((run_dir / "transcript.json").read_text(encoding="utf-8"))
+
+    turns = {(t["phase"], t["side_index"]): t for t in document["turns"]}
+    pro_prep, pro_opening = turns[("prep", 0)], turns[("opening", 0)]
+    con_prep = turns[("prep", 1)]
+
+    pro_evidence = "\n".join(item["text"] for item in pro_prep["evidence"])
+    con_evidence = "\n".join(item["text"] for item in con_prep["evidence"])
+    assert all(name in pro_evidence for name in pro_only)
+    assert not any(name in pro_evidence for name in con_only)  # each side got its own material
+    assert all(name in con_evidence for name in con_only)
+
+    cited = {name for name in pro_only if name in pro_opening["text"]}
+    print(f"\nPRO opening cites {cited or 'nothing from its evidence'}")
+    print(f"PRO prep notes: {pro_prep['text'].strip()[:400]}…")
+    print(f"PRO opening: {pro_opening['text'].strip()[:400]}…")
+    assert cited, "the opening cites nothing that only its prep evidence could have supplied"
+    assert not any(name in pro_opening["text"] for name in con_only)
+    assert "evidence" not in pro_opening  # only prep carries it
 
 
 def test_the_same_seed_gives_the_same_debate(run_dir: Path, afm_base_url, capfd):

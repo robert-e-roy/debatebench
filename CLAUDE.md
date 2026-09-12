@@ -18,8 +18,12 @@ code. See ADR-002 for full scope.
   framework), `ADR-006`, `ADR-007` (`run.yaml` schema and CLI invocation),
   `ADR-008` (Python 3.11+, `httpx`, PyYAML), `ADR-009` (backend request and
   result types), `ADR-005` (transcript format), `ADR-010` (turn order, phase
-  meanings, budget tolerance, valid turns) — accepted; together they are the
-  spec.
+  meanings, budget tolerance, valid turns), `ADR-011` (response length,
+  `short`/`medium`/`long`), `ADR-012` (Prep retrieval mechanism), `ADR-013`
+  (judge scoring aggregation, winner determination, score-file format),
+  `ADR-014` (corpus format, prep privacy, empty retrieval) — accepted;
+  together they are the spec. **Not yet implemented: ADR-011** — `length` is
+  accepted but no code reads it; the prompts still state no target length.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
@@ -33,8 +37,14 @@ code. See ADR-002 for full scope.
   transcript is written as JSON to the `output:` path, with any existing file
   rotated to `<output>.1`; two AFM runs with the same seed produced identical
   turns; and one debate ran across two servers at once, Qwen3-8B on
-  `mlx_lm.server` against AFM. **Next: B4 (prep) or B5 (judge)**, which can run
-  in either order; both still have open questions (10 and 2 respectively).
+  `mlx_lm.server` against AFM. **B4 is done** (2026-09-12): prep retrieves
+  from the shared pool by topic+side and from a team's own corpus by topic,
+  spends `prep_budget` on one synthesis call per side, and records the raw
+  passages as that turn's `evidence`. Its exit gate was met live on AFM — the
+  pro opening cited two invented place names that exist only in its own prep
+  evidence, with the passage ids. **Next: B5 (judge)**, specified by ADR-013;
+  its scores aren't trustworthy until open question 6 (validating a judge
+  against human ratings) is settled, which also still blocks B7.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
@@ -124,15 +134,41 @@ Two file types — see ADR-002 and ADR-007 for full schema and rationale:
   ever** — that's a run-time concern, not identity.
 
 Validation is strict (ADR-007 §6): unknown or duplicate keys are errors, phase
-names come from a fixed list, and paths resolve from `run.yaml`'s directory.
+names come from a fixed list, and paths resolve from `run.yaml`'s directory —
+except a team's `corpus`, which resolves from the **team file's** directory,
+because a team file is reused across runs (ADR-014 §1). `sources` entries must
+be names on the vetted list (`args-me`, `debatesum`), since each one's licence
+was checked by hand (ADR-012 §5).
 Load YAML only through the package's strict loader, never plain `safe_load`
 (ADR-008 lists the YAML 1.1 coercions it blocks).
 
 `debate` takes exactly one argument, the path to a `run.yaml`. No other flags
-— see ADR-007. `judge` takes a transcript path plus flags: `--model` and
-`--output` (both required), an optional `--base-url`, and `--fact-check` /
-`--no-fact-check` (default on). The asymmetry is deliberate, not an oversight
+— see ADR-007. `judge` takes a transcript path plus flags: `--model`,
+`--budget` and `--output` (all required), an optional `--base-url`, and
+`--fact-check` / `--no-fact-check` (default on). The asymmetry is deliberate, not an oversight
 (ADR-007, "CLI invocation").
+
+## Prep (ADR-012, ADR-014)
+
+Retrieval is deterministic and orchestrator-side: no model call forms a query,
+so a run is reproducible from config alone. The shared `sources` pool is
+filtered on **topic + `side`** (never `stance`, which is a persona label, not a
+position — ADR-007 §7); a team's own `corpus` is filtered on topic only,
+because everything in it is that side's already. Top 10 per pool, layered.
+
+Both pools are **JSONL files that must already exist on disk** — `debate`
+downloads nothing. Shared pools live in `~/.cache/debatebench/sources/<name>.jsonl`,
+overridable with **`DEBATEBENCH_SOURCES_DIR`** (ADR-014 §5); a team's `corpus`
+is a path in its own team file. A row is `id`, `text`, `topic`, `source`, plus
+`side` in a shared pool only. Preparing those files from the real datasets is a
+one-time manual step, deliberately not code this tool ships.
+
+`prep_budget` buys exactly one model call per side: retrieval itself is free.
+The prep turn records the raw passages as `evidence` and the synthesis as
+`text`, and its `budget` field holds `prep_budget`. **Prep is private** — a
+side sees its own notes in later phases, never the opponent's — and raw
+passages never reach any prompt after the synthesis call. A side that retrieves
+nothing from *either* pool fails the run rather than debating unprepared.
 
 ## Backend
 

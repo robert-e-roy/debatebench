@@ -16,6 +16,7 @@ from urllib.parse import urlsplit
 
 import yaml
 
+from .retrieval import SOURCES
 from .yaml_loader import load_yaml
 
 PHASES = ("prep", "opening", "rebuttal", "retort", "conclusion")
@@ -55,7 +56,8 @@ class Team:
     voice: str
     stance: str
     values: tuple[str, ...]
-    corpus: str | None  # as written; resolving it is B4's (ADR-007 §6)
+    corpus: str | None  # as written, which is what a transcript records (ADR-007 §6)
+    corpus_path: Path | None  # resolved from the team file's own directory (ADR-014 §1)
 
 
 @dataclass(frozen=True)
@@ -108,7 +110,7 @@ def load_run(path: str | Path) -> RunConfig:
             "one team must be pro and the other con (ADR-007)",
         )
 
-    sources = _opt_str_list(run_path, data, "sources", "sources") or ()
+    sources = _sources(run_path, data)
     seed = _opt_int(run_path, data, "seed", "seed", minimum=0)
     seed_generated = seed is None
     if seed is None:
@@ -137,6 +139,7 @@ def load_team(path: Path) -> Team:
                 "not in the team file (ADR-002)",
             )
     _check_keys(path, data, _TEAM_KEYS, "")
+    corpus = _opt_str(path, data, "corpus", "corpus")
     return Team(
         path=path,
         id=_str(path, data, "id", "id"),
@@ -144,8 +147,27 @@ def load_team(path: Path) -> Team:
         voice=_str(path, data, "voice", "voice"),
         stance=_str(path, data, "stance", "stance"),
         values=_str_list(path, data, "values", "values"),
-        corpus=_opt_str(path, data, "corpus", "corpus"),
+        corpus=corpus,
+        # A team file is reused across runs, so its corpus travels with it rather
+        # than with whichever run.yaml names it that day (ADR-014 §1).
+        corpus_path=_resolve(path, corpus) if corpus is not None else None,
     )
+
+
+def _sources(run_path: Path, data: dict[str, Any]) -> tuple[str, ...]:
+    """The shared pool names, which must be ones whose licence was checked (ADR-012 §5)."""
+    sources = _opt_str_list(run_path, data, "sources", "sources") or ()
+    for index, name in enumerate(sources):
+        if name not in SOURCES:
+            raise _fail(
+                run_path,
+                f"sources[{index}] is {name!r}, which is not a vetted source "
+                f"({', '.join(SOURCES)}). Each one's licence is checked by hand before "
+                "it's allowed here (ADR-012 §5)",
+            )
+    if len(set(sources)) != len(sources):
+        raise _fail(run_path, "sources lists the same source twice")
+    return sources
 
 
 def _phases(path: Path, data: dict[str, Any]) -> tuple[str, ...]:

@@ -41,12 +41,13 @@ def test_config_error_goes_to_stderr(run_dir: Path, capfd):
     assert "debate: config error:" in err and "output is required" in err
 
 
-def test_prep_is_reported_as_not_built_yet(run_dir: Path, capfd):
+def test_unprepared_sources_are_reported_on_stderr(run_dir: Path, capfd, monkeypatch):
+    monkeypatch.setenv("DEBATEBENCH_SOURCES_DIR", str(run_dir / "not-prepared"))
     configure(run_dir, ("prep", "opening"))
     assert main([str(run_dir / "run.yaml")]) == 1
     out, err = capfd.readouterr()
     assert out == ""
-    assert "debate: debate failed:" in err and "arrives in B4" in err
+    assert "debate: debate failed:" in err and "is not prepared" in err
 
 
 def _closed_port() -> int:
