@@ -17,6 +17,7 @@ import json
 import os
 import re
 from collections.abc import Sequence
+from functools import lru_cache
 from pathlib import Path
 
 from .transcript import Evidence
@@ -68,11 +69,11 @@ def retrieve(
     passages: list[Evidence] = []
     for name in sources:
         path = sources_dir() / f"{name}.jsonl"
-        rows = _read(path, _SHARED_FIELDS, missing_hint=_MISSING_SOURCE.format(name=name, path=path))
-        passages += _best([row for row in rows if row["side"] == side], query)
+        ranked = _ranked(path, _SHARED_FIELDS, query, _MISSING_SOURCE.format(name=name, path=path))
+        passages += _take(ranked, side)
     if corpus is not None:
-        rows = _read(corpus, _CORPUS_FIELDS, missing_hint=_MISSING_CORPUS.format(path=corpus))
-        passages += _best(rows, query)
+        ranked = _ranked(corpus, _CORPUS_FIELDS, query, _MISSING_CORPUS.format(path=corpus))
+        passages += _take(ranked, None)
     return tuple(passages)
 
 
@@ -84,12 +85,58 @@ _MISSING_SOURCE = (
 _MISSING_CORPUS = "the team's corpus file does not exist: {path}"
 
 
-def _read(path: Path, fields: tuple[str, ...], *, missing_hint: str) -> list[dict]:
+def _ranked(
+    path: Path, fields: tuple[str, ...], query: frozenset[str], missing_hint: str
+) -> tuple[tuple[int, int, dict], ...]:
+    """A pool scored against one query, read and scored once however many sides ask.
+
+    Both sides of a debate share a topic, so they share a query and a ranking —
+    only the side filter differs. Scoring args-me twice per run would mean
+    tokenizing every row twice for an identical result.
+    """
+    try:
+        stat = path.stat()
+    except FileNotFoundError as e:
+        raise RetrievalError(missing_hint) from e
+    except OSError as e:
+        raise RetrievalError(f"{path}: cannot be read: {e}") from e
+    # Size and mtime are part of the key, so an edited pool is re-read, not remembered.
+    return _ranked_cached(path, stat.st_mtime_ns, stat.st_size, fields, query)
+
+
+@lru_cache(maxsize=8)
+def _ranked_cached(
+    path: Path, mtime_ns: int, size: int, fields: tuple[str, ...], query: frozenset[str]
+) -> tuple[tuple[int, int, dict], ...]:
+    """Rows this query matches at all, best first.
+
+    Scoring is deliberately simple and documented rather than tuned: a row scores
+    twice for each query word in its ``topic`` and once for each in its ``text``,
+    and a row matching no query word is not retrieved. Ties keep the file's own
+    order, which is what makes a run reproducible (ADR-014, open questions).
+    """
+    ranked = []
+    for position, row in enumerate(_read(path, fields)):
+        score = 2 * len(query & _tokenize(row["topic"])) + len(query & _tokenize(row["text"]))
+        if score:
+            ranked.append((-score, position, row))
+    ranked.sort(key=lambda item: (item[0], item[1]))
+    return tuple(ranked)
+
+
+def _take(ranked: tuple[tuple[int, int, dict], ...], side: str | None) -> list[Evidence]:
+    """The best ``TOP_K`` of one side's rows. ``side`` is None for a team's own corpus,
+    whose rows are all its own already (ADR-012 §2)."""
+    chosen = [row for _, _, row in ranked if side is None or row["side"] == side]
+    return [
+        Evidence(id=row["id"], source=row["source"], text=row["text"]) for row in chosen[:TOP_K]
+    ]
+
+
+def _read(path: Path, fields: tuple[str, ...]) -> list[dict]:
     """Every row of a JSONL pool, with each row checked before anything is retrieved."""
     try:
         text = path.read_text(encoding="utf-8")
-    except FileNotFoundError as e:
-        raise RetrievalError(missing_hint) from e
     except OSError as e:
         raise RetrievalError(f"{path}: cannot be read: {e}") from e
 
@@ -112,26 +159,6 @@ def _read(path: Path, fields: tuple[str, ...], *, missing_hint: str) -> list[dic
                 )
         rows.append(row)
     return rows
-
-
-def _best(rows: list[dict], query: frozenset[str]) -> list[Evidence]:
-    """The top ``TOP_K`` rows this query matches at all, best first.
-
-    Scoring is deliberately simple and documented rather than tuned: a row scores
-    twice for each query word in its ``topic`` and once for each in its ``text``,
-    and a row matching no query word is not retrieved. Ties keep the file's own
-    order, which is what makes a run reproducible (ADR-014, open questions).
-    """
-    scored = []
-    for position, row in enumerate(rows):
-        score = 2 * len(query & _tokenize(row["topic"])) + len(query & _tokenize(row["text"]))
-        if score:
-            scored.append((-score, position, row))
-    scored.sort(key=lambda item: (item[0], item[1]))
-    return [
-        Evidence(id=row["id"], source=row["source"], text=row["text"])
-        for _, _, row in scored[:TOP_K]
-    ]
 
 
 def _tokenize(text: str) -> frozenset[str]:

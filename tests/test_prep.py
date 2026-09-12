@@ -151,6 +151,37 @@ def test_blank_lines_and_extra_fields_are_tolerated(run_dir: Path, prepared_sour
     assert "extra" in ids(retrieve(TOPIC, "pro", ("args-me",), None))
 
 
+def test_a_pool_is_read_once_however_many_sides_ask(run_dir: Path, prepared_sources, monkeypatch):
+    # Both sides share a topic, so they share a ranking. Re-reading args-me per side
+    # is invisible at fixture scale and expensive at the real dataset's size.
+    import debatebench.retrieval as retrieval
+
+    reads: list[Path] = []
+    original = retrieval._read
+    monkeypatch.setattr(
+        retrieval, "_read", lambda path, fields: (reads.append(path), original(path, fields))[1]
+    )
+    retrieval._ranked_cached.cache_clear()
+
+    prep_debate(run_dir)
+
+    assert reads.count(prepared_sources / "args-me.jsonl") == 1
+    assert reads.count(prepared_sources / "debatesum.jsonl") == 1
+
+
+def test_an_edited_pool_is_read_again(run_dir: Path, prepared_sources):
+    # The ranking is remembered per file, so an edit must invalidate it.
+    path = prepared_sources / "args-me.jsonl"
+    assert "am-1" in ids(retrieve(TOPIC, "pro", ("args-me",), None))
+
+    path.write_text(
+        json.dumps({"id": "fresh", "topic": "carbon tax", "side": "pro",
+                    "source": "args-me", "text": "A new carbon tax argument."}) + "\n",
+        encoding="utf-8",
+    )
+    assert ids(retrieve(TOPIC, "pro", ("args-me",), None)) == {"fresh"}
+
+
 def test_sources_dir_defaults_to_the_documented_cache(monkeypatch):
     monkeypatch.delenv("DEBATEBENCH_SOURCES_DIR", raising=False)
     assert sources_dir() == Path.home() / ".cache" / "debatebench" / "sources"

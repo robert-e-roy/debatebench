@@ -26,6 +26,12 @@ is exactly why ADR-012 §2 gives it a different retrieval method. One row
 shape means one parser and one passage type; the only difference between the
 two pools stays the side filter, as ADR-012 §2 says it should be.
 
+Extra keys in a row are **ignored, not rejected** — a pool is data, not config,
+and real datasets arrive with columns this tool doesn't read, so ADR-007 §6's
+strictness about unknown keys deliberately doesn't extend here. One consequence
+worth stating: a `side` key in a *corpus* row is ignored rather than honoured,
+because a team's own corpus is never side-filtered.
+
 **It resolves relative to the team file's own directory**, the way `team:`
 already resolves from `run.yaml`'s (ADR-007 §6). A team file is durable and
 reused across runs (ADR-006), so its corpus travels with it, not with
