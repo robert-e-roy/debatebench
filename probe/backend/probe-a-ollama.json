@@ -1,0 +1,67 @@
+{
+  "label": "ollama",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "model": "phi4-mini:latest",
+  "rows": {
+    "A1": {
+      "max_tokens": {
+        "status": 200,
+        "completion_tokens": 7
+      },
+      "max_completion_tokens": {
+        "status": 200,
+        "completion_tokens": 6
+      }
+    },
+    "A2": {
+      "status": 200,
+      "content_parses_as_json": true,
+      "sample": "{\n  \"answer\": 4\n}"
+    },
+    "A3": {
+      "status": 200,
+      "conforms_to_schema": true,
+      "sample": "{ \"answer\": 4 }"
+    },
+    "A4": {
+      "status": 200,
+      "single_json_object": true,
+      "has_choices": true
+    },
+    "A5": {
+      "identical": true,
+      "first": "Red, Blue, Green",
+      "second": "Red, Blue, Green"
+    },
+    "A6": {
+      "status": 200,
+      "usage_keys": [
+        "completion_tokens",
+        "prompt_tokens",
+        "prompt_tokens_details",
+        "total_tokens"
+      ],
+      "prompt_tokens": 7,
+      "completion_tokens": 6
+    },
+    "A7": {
+      "status": 200,
+      "finish_reason": "stop",
+      "completion_tokens": 444
+    },
+    "A8": {
+      "status": null,
+      "body": "TIMEOUT after 180.0s (ReadTimeout)",
+      "approx_prompt_words": 120000
+    },
+    "A9": {
+      "status": 200,
+      "message_keys": [
+        "content"
+      ],
+      "separate_reasoning_field": false,
+      "think_tag_in_content": false,
+      "content_sample": "1. Set up the multiplication vertically.\n```\n   17\nx 23\n----\n```\n\n2. Multiply the bottom digit of the second number (3) "
+    }
+  }
+}

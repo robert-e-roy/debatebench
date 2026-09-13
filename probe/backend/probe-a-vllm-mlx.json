@@ -1,0 +1,64 @@
+{
+  "label": "vllm-mlx",
+  "base_url": "http://127.0.0.1:8082/v1",
+  "model": "mlx-community/Qwen3-8B-4bit",
+  "rows": {
+    "A1": {
+      "max_tokens": {
+        "status": 200,
+        "completion_tokens": 20
+      },
+      "max_completion_tokens": {
+        "status": 200,
+        "completion_tokens": 305
+      }
+    },
+    "A2": {
+      "status": 200,
+      "content_parses_as_json": true,
+      "sample": "{\"answer\": 4}"
+    },
+    "A3": {
+      "status": 200,
+      "conforms_to_schema": true,
+      "sample": "{\"answer\": 4}"
+    },
+    "A4": {
+      "status": 200,
+      "single_json_object": true,
+      "has_choices": true
+    },
+    "A5": {
+      "identical": true,
+      "first": "Red, blue, and green.",
+      "second": "Red, blue, and green."
+    },
+    "A6": {
+      "status": 200,
+      "usage_keys": [
+        "completion_tokens",
+        "prompt_tokens",
+        "total_tokens"
+      ],
+      "prompt_tokens": 12,
+      "completion_tokens": 463
+    },
+    "A7": {
+      "status": 200,
+      "finish_reason": "stop",
+      "completion_tokens": 713
+    },
+    "A8": {
+      "status": null,
+      "body": "TIMEOUT after 180.0s (ReadTimeout)",
+      "approx_prompt_words": 120000
+    },
+    "A9": {
+      "status": 503,
+      "message_keys": [],
+      "separate_reasoning_field": false,
+      "think_tag_in_content": false,
+      "content_sample": ""
+    }
+  }
+}
