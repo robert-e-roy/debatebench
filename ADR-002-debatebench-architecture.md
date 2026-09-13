@@ -205,10 +205,20 @@ choice:**
 - `ibm-research/debate_speeches` (CDLA-Permissive-2.0) — the HF release
   (`opening_speeches` config) holds 948 opening speeches across 114 topics from
   nine sources, human-written and machine-generated, each rated by crowd
-  annotators (5–30 per speech, mean ≈15). 81 of them are "mixed stance control"
-  speeches used as annotator test questions; exclude those before correlating.
-  (The 631-speech / 76-topic figure previously cited here matches neither; if it
-  is the paper's subset, record that.) Purpose-built for benchmarking whether an LLM judge's scores track human
+  annotators. **Resolved 2026-09-13 by reading the paper and the data:** the
+  631-speech / 76-topic figure *is* the paper's subset. It removes **78**
+  control speeches — not 81 — plus two topics lacking both Arg-Human sources.
+  Better still, the authors publish that filtered set directly as
+  `noystl/speech-quality-dataset` (CDLA-Permissive-2.0, one `data.csv`), so
+  there is no need to re-derive it from the 948-row release and no chance of
+  filtering it differently than they did.
+
+  Verified locally against that file: 631 speeches, 76 topics, **exactly 15**
+  labelers each (not 5–30), 9,465 individual ratings on a 1–5 Likert scale held
+  per-annotator rather than pre-averaged, mean 605.6 words per speech. Mean
+  score by source forms the gradient a judge has to reproduce: Human expert
+  4.19, Project Debater 4.03, Arg-Human1 3.79, Arg-Human2 3.67, Arg-GPT2 3.40,
+  Speech-GPT2 3.22, Arg-Search 3.12, Summit 2.96. Purpose-built for benchmarking whether an LLM judge's scores track human
   judgment at the speech/turn level (closer to our unit of judging than
   Rank-30k's isolated arguments). A recent paper, "Benchmarking LLM Judges via
   Debate Speech Evaluation," used this exact dataset for this exact task — read
