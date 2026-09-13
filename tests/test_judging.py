@@ -307,6 +307,41 @@ def test_a_preamble_before_the_json_is_read(run_dir: Path):
     assert sheet.sides[0].total == 76
 
 
+def test_a_python_style_escaped_apostrophe_is_repaired(run_dir: Path):
+    # Measured from mlx_lm: Qwen writes \' inside a justification, and JSON defines
+    # no such escape, so one apostrophe rejected a whole good sheet (ADR-017 §4).
+    _, transcript = debated(run_dir)
+    # json.dumps escapes the ellipsis, so the target here is its … form.
+    text = judge_reply(side(0), side(1)).replace(
+        "scored clarity this way because\\u2026", "cited by the CON\\'s opening passage"
+    )
+    assert "\\'" in text  # the defect really is in the reply
+
+    sheet, _ = judged(transcript, text)
+
+    clarity = next(d for d in sheet.sides[0].dimensions if d.name == "clarity")
+    assert clarity.justification == "cited by the CON's opening passage"
+
+
+def test_a_valid_escape_is_left_alone(run_dir: Path):
+    # The repair must not mangle a backslash pair JSON does define.
+    _, transcript = debated(run_dir)
+    text = judge_reply(side(0), side(1)).replace(
+        "scored clarity this way because\\u2026", "the path C:\\\\logs was cited"
+    )
+    sheet, _ = judged(transcript, text)
+
+    clarity = next(d for d in sheet.sides[0].dimensions if d.name == "clarity")
+    assert clarity.justification == "the path C:\\logs was cited"
+
+
+def test_json_broken_some_other_way_still_fails(run_dir: Path):
+    # The repair fixes one named defect; it is not a general "make it parse" pass.
+    _, transcript = debated(run_dir)
+    with pytest.raises(JudgeError, match="JSON is malformed"):
+        judged(transcript, '{"sides": [{"side_index": 0 "clarity": {}}]}')
+
+
 # --- the score file (ADR-013 §5) ---------------------------------------------
 
 

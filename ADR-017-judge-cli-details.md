@@ -67,6 +67,20 @@ This is deliberately a small, stated tolerance rather than a retry loop: a
 retry would make a scoring run non-deterministic and hide a model that can't
 produce the format, which is a fact worth knowing about a candidate judge.
 
+**Amended 2026-09-13 — one more tolerance: escapes JSON doesn't define.** If
+the extracted object fails to parse, the backslash is dropped from any escape
+sequence JSON has no rule for (`\'` chiefly), and the parse is tried once more;
+a valid `\\` pair is left intact. Measured: Qwen3-8B-4bit through `mlx_lm`
+writes Python-style `\'` inside a justification — *"Cited by the CON\'s opening
+passage"* — and one apostrophe rejected a complete, correct score sheet.
+
+This stays inside the rule above rather than bending it. The repair is lossless
+(the backslash carried no meaning), deterministic (the same reply always
+repairs the same way, so a run stays reproducible), and mechanical (it fixes
+one named defect, not "whatever the model meant"). A retry would have neither
+property. Anything still unparseable after it is a genuine format failure and
+fails the run, exactly as before.
+
 ### 5. The judge sees everything, including both sides' prep evidence
 
 Prep privacy (ADR-014 §2) is a rule about what a *debater* sees, to stop a side

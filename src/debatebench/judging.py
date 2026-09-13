@@ -375,13 +375,48 @@ def _json_object(text: str, *, truncated: bool) -> dict:
     )
     if start == -1 or end <= start:
         raise JudgeError(f"the reply holds no JSON object.{hint} It said: {text.strip()[:300]!r}")
+    body = cleaned[start : end + 1]
     try:
-        payload = json.loads(cleaned[start : end + 1])
-    except ValueError as e:
-        raise JudgeError(f"the reply's JSON is malformed: {e}.{hint}") from e
+        payload = json.loads(body)
+    except ValueError:
+        # One known, mechanical defect: an escape JSON doesn't define (ADR-017 §4).
+        try:
+            payload = json.loads(_repair_escapes(body))
+        except ValueError as e:
+            raise JudgeError(f"the reply's JSON is malformed: {e}.{hint}") from e
     if not isinstance(payload, dict):
         raise JudgeError("the reply's JSON is not an object")
     return payload
+
+
+# The escapes JSON actually defines. Anything else after a backslash is invalid.
+_JSON_ESCAPES = '"\\/bfnrtu'
+
+
+def _repair_escapes(body: str) -> str:
+    r"""Drop backslashes JSON doesn't define, keeping the character they escaped.
+
+    Qwen through mlx_lm emits Python-style ``\'`` inside strings, and JSON defines
+    no such escape, so a single apostrophe rejects an otherwise complete score
+    sheet. Dropping the backslash changes no meaning, and a valid ``\\`` pair is
+    left intact. This is lossless and deterministic — the same reply always
+    repairs the same way — which is what separates it from the retry loop
+    ADR-017 §4 refuses.
+    """
+    out: list[str] = []
+    index = 0
+    while index < len(body):
+        character = body[index]
+        if character == "\\" and index + 1 < len(body):
+            following = body[index + 1]
+            if following in _JSON_ESCAPES:
+                out.append(character)  # a real escape: keep the pair as it is
+            out.append(following)
+            index += 2
+            continue
+        out.append(character)
+        index += 1
+    return "".join(out)
 
 
 # --- the fact-check pass (ADR-015) ------------------------------------------
