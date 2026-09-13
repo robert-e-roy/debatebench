@@ -128,8 +128,11 @@ def run(base_url: str, model: str, label: str, wanted: set[str]) -> dict:
         if "A2" in wanted:
             status, payload, _ = post(client, url, {
                 "model": model, "stream": False, "max_tokens": REASONING_BUDGET,
-                "messages": [{"role": "user", "content":
-                              "Reply with a JSON object mapping 'answer' to the number 4."}],
+                # The prompt must NOT ask for JSON, or a model emits it regardless and
+                # the row says nothing about whether response_format was honoured.
+                # Session 1 asked "Reply with a JSON object mapping 'answer' to 4" and
+                # recorded a pass for all three servers on that confounded evidence.
+                "messages": [{"role": "user", "content": "What is two plus two?"}],
                 "response_format": {"type": "json_object"}})
             text, raw = content_of(payload)
             record("A2", status=status, content_parses_as_json=parses_as_json(text),

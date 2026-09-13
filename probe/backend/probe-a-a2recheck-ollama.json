@@ -1,0 +1,13 @@
+{
+  "label": "a2recheck-ollama",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "model": "qwen3:8b",
+  "rows": {
+    "A2": {
+      "status": 200,
+      "content_parses_as_json": true,
+      "sample": "{\"answer\": \"Two plus two equals four.\"}",
+      "raw_message_when_no_content": null
+    }
+  }
+}

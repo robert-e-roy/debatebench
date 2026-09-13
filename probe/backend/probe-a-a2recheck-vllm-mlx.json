@@ -1,0 +1,13 @@
+{
+  "label": "a2recheck-vllm-mlx",
+  "base_url": "http://127.0.0.1:8082/v1",
+  "model": "mlx-community/Qwen3-8B-4bit",
+  "rows": {
+    "A2": {
+      "status": 200,
+      "content_parses_as_json": true,
+      "sample": "{\"answer\": \"four\"}",
+      "raw_message_when_no_content": null
+    }
+  }
+}

@@ -31,6 +31,14 @@ project, not one of the three that amendment lists (`vllm-project/vllm-metal`,
 `waybarrios/vllm-mlx`, `vllm-swift`). It is its own org, `vllm-mlx/vllm-mlx`,
 Apache-2.0. Anyone reproducing this must pin that, not "vllm-mlx".
 
+**`mlx_lm.server` says it is not production software, in its own words.** Every
+start prints `UserWarning: mlx_lm.server is not recommended for production as it
+only implements basic security checks` (`mlx_lm/server.py:1723`). Neither of the
+other two emits such a warning. That is a vendor self-assessment rather than a
+measurement, and it bears on ADR-003's choice of default independently of any
+row in this file: the current default is a tool its own authors scope to
+development use.
+
 Ollama's licence is **MIT**, confirmed by this repo's maintainer. Worth noting
 how it was *not* established: the only licence file this probe found in the app
 bundle was `MLX_C_LICENSE` (MIT), which covers a **bundled dependency** rather
@@ -55,7 +63,7 @@ class, not byte-identical weights). Ollama's earlier `phi4-mini` pass is kept in
 |---|---|---|---|
 | A1 `max_tokens` | **honoured** — exactly 20 | **honoured** — exactly 20 | **honoured** — 20, `length` |
 | A1 `max_completion_tokens` | **ignored** — 305 tokens | **honoured** — exactly 20 | **ignored** — 1287 tokens, `stop` |
-| A2 `json_object` | honoured, parses | **honoured**, parses | honoured, parses |
+| A2 `json_object` | **honoured** — `{"answer": "four"}` unprompted | **NOT honoured** — answered in prose | **honoured** — JSON unprompted |
 | A3 `json_schema` | **honoured, conforms** | **NOT honoured** — returned prose, "Two plus two is **4**." | **honoured, conforms** |
 | A4 `stream: false` | one JSON object | one JSON object | one JSON object |
 | A5 seed 42 + temp 0, twice | **identical** | **identical** | **identical** |
@@ -66,11 +74,18 @@ class, not byte-identical weights). Ollama's earlier `phi4-mini` pass is kept in
 | A10 bind address | `127.0.0.1` | `127.0.0.1` | **`*:11434` — wildcard, reachable off-box** |
 | A11 offline start | *not verified to standard* | *not verified to standard* | not applicable (already running) |
 
-**A3 is the row ADR-013's open question needed, and it divides 2–1 against the
-current default.** `vllm-mlx` and Ollama both honour `json_schema` and return
-conforming JSON; `mlx_lm.server` — which ADR-003 makes the default — ignores it
-and answers in prose. Structured output would retire the malformed-JSON failures
-that cost most of 2026-09-12/13 rather than validating around them.
+**A2 and A3 together are the rows ADR-013's open question needed, and they
+divide 2–1 against the current default.** `mlx_lm.server` — which ADR-003 makes
+the default — **ignores `response_format` entirely**, in both modes: prose for
+"What is two plus two?" under `json_object` *and* under a strict `json_schema`.
+`vllm-mlx` and Ollama honour both, returning JSON unprompted and conforming to
+the schema when given one.
+
+That distinction is the whole point. `json_object` is only a hint — the model
+may still emit the invalid `\'` escapes and mangled keys that cost most of
+2026-09-12/13. **`json_schema` constrains decoding to the grammar**, which
+would retire that failure class rather than repairing around it. The default
+backend offers neither.
 
 ### Why the gaps
 
@@ -102,6 +117,14 @@ that cost most of 2026-09-12/13 rather than validating around them.
   honoured. Re-run with a 400-word essay prompt, which is what produced the
   table above. The vllm-mlx A1 reading was decisive on the original prompt
   (20 vs 305) and was not affected.
+- **A2's first reading was confounded for all three servers and was redone.**
+  The prompt was *"Reply with a JSON object mapping 'answer' to the number 4"* —
+  a model emits JSON there whether or not the server honours `response_format`,
+  so a pass proved nothing. Re-run with *"What is two plus two?"*, a question
+  that would not naturally produce JSON, the row separates cleanly: `vllm-mlx`
+  and Ollama return JSON unprompted, `mlx_lm` answers in prose. Same class of
+  error as the A1 prompt above: testing a cap, or a mode, with an input that
+  never exercises it.
 - **`ps -o rss` is the wrong instrument** on Apple Silicon and its readings
   (8 MB for a process holding an 8B model) were discarded. B0 used macOS
   `footprint -p <pid>`, and that is what Part B below uses.
