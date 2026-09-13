@@ -168,8 +168,11 @@ huggingface.co on every start. AFM goes through the same adapter via `fm serve`
 the request body, and a team's `model` must be exactly the repo id the server
 loaded. A reasoning model there returns its thinking as a separate `reasoning`
 field and can spend a whole budget on it, leaving no answer — see
-OPEN-QUESTIONS 13. Ollama and LM Studio go through the same adapter but haven't
-been run against yet.
+OPEN-QUESTIONS 13. **Ollama was first run against on 2026-09-13** (`phi4-mini`
+at `http://127.0.0.1:11434/v1`): the adapter needed no change and scoring
+parsed, but the fact-check audit's JSON was malformed and the scores were poor
+— zeros on three of five dimensions. Both findings sit in ADR-017 §4; the
+second is why open question 6 matters. LM Studio still hasn't been run against.
 
 **Default model for development/testing the CLI itself is Apple Foundation
 Models (AFM) or another very small/instant model.** Don't reach for a real MLX

@@ -81,6 +81,30 @@ one named defect, not "whatever the model meant"). A retry would have neither
 property. Anything still unparseable after it is a genuine format failure and
 fails the run, exactly as before.
 
+**A second corruption mode, which is deliberately NOT repaired.** The same
+model also emits a lone string where a key and value belong:
+
+```jsonc
+"claim": "The opposition accepts: the U.S. spends more on healthcare…",
+"ver/Cited by the CON's opening passage, which asserts the same claim.",
+"verdict": "supported",
+```
+
+It begins a key (`"ver…`), derails into prose, and closes the string, so the
+object has a member with no `:`. Repairing that would mean guessing which key
+was intended — unfalsifiable, and exactly what §4 exists to refuse. It fails
+the run, and should.
+
+**Measured 2026-09-13, and the split is the useful part.** The *scoring* call
+parses reliably; the *fact-check audit* is where replies break. Qwen3-8B-4bit
+through `mlx_lm` scored the same transcript cleanly four times out of four and
+produced malformed audit JSON every time (two different corruptions: the `\'`
+above and this one). `phi4-mini` through **Ollama** did the same — scored
+cleanly, audit malformed. Two models, two backends, one pattern: the audit
+prompt is longer and asks for more items, and that is where the format gives
+way. Whether a stronger judge holds it is open; it is a fact about candidate
+judges, not something to engineer around.
+
 ### 5. The judge sees everything, including both sides' prep evidence
 
 Prep privacy (ADR-014 §2) is a rule about what a *debater* sees, to stop a side
