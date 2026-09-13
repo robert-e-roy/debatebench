@@ -389,7 +389,13 @@ def _json_object(text: str, *, truncated: bool) -> dict:
         try:
             payload = json.loads(_repair_escapes(body))
         except ValueError as e:
-            raise JudgeError(f"the reply's JSON is malformed: {e}.{hint}") from e
+            # Show the text at the fault. "Expecting ':' delimiter: line 35
+            # column 78" is true and useless on its own: diagnosing it once cost
+            # three throwaway scripts to recover a reply the error already held.
+            raise JudgeError(
+                f"the reply's JSON is malformed: {e}.{hint} "
+                f"The text at the fault: {_around(body, getattr(e, 'pos', 0))}"
+            ) from e
     if not isinstance(payload, dict):
         raise JudgeError("the reply's JSON is not an object")
     return payload
@@ -397,6 +403,13 @@ def _json_object(text: str, *, truncated: bool) -> dict:
 
 # The escapes JSON actually defines. Anything else after a backslash is invalid.
 _JSON_ESCAPES = '"\\/bfnrtu'
+
+
+def _around(text: str, position: int, width: int = 90) -> str:
+    """The text either side of a fault, so the error carries its own diagnosis."""
+    start = max(0, position - width // 2)
+    window = text[start : start + width]
+    return f"…{window}…" if start else f"{window}…"
 
 
 def _repair_escapes(body: str) -> str:

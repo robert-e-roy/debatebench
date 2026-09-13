@@ -342,6 +342,19 @@ def test_json_broken_some_other_way_still_fails(run_dir: Path):
         judged(transcript, '{"sides": [{"side_index": 0 "clarity": {}}]}')
 
 
+def test_a_malformed_reply_shows_the_text_at_the_fault(run_dir: Path):
+    # A failure has to hand back what is needed to fix it. "Expecting ':'
+    # delimiter: line 35 column 78" is true and useless alone: diagnosing exactly
+    # that cost three throwaway scripts to recover a reply the error already had.
+    _, transcript = debated(run_dir)
+    with pytest.raises(JudgeError) as raised:
+        judged(transcript, '{"sides": [{"side_index": 0 "clarity": {"score": 3}}]}')
+
+    message = str(raised.value)
+    assert "The text at the fault:" in message
+    assert '"clarity"' in message  # the offending region, not just a coordinate
+
+
 # --- the score file (ADR-013 §5) ---------------------------------------------
 
 

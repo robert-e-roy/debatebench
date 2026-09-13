@@ -82,6 +82,16 @@ reaching across.
 - Ground-truth everything. If you're about to state what an existing file
   contains, a dependency does, or a prior decision was, verify by reading it —
   don't reconstruct it from memory of the conversation that led here.
+- **A failure must carry what's needed to fix it.** Hard Rule 1 says fail
+  loudly; this says fail *usefully*. An error that reports only that something
+  went wrong, when it was holding the evidence, wastes the next person's time
+  reconstructing what it already knew. `"Expecting ':' delimiter: line 35
+  column 78"` is true and useless — recovering the reply behind it cost three
+  throwaway scripts. Quote the offending text, name the field and the side, say
+  which budget was exceeded and by how much, and where a fix is obvious
+  (`"raise --budget"`, `"remove the space after the colon"`) say that too. This
+  applies to the probe rows as much as the code: "could not test A9 because the
+  engine was wedged" is a finding; a blank cell is not.
 
 ## Hard rules (non-negotiable)
 
