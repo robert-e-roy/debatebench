@@ -42,8 +42,20 @@ code. See ADR-002 for full scope.
   transcript is written as JSON to the `output:` path, with any existing file
   rotated to `<output>.1`; two AFM runs with the same seed produced identical
   turns; and one debate ran across two servers at once, Qwen3-8B on
-  `mlx_lm.server` against AFM. **Next: B4 (prep) or B5 (judge)**, which can run
-  in either order; both still have open questions (10 and 2 respectively).
+  `mlx_lm.server` against AFM. **B4 is done** (2026-09-12): prep retrieves by
+  topic+side from the shared pool and by topic from a team's own corpus, spends
+  `prep_budget` on one synthesis call per side, and records the raw passages as
+  the turn's `evidence`; its gate was met live on AFM, an opening citing two
+  invented place names that exist only in that side's evidence. **B5 is done**
+  (2026-09-12): `judge` scores a transcript in one call, five dimensions per
+  side, with the total and winner computed outside the model and printed beside
+  every score. **B6 is built but its live gate is NOT met** (2026-09-13): the
+  fact-check pass runs end to end and produced a full claims ledger — including
+  a claim contradicted by the *opponent's* recorded evidence, the finding
+  `prep_grounded` cannot produce — but a second run of the same command missed
+  the opinion and so failed the `not_checkable` check. The mechanism works; its
+  reliability is unproven. **Next: open question 6**, which blocks B7 and
+  trusting any score from B5 onward.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
