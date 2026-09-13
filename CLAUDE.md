@@ -26,8 +26,9 @@ code. See ADR-002 for full scope.
   (fact-check lives in `judge`; real-time deferred to the Swift app),
   `ADR-016` (per-phase length as a `name:length` suffix; supersedes ADR-011's
   per-team field), `ADR-017` (judge CLI details: `--base-url` required, the
-  hit-ledger vocabulary, reading the model's reply) — accepted; together they
-  are the spec.
+  hit-ledger vocabulary, reading the model's reply), `ADR-018` (Ollama for
+  real-model runs; send both budget fields, superseding ADR-003 rule 2) —
+  accepted; together they are the spec.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
@@ -160,7 +161,12 @@ default kills real turns. **Model servers must run with `HF_HUB_OFFLINE=1`**
 huggingface.co on every start. AFM goes through the same adapter via `fm serve`
 (ADR-003), and its measured quirks bind the adapter:
 - send `"stream": false` explicitly;
-- send budgets as `max_completion_tokens`, never `max_tokens`;
+- send budgets as **both** `max_tokens` and `max_completion_tokens`, set to the
+  same value (ADR-018 §4, superseding ADR-003's "never `max_tokens`"). No single
+  field works everywhere: AFM honours only `max_completion_tokens`, `vllm-mlx`
+  and Ollama honour only `max_tokens`, `mlx_lm` honours both. **Not yet
+  implemented** — until it is, budgets are unenforced server-side on `vllm-mlx`
+  and Ollama and Hard Rule 5's check is all that holds;
 - check `usage.completion_tokens` against the budget yourself — `finish_reason`
   doesn't signal truncation.
 
@@ -168,11 +174,17 @@ huggingface.co on every start. AFM goes through the same adapter via `fm serve`
 the request body, and a team's `model` must be exactly the repo id the server
 loaded. A reasoning model there returns its thinking as a separate `reasoning`
 field and can spend a whole budget on it, leaving no answer — see
-OPEN-QUESTIONS 13. **Ollama was first run against on 2026-09-13** (`phi4-mini`
-at `http://127.0.0.1:11434/v1`): the adapter needed no change and scoring
-parsed, but the fact-check audit's JSON was malformed and the scores were poor
-— zeros on three of five dimensions. Both findings sit in ADR-017 §4; the
-second is why open question 6 matters. LM Studio still hasn't been run against.
+OPEN-QUESTIONS 13. **Ollama is the recommended server for real-model runs (ADR-018)**, measured
+against `mlx_lm.server` and `vllm-mlx` on the same model in
+`BACKEND-PROBE-RESULTS.md`: it honours `response_format` in both modes where
+`mlx_lm` honours neither, queues a second request where `vllm-mlx` refuses it
+with a 503, and prefills fastest. It costs ~20% decode speed against
+`vllm-mlx`. A team's `model` is Ollama's own name (`qwen3:8b`), not a Hugging
+Face repo id — the "exact repo id" rule is `mlx_lm`-specific. AFM remains the
+dev default for plumbing (ADR-002). Ollama binds `*:11434` by default, which on
+this machine is a deliberate toggle for remote work, not a defect; a run must
+not depend on network reachability either way. LM Studio still hasn't been run
+against.
 
 **Default model for development/testing the CLI itself is Apple Foundation
 Models (AFM) or another very small/instant model.** Don't reach for a real MLX

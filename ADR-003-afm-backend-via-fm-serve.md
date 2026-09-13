@@ -17,8 +17,13 @@ directly on the hard rules. So the adapter must:
 
 1. Always send `"stream": false` explicitly. `fm serve` streams when `stream` is
    omitted; OpenAI doesn't.
-2. Send the per-phase budget as **`max_completion_tokens`**, never `max_tokens`,
-   which `fm serve` ignores.
+2. Send the per-phase budget as **`max_completion_tokens`**; `fm serve` ignores
+   `max_tokens`. **Amended by ADR-018 §4 (2026-09-13): send both fields, set to
+   the same value.** The "never `max_tokens`" half of this rule generalised
+   AFM's quirk into a rule for every server, and the backend probe found the
+   opposite is just as common — `vllm-mlx` and Ollama honour only `max_tokens`
+   and ignore `max_completion_tokens`, returning 305 and 1287 completion tokens
+   against a cap of 20. AFM's own behaviour, measured below, is unchanged.
 3. Treat the backend's cap as advisory. After every turn the orchestrator checks
    `usage.completion_tokens` against the phase budget itself (Hard Rule 5).
    `finish_reason` is not a usable truncation signal here.

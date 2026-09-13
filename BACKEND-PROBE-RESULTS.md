@@ -35,9 +35,9 @@ Apache-2.0. Anyone reproducing this must pin that, not "vllm-mlx".
 start prints `UserWarning: mlx_lm.server is not recommended for production as it
 only implements basic security checks` (`mlx_lm/server.py:1723`). Neither of the
 other two emits such a warning. That is a vendor self-assessment rather than a
-measurement, and it bears on ADR-003's choice of default independently of any
-row in this file: the current default is a tool its own authors scope to
-development use.
+measurement, but it bears on any decision to run real work through it,
+independently of any row in this file: its own authors scope it to development
+use. (No ADR ever made it the default — see ADR-018's opening correction.)
 
 Ollama's licence is **MIT**, confirmed by this repo's maintainer. Worth noting
 how it was *not* established: the only licence file this probe found in the app
@@ -75,8 +75,8 @@ class, not byte-identical weights). Ollama's earlier `phi4-mini` pass is kept in
 | A11 offline start | *not verified to standard* | *not verified to standard* | not applicable (already running) |
 
 **A2 and A3 together are the rows ADR-013's open question needed, and they
-divide 2–1 against the current default.** `mlx_lm.server` — which ADR-003 makes
-the default — **ignores `response_format` entirely**, in both modes: prose for
+divide 2–1.** `mlx_lm.server` **ignores `response_format` entirely**, in both
+modes: prose for
 "What is two plus two?" under `json_object` *and* under a strict `json_schema`.
 `vllm-mlx` and Ollama honour both, returning JSON unprompted and conforming to
 the schema when given one.

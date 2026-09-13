@@ -79,5 +79,10 @@ silently skipped row.
 Every row in A and B filled in for all three servers, in the same session,
 on the same machine state, with Part Zero's naming pinned precisely enough
 that someone else could reproduce the exact setup. A recommendation that
-changes ADR-003's current default (`mlx_lm.server`) needs its own ADR
-amendment citing this file, not a silent switch.
+changes which server real-model runs use needs its own ADR citing this file,
+not a silent switch. **Corrected 2026-09-13:** this line used to say "changes
+ADR-003's current default (`mlx_lm.server`)". No ADR ever made
+`mlx_lm.server` the default — ADR-002 names it as one server among several and
+as the one that contacts huggingface.co at start, and the only stated default
+is AFM for dev/plumbing work. See ADR-018, which makes the recommendation this
+gate anticipated.
