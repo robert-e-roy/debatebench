@@ -1,0 +1,45 @@
+{
+  "label": "mlx_lm",
+  "base_url": "http://127.0.0.1:8081/v1",
+  "model": "mlx-community/Qwen3-8B-4bit",
+  "captured_from": "the run's stdout, not written by the script: session 1's probe_a.py persisted only after every row finished, and this run was killed during A8, so its own file was never created. That defect is fixed in probe_a.py, which now saves after each row.",
+  "caveats": {
+    "A1": "ran with the old non-binding prompt ('Name three colours'). Both fields recorded exactly 20 completion tokens, which does indicate the cap bound here, but for parity with the other servers it should be re-run with the 400-word prompt now baked into the instrument.",
+    "A2": "INSTRUMENT FAILURE, not a server finding. The recorded sample is a repr of the response envelope, which means content extraction returned nothing and the old code fell back to str(payload). Whether mlx_lm honours response_format json_object is UNMEASURED.",
+    "A3": "INSTRUMENT FAILURE, same cause as A2. Whether mlx_lm honours json_schema is UNMEASURED — and this is the row ADR-013's open question actually needs.",
+    "A5": "INSTRUMENT FAILURE, same cause. Both samples are empty, so 'identical: false' says nothing about determinism. UNMEASURED.",
+    "A9": "never ran — the run was killed during A8."
+  },
+  "rows": {
+    "A1": {
+      "max_tokens": {"status": 200, "completion_tokens": 20},
+      "max_completion_tokens": {"status": 200, "completion_tokens": 20}
+    },
+    "A2": {
+      "status": 200,
+      "content_parses_as_json": false,
+      "sample": "{'id': 'chatcmpl-7b6fd1f6-6abc-46c5-9f04-251e04ba3394', 'system_fingerprint': '0.31.3-0.32.2-macOS-27.0-arm64-arm-64bit-Mach-O-applegpu_g14s', 'object': 'chat.c",
+      "verdict": "unmeasured"
+    },
+    "A3": {
+      "status": 200,
+      "conforms_to_schema": false,
+      "sample": "{'id': 'chatcmpl-86857f7e-3ea1-480b-ae23-a16ab10c632d', 'system_fingerprint': '0.31.3-0.32.2-macOS-27.0-arm64-arm-64bit-Mach-O-applegpu_g14s', 'object': 'chat.c",
+      "verdict": "unmeasured"
+    },
+    "A4": {"status": 200, "single_json_object": true, "has_choices": true},
+    "A5": {"identical": false, "first": "", "second": "", "verdict": "unmeasured"},
+    "A6": {
+      "status": 200,
+      "usage_keys": ["completion_tokens", "prompt_tokens", "prompt_tokens_details", "total_tokens"],
+      "prompt_tokens": 12,
+      "completion_tokens": 30
+    },
+    "A7": {"status": 200, "finish_reason": "length", "completion_tokens": 10},
+    "A8": {"status": null, "body": "TIMEOUT after 180.0s (ReadTimeout)", "approx_prompt_words": 120000}
+  },
+  "out_of_band": {
+    "A8_server_side": "the server did not release after the client timed out, nor after the driving process was killed: phys_footprint stayed at 23 GB (peak 23 GB) until the server itself was killed. Measured with footprint(1), B0's instrument.",
+    "A10": "bound 127.0.0.1:8081 (loopback), started with --port and no host flag"
+  }
+}

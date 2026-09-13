@@ -83,11 +83,20 @@ def parses_as_json(text) -> bool:
 
 def run(base_url: str, model: str, label: str, wanted: set[str]) -> dict:
     url = base_url.rstrip("/") + "/chat/completions"
+    out = HERE / f"probe-a-{label}.json"
     found: dict[str, dict] = {}
+
+    def save() -> None:
+        """Persist after every row. A8 can wedge a server or be killed, and a run
+        that dies mid-row must not take the rows that already succeeded with it —
+        which is exactly how session 1 lost mlx_lm's file."""
+        out.write_text(json.dumps({"label": label, "base_url": base_url, "model": model,
+                                   "rows": found}, indent=2, default=str))
 
     with httpx.Client(timeout=TIMEOUT) as client:
         def record(row: str, **facts):
             found[row] = facts
+            save()
             print(f"  {row}: {json.dumps(facts, default=str)[:320]}", flush=True)
 
         def finish_reason_of(payload):
@@ -184,9 +193,7 @@ def run(base_url: str, model: str, label: str, wanted: set[str]) -> dict:
                    think_tag_in_content=isinstance(text, str) and "<think" in text,
                    content_sample=(text or "")[:120])
 
-    out = HERE / f"probe-a-{label}.json"
-    out.write_text(json.dumps({"label": label, "base_url": base_url, "model": model,
-                               "rows": found}, indent=2, default=str))
+    save()
     print(f"  -> {out}")
     return found
 
