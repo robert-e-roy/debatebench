@@ -1,0 +1,947 @@
+{
+  "model": "qwen3:8b",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "seed": 42,
+  "budget": 2000,
+  "requested_n": 120,
+  "sampled": 117,
+  "elapsed_s": 2193.1,
+  "results": [
+    {
+      "id": "609f1afd-3bc7-4609-a055-39eb2ed40b7b",
+      "source": "Human expert",
+      "human_mean": 4.333333333333333,
+      "completion_tokens": 379,
+      "elapsed_s": 17.0,
+      "score": 4
+    },
+    {
+      "id": "4fb017d3-9f8f-477e-a5c1-e58756c97f16",
+      "source": "Project Debater",
+      "human_mean": 4.6,
+      "completion_tokens": 457,
+      "elapsed_s": 19.8,
+      "score": 2
+    },
+    {
+      "id": "a2bb5491-496e-4997-b131-fff3d0709e19",
+      "source": "Human expert",
+      "human_mean": 3.6,
+      "completion_tokens": 479,
+      "elapsed_s": 20.7,
+      "score": 4
+    },
+    {
+      "id": "80ec6c37-e497-4b18-bb6a-1ceca143b82b",
+      "source": "Human expert",
+      "human_mean": 3.7333333333333334,
+      "completion_tokens": 438,
+      "elapsed_s": 20.0,
+      "score": 4
+    },
+    {
+      "id": "e7c0262c-5241-4598-a807-781f3af7a70e",
+      "source": "Arg-GPT2",
+      "human_mean": 3.7333333333333334,
+      "completion_tokens": 456,
+      "elapsed_s": 19.5,
+      "score": 2
+    },
+    {
+      "id": "ba086e1c-a0dc-4405-bdc8-7a0c4327f6bb",
+      "source": "Human expert",
+      "human_mean": 4.733333333333333,
+      "completion_tokens": 320,
+      "elapsed_s": 15.0,
+      "score": 5
+    },
+    {
+      "id": "fd08b950-9e7d-41c0-82a8-177362e2c3be",
+      "source": "Arg-GPT2",
+      "human_mean": 3.3333333333333335,
+      "completion_tokens": 552,
+      "elapsed_s": 23.1,
+      "score": 4
+    },
+    {
+      "id": "afca3ec1-1348-4d52-bfb4-81c12c58f473",
+      "source": "Arg-Human2",
+      "human_mean": 3.8666666666666667,
+      "completion_tokens": 620,
+      "elapsed_s": 25.9,
+      "score": 4
+    },
+    {
+      "id": "e2ced12d-3193-43d0-aa78-f5c67a71de2e",
+      "source": "Arg-Human1",
+      "human_mean": 4.2,
+      "completion_tokens": 468,
+      "elapsed_s": 20.0,
+      "score": 4
+    },
+    {
+      "id": "12c12af0-7408-494e-849e-fedbff81e55a",
+      "source": "Human expert",
+      "human_mean": 3.6666666666666665,
+      "completion_tokens": 334,
+      "elapsed_s": 15.0,
+      "score": 4
+    },
+    {
+      "id": "0db9c25a-67e6-4a69-8c16-4497b8448191",
+      "source": "Arg-GPT2",
+      "human_mean": 2.6666666666666665,
+      "completion_tokens": 413,
+      "elapsed_s": 17.9,
+      "score": 1
+    },
+    {
+      "id": "b100501f-6b25-434c-8d95-8c2fba79a3af",
+      "source": "Arg-GPT2",
+      "human_mean": 3.1333333333333333,
+      "completion_tokens": 436,
+      "elapsed_s": 18.9,
+      "score": 2
+    },
+    {
+      "id": "caaf55af-fe12-42b2-b094-107e260deb4b",
+      "source": "Human expert",
+      "human_mean": 4.466666666666667,
+      "completion_tokens": 567,
+      "elapsed_s": 24.2,
+      "score": 5
+    },
+    {
+      "id": "3630a7df-071f-445f-883c-57cbba9eac8d",
+      "source": "Human expert",
+      "human_mean": 4.066666666666666,
+      "completion_tokens": 362,
+      "elapsed_s": 17.4,
+      "score": 5
+    },
+    {
+      "id": "578d1992-4484-4d62-9217-c9df3f7d6fee",
+      "source": "Arg-GPT2",
+      "human_mean": 3.7333333333333334,
+      "completion_tokens": 766,
+      "elapsed_s": 31.2,
+      "score": 2
+    },
+    {
+      "id": "99a03c77-3190-4a13-8ca3-79ae161dec17",
+      "source": "Arg-Search",
+      "human_mean": 2.8666666666666667,
+      "completion_tokens": 331,
+      "elapsed_s": 15.5,
+      "score": 1
+    },
+    {
+      "id": "a03ebb5f-200c-418e-97ef-774d8adc8d0b",
+      "source": "Human expert",
+      "human_mean": 4.266666666666667,
+      "completion_tokens": 458,
+      "elapsed_s": 20.6,
+      "score": 4
+    },
+    {
+      "id": "d6cb8f2e-319a-49a9-8026-18b0dd1f27ba",
+      "source": "Summit",
+      "human_mean": 2.6666666666666665,
+      "completion_tokens": 309,
+      "elapsed_s": 14.8,
+      "score": 1
+    },
+    {
+      "id": "31fd38fa-89c5-4675-abf7-8ff55cbec329",
+      "source": "Human expert",
+      "human_mean": 4.333333333333333,
+      "completion_tokens": 315,
+      "elapsed_s": 15.1,
+      "score": 4
+    },
+    {
+      "id": "ace53012-9f6e-44a5-a6b2-c2207e1cd8bf",
+      "source": "Arg-Human2",
+      "human_mean": 4.066666666666666,
+      "completion_tokens": 356,
+      "elapsed_s": 16.0,
+      "score": 5
+    },
+    {
+      "id": "7dac4a19-9b7d-499d-8907-3211a46182ab",
+      "source": "Speech-GPT2",
+      "human_mean": 2.8666666666666667,
+      "completion_tokens": 306,
+      "elapsed_s": 13.2,
+      "score": 1
+    },
+    {
+      "id": "fd5ea392-5b54-4319-90f2-7a130fcf9b14",
+      "source": "Arg-Human2",
+      "human_mean": 3.8,
+      "completion_tokens": 577,
+      "elapsed_s": 24.6,
+      "score": 5
+    },
+    {
+      "id": "2b7f1305-1c0d-4088-8858-fdffeb79e0c9",
+      "source": "Human expert",
+      "human_mean": 4.666666666666667,
+      "completion_tokens": 464,
+      "elapsed_s": 19.6,
+      "score": 5
+    },
+    {
+      "id": "a7d8f332-af80-4e23-b5de-384efdfd84a7",
+      "source": "Arg-Human2",
+      "human_mean": 3.4,
+      "completion_tokens": 370,
+      "elapsed_s": 14.6,
+      "score": 5
+    },
+    {
+      "id": "1e841ab2-d7c4-4e46-a2f0-b0de9c8e0414",
+      "source": "Arg-Search",
+      "human_mean": 3.8666666666666667,
+      "completion_tokens": 478,
+      "elapsed_s": 20.7,
+      "score": 2
+    },
+    {
+      "id": "6c804ec6-f73a-4d29-a2d8-7a3c055090ad",
+      "source": "Summit",
+      "human_mean": 2.8,
+      "completion_tokens": 484,
+      "elapsed_s": 17.6,
+      "score": 1
+    },
+    {
+      "id": "2c3495b5-e846-4b52-b3d5-96cf68b75623",
+      "source": "Speech-GPT2",
+      "human_mean": 3.7333333333333334,
+      "completion_tokens": 302,
+      "elapsed_s": 14.9,
+      "score": 2
+    },
+    {
+      "id": "2fd02fa6-5626-45ed-b5a3-f230f278c1fc",
+      "source": "Project Debater",
+      "human_mean": 4.6,
+      "completion_tokens": 567,
+      "elapsed_s": 22.2,
+      "score": 3
+    },
+    {
+      "id": "198efba1-0e4f-40b7-9560-521e6b5294ad",
+      "source": "Project Debater",
+      "human_mean": 3.8,
+      "completion_tokens": 437,
+      "elapsed_s": 17.1,
+      "score": 3
+    },
+    {
+      "id": "7f74059c-4098-4307-9240-bfd951c3f440",
+      "source": "Speech-GPT2",
+      "human_mean": 4.466666666666667,
+      "completion_tokens": 262,
+      "elapsed_s": 13.5,
+      "score": 2
+    },
+    {
+      "id": "f09e27e6-343c-4694-8e13-70dd4f7fa34c",
+      "source": "Arg-Human2",
+      "human_mean": 3.2666666666666666,
+      "completion_tokens": 416,
+      "elapsed_s": 18.5,
+      "score": 2
+    },
+    {
+      "id": "53838ccd-c6e0-425e-b3f5-e7649a1b1ef3",
+      "source": "Human expert",
+      "human_mean": 3.933333333333333,
+      "completion_tokens": 436,
+      "elapsed_s": 19.5,
+      "score": 2
+    },
+    {
+      "id": "af7eaa42-31d8-444a-98cc-693caaf75bce",
+      "source": "Summit",
+      "human_mean": 2.8666666666666667,
+      "completion_tokens": 346,
+      "elapsed_s": 16.3,
+      "score": 1
+    },
+    {
+      "id": "5d957042-3eeb-4c0c-b68a-95ecc24daaf8",
+      "source": "Arg-Human2",
+      "human_mean": 4.066666666666666,
+      "completion_tokens": 579,
+      "elapsed_s": 22.8,
+      "score": 4
+    },
+    {
+      "id": "758e93b6-70f4-4b8d-aeef-2bc7cb8898de",
+      "source": "Arg-GPT2",
+      "human_mean": 3.3333333333333335,
+      "completion_tokens": 397,
+      "elapsed_s": 17.4,
+      "score": 2
+    },
+    {
+      "id": "3f67456e-b8a5-4f43-9693-01966f6732ad",
+      "source": "Human expert",
+      "human_mean": 4.4,
+      "completion_tokens": 502,
+      "elapsed_s": 21.6,
+      "score": 4
+    },
+    {
+      "id": "fcf71365-7e23-434d-8337-b40a55586698",
+      "source": "Arg-Human1",
+      "human_mean": 3.7333333333333334,
+      "completion_tokens": 478,
+      "elapsed_s": 20.4,
+      "score": 4
+    },
+    {
+      "id": "1de78d74-4933-4a1b-8a3f-75bb374cef56",
+      "source": "Summit",
+      "human_mean": 2.933333333333333,
+      "completion_tokens": 260,
+      "elapsed_s": 13.2,
+      "score": 2
+    },
+    {
+      "id": "1d89af19-d595-4138-95bd-2f25f96e98f1",
+      "source": "Arg-Search",
+      "human_mean": 2.3333333333333335,
+      "completion_tokens": 379,
+      "elapsed_s": 16.3,
+      "score": 1
+    },
+    {
+      "id": "4a303e69-d95a-4be9-86eb-43bdb340a95e",
+      "source": "Human expert",
+      "human_mean": 3.8666666666666667,
+      "completion_tokens": 380,
+      "elapsed_s": 17.8,
+      "score": 5
+    },
+    {
+      "id": "60d773a4-1010-4b97-b92d-4b5baea98710",
+      "source": "Arg-Human2",
+      "human_mean": 4.066666666666666,
+      "completion_tokens": 374,
+      "elapsed_s": 16.9,
+      "score": 4
+    },
+    {
+      "id": "9c56b3aa-630b-4cc3-b5bf-68b9fc217810",
+      "source": "Arg-Human2",
+      "human_mean": 3.933333333333333,
+      "completion_tokens": 320,
+      "elapsed_s": 14.9,
+      "score": 2
+    },
+    {
+      "id": "ad803fd8-f35e-478b-987c-f12256a02abc",
+      "source": "Project Debater",
+      "human_mean": 4.4,
+      "completion_tokens": 308,
+      "elapsed_s": 13.8,
+      "score": 4
+    },
+    {
+      "id": "354fec19-0d9a-465d-b4db-c68016450fa1",
+      "source": "Human expert",
+      "human_mean": 4,
+      "completion_tokens": 410,
+      "elapsed_s": 17.8,
+      "score": 4
+    },
+    {
+      "id": "e984217e-2047-4772-a34f-e3304fcca82a",
+      "source": "Project Debater",
+      "human_mean": 4,
+      "completion_tokens": 197,
+      "elapsed_s": 8.7,
+      "score": 3
+    },
+    {
+      "id": "03f88bf9-d862-4055-af5a-a2b531a25f7f",
+      "source": "Project Debater",
+      "human_mean": 4.466666666666667,
+      "completion_tokens": 413,
+      "elapsed_s": 17.2,
+      "score": 5
+    },
+    {
+      "id": "0ced48b8-dea1-48de-bfe9-4de0e01939b7",
+      "source": "Arg-Search",
+      "human_mean": 3.7333333333333334,
+      "completion_tokens": 383,
+      "elapsed_s": 17.3,
+      "score": 2
+    },
+    {
+      "id": "7d7dbd68-c93d-4a83-9087-6858b6420ccc",
+      "source": "Arg-GPT2",
+      "human_mean": 2.8666666666666667,
+      "completion_tokens": 404,
+      "elapsed_s": 18.0,
+      "score": 2
+    },
+    {
+      "id": "a071d5b8-95bd-43a0-b04f-52b834c7835b",
+      "source": "Arg-Search",
+      "human_mean": 2.466666666666667,
+      "completion_tokens": 517,
+      "elapsed_s": 22.1,
+      "score": 2
+    },
+    {
+      "id": "830e7e08-4a6e-4115-8a07-e089a11241ed",
+      "source": "Human expert",
+      "human_mean": 4,
+      "completion_tokens": 478,
+      "elapsed_s": 21.3,
+      "score": 4
+    },
+    {
+      "id": "48ee779b-3593-4fc2-aa34-3a9ed3fa36fe",
+      "source": "Human expert",
+      "human_mean": 4.133333333333334,
+      "completion_tokens": 374,
+      "elapsed_s": 17.3,
+      "score": 5
+    },
+    {
+      "id": "4de6aa57-e44a-4d73-8953-77df8c5e28d8",
+      "source": "Summit",
+      "human_mean": 3.3333333333333335,
+      "completion_tokens": 308,
+      "elapsed_s": 14.4,
+      "score": 2
+    },
+    {
+      "id": "a8c95fe8-9be2-437f-95f4-7f3dad9f9b64",
+      "source": "Speech-GPT2",
+      "human_mean": 4.133333333333334,
+      "completion_tokens": 304,
+      "elapsed_s": 14.0,
+      "score": 1
+    },
+    {
+      "id": "0894d31a-ec71-4944-94af-552df093ecd8",
+      "source": "Arg-Human2",
+      "human_mean": 3.4,
+      "completion_tokens": 468,
+      "elapsed_s": 20.4,
+      "score": 2
+    },
+    {
+      "id": "f16549a2-6701-4688-bd97-e2ec076992d0",
+      "source": "Speech-GPT2",
+      "human_mean": 3,
+      "completion_tokens": 191,
+      "elapsed_s": 8.8,
+      "score": 1
+    },
+    {
+      "id": "9447f505-a8f1-40ce-b66a-b2c836e30612",
+      "source": "Speech-GPT2",
+      "human_mean": 3.1333333333333333,
+      "completion_tokens": 178,
+      "elapsed_s": 9.3,
+      "score": 2
+    },
+    {
+      "id": "eb166126-9696-46d8-8ba9-bbe77041d905",
+      "source": "Speech-GPT2",
+      "human_mean": 3.6666666666666665,
+      "completion_tokens": 284,
+      "elapsed_s": 13.0,
+      "score": 1
+    },
+    {
+      "id": "e13305c1-c1f5-45fb-b899-62b65fb1e8cf",
+      "source": "Human expert",
+      "human_mean": 4.133333333333334,
+      "completion_tokens": 543,
+      "elapsed_s": 23.0,
+      "score": 4
+    },
+    {
+      "id": "e4118147-1c2a-4828-8212-41af403eb9e0",
+      "source": "Speech-GPT2",
+      "human_mean": 4.2,
+      "completion_tokens": 496,
+      "elapsed_s": 20.3,
+      "score": 4
+    },
+    {
+      "id": "724480b9-7987-4e7c-8215-f1a01e99f78b",
+      "source": "Arg-Search",
+      "human_mean": 2,
+      "completion_tokens": 629,
+      "elapsed_s": 26.3,
+      "score": 1
+    },
+    {
+      "id": "a6f8de87-fc55-496a-a0a1-4c3667bb5904",
+      "source": "Human expert",
+      "human_mean": 4.133333333333334,
+      "completion_tokens": 391,
+      "elapsed_s": 18.1,
+      "score": 4
+    },
+    {
+      "id": "edce2bd7-60bc-4a91-aaae-933bb5f2c287",
+      "source": "Project Debater",
+      "human_mean": 4.4,
+      "completion_tokens": 258,
+      "elapsed_s": 11.6,
+      "score": 3
+    },
+    {
+      "id": "686f4048-146f-4d86-9768-cd6962fb7a90",
+      "source": "Arg-Search",
+      "human_mean": 3,
+      "completion_tokens": 530,
+      "elapsed_s": 22.4,
+      "score": 1
+    },
+    {
+      "id": "9f8f7243-a9e5-4062-9e9f-9c6b8b8ae15d",
+      "source": "Summit",
+      "human_mean": 3.4,
+      "completion_tokens": 360,
+      "elapsed_s": 16.7,
+      "score": 3
+    },
+    {
+      "id": "f5f8d74b-eea0-4961-8827-376c75eb8f3f",
+      "source": "Arg-Human1",
+      "human_mean": 4,
+      "completion_tokens": 517,
+      "elapsed_s": 22.0,
+      "score": 4
+    },
+    {
+      "id": "707ecb40-9477-4320-8364-83b840ea6617",
+      "source": "Arg-GPT2",
+      "human_mean": 3.6666666666666665,
+      "completion_tokens": 278,
+      "elapsed_s": 13.2,
+      "score": 2
+    },
+    {
+      "id": "420f749f-9908-43e9-8360-1738e08b9f54",
+      "source": "Project Debater",
+      "human_mean": 3.533333333333333,
+      "completion_tokens": 220,
+      "elapsed_s": 9.1,
+      "score": 4
+    },
+    {
+      "id": "0234c66f-f7c7-4513-b941-c8747b7413ab",
+      "source": "Summit",
+      "human_mean": 2.3333333333333335,
+      "completion_tokens": 259,
+      "elapsed_s": 12.7,
+      "score": 1
+    },
+    {
+      "id": "525b948a-7b1b-4c0d-a1f4-89e337727653",
+      "source": "Arg-GPT2",
+      "human_mean": 3.8,
+      "completion_tokens": 318,
+      "elapsed_s": 14.6,
+      "score": 2
+    },
+    {
+      "id": "005fc9ca-8b3e-4e85-9b8a-da7821c0c0f5",
+      "source": "Human expert",
+      "human_mean": 4.333333333333333,
+      "completion_tokens": 472,
+      "elapsed_s": 20.8,
+      "score": 3
+    },
+    {
+      "id": "2c25fd40-6316-4131-b662-37da168ed053",
+      "source": "Arg-GPT2",
+      "human_mean": 3.7333333333333334,
+      "completion_tokens": 333,
+      "elapsed_s": 15.1,
+      "score": 2
+    },
+    {
+      "id": "35ce3770-1022-4b3c-ad7d-705fa2911f4a",
+      "source": "Arg-Human2",
+      "human_mean": 4.133333333333334,
+      "completion_tokens": 419,
+      "elapsed_s": 18.4,
+      "score": 5
+    },
+    {
+      "id": "41b58ffa-b42b-4c30-a27f-83d5eb19f0d5",
+      "source": "Arg-Search",
+      "human_mean": 3.3333333333333335,
+      "completion_tokens": 463,
+      "elapsed_s": 20.0,
+      "score": 4
+    },
+    {
+      "id": "2661b00a-81f3-495e-b179-2470d49afb56",
+      "source": "Human expert",
+      "human_mean": 4.133333333333334,
+      "completion_tokens": 493,
+      "elapsed_s": 20.9,
+      "score": 4
+    },
+    {
+      "id": "8aa21488-32d7-455f-b63c-3d161bf07883",
+      "source": "Summit",
+      "human_mean": 2.4,
+      "completion_tokens": 635,
+      "elapsed_s": 26.7,
+      "score": 2
+    },
+    {
+      "id": "5b0fa06e-390a-4b4c-a350-e8224c799d95",
+      "source": "Arg-GPT2",
+      "human_mean": 3.466666666666667,
+      "completion_tokens": 326,
+      "elapsed_s": 15.1,
+      "score": 1
+    },
+    {
+      "id": "e674e705-3fb3-4f6f-a1f8-a9d562968c53",
+      "source": "Human expert",
+      "human_mean": 4.266666666666667,
+      "completion_tokens": 391,
+      "elapsed_s": 18.6,
+      "score": 4
+    },
+    {
+      "id": "53847107-0bf3-4f51-9085-ec1395d6301a",
+      "source": "Arg-Search",
+      "human_mean": 3.533333333333333,
+      "completion_tokens": 224,
+      "elapsed_s": 11.4,
+      "score": 2
+    },
+    {
+      "id": "0cded48b-7c78-4804-a575-b1780f25b7ef",
+      "source": "Project Debater",
+      "human_mean": 3.8,
+      "completion_tokens": 178,
+      "elapsed_s": 7.6,
+      "score": 2
+    },
+    {
+      "id": "fa93b4f8-b884-4d5e-8707-ba2ca24e0129",
+      "source": "Summit",
+      "human_mean": 2.6666666666666665,
+      "completion_tokens": 585,
+      "elapsed_s": 24.8,
+      "score": 2
+    },
+    {
+      "id": "64936726-c920-44d5-902a-275ef9cf452a",
+      "source": "Human expert",
+      "human_mean": 4.066666666666666,
+      "completion_tokens": 520,
+      "elapsed_s": 22.6,
+      "score": 5
+    },
+    {
+      "id": "7cc400c9-8ec1-4366-858e-b08deb271c8f",
+      "source": "Human expert",
+      "human_mean": 4,
+      "completion_tokens": 497,
+      "elapsed_s": 20.8,
+      "score": 2
+    },
+    {
+      "id": "ba1c9170-c43f-41b4-839a-d50ab1996bdb",
+      "source": "Speech-GPT2",
+      "human_mean": 3.8666666666666667,
+      "completion_tokens": 444,
+      "elapsed_s": 18.7,
+      "score": 2
+    },
+    {
+      "id": "83b2d816-cd4c-4387-a523-eba3bc261a34",
+      "source": "Human expert",
+      "human_mean": 3.6,
+      "completion_tokens": 439,
+      "elapsed_s": 19.2,
+      "score": 4
+    },
+    {
+      "id": "5b59cecb-c3fe-4cd3-8bda-dacfb78bdc56",
+      "source": "Arg-Human2",
+      "human_mean": 3.2666666666666666,
+      "completion_tokens": 282,
+      "elapsed_s": 14.0,
+      "score": 5
+    },
+    {
+      "id": "21caa630-486c-4076-9c97-54ad91500669",
+      "source": "Arg-Human2",
+      "human_mean": 3.4,
+      "completion_tokens": 871,
+      "elapsed_s": 35.2,
+      "score": 4
+    },
+    {
+      "id": "b6464965-6434-4bf6-a4b3-b7ff351f3fc0",
+      "source": "Project Debater",
+      "human_mean": 3.933333333333333,
+      "completion_tokens": 345,
+      "elapsed_s": 14.4,
+      "score": 2
+    },
+    {
+      "id": "f1e40cb7-35e6-45ce-81bb-c999609efe0c",
+      "source": "Summit",
+      "human_mean": 3.066666666666667,
+      "completion_tokens": 534,
+      "elapsed_s": 22.9,
+      "score": 2
+    },
+    {
+      "id": "631b18d5-b934-4802-ae58-59b3f39d9fc3",
+      "source": "Project Debater",
+      "human_mean": 3.3333333333333335,
+      "completion_tokens": 274,
+      "elapsed_s": 11.0,
+      "score": 4
+    },
+    {
+      "id": "e9d8c98e-77b8-4b64-8a3f-2f8239853cda",
+      "source": "Arg-Search",
+      "human_mean": 3.8,
+      "completion_tokens": 909,
+      "elapsed_s": 36.5,
+      "score": 2
+    },
+    {
+      "id": "d3e38dc9-35be-4440-be8a-bd9972530260",
+      "source": "Project Debater",
+      "human_mean": 4.4,
+      "completion_tokens": 802,
+      "elapsed_s": 31.1,
+      "score": 5
+    },
+    {
+      "id": "8365e30e-6f10-44d5-a295-f010c02f6dfa",
+      "source": "Arg-GPT2",
+      "human_mean": 3.933333333333333,
+      "completion_tokens": 788,
+      "elapsed_s": 31.6,
+      "score": 3
+    },
+    {
+      "id": "840b4ef8-dc05-4fed-8c39-235775eda3d0",
+      "source": "Speech-GPT2",
+      "human_mean": 3.466666666666667,
+      "completion_tokens": 473,
+      "elapsed_s": 19.4,
+      "score": 2
+    },
+    {
+      "id": "46843932-708a-4fd0-a96b-71e23becd0e0",
+      "source": "Arg-Human2",
+      "human_mean": 3.6666666666666665,
+      "completion_tokens": 493,
+      "elapsed_s": 21.0,
+      "score": 2
+    },
+    {
+      "id": "fb26581b-2b55-4123-93c7-458664b3cc9d",
+      "source": "Human expert",
+      "human_mean": 4,
+      "completion_tokens": 497,
+      "elapsed_s": 21.5,
+      "score": 4
+    },
+    {
+      "id": "0624f71d-15f5-44e1-8286-2aa05153c3ab",
+      "source": "Arg-Search",
+      "human_mean": 3.4,
+      "completion_tokens": 754,
+      "elapsed_s": 30.7,
+      "score": 3
+    },
+    {
+      "id": "bc1bde53-e9f9-4a45-9f97-a7bfecd7fab9",
+      "source": "Speech-GPT2",
+      "human_mean": 2.1333333333333333,
+      "completion_tokens": 274,
+      "elapsed_s": 14.2,
+      "score": 1
+    },
+    {
+      "id": "55e78f35-cc5b-42e2-a609-69acff7610f3",
+      "source": "Summit",
+      "human_mean": 3.066666666666667,
+      "completion_tokens": 713,
+      "elapsed_s": 29.5,
+      "score": 1
+    },
+    {
+      "id": "1274fd2e-c9bc-4230-bc78-abdf08c68247",
+      "source": "Arg-GPT2",
+      "human_mean": 2.8,
+      "completion_tokens": 495,
+      "elapsed_s": 21.0,
+      "score": 2
+    },
+    {
+      "id": "85e1c0a8-5d04-4c57-9d2e-53c7138353f2",
+      "source": "Human expert",
+      "human_mean": 4.6,
+      "completion_tokens": 228,
+      "elapsed_s": 12.5,
+      "score": 2
+    },
+    {
+      "id": "5382d84d-8aa6-4db6-a595-1d8be7a55959",
+      "source": "Arg-Human2",
+      "human_mean": 3.933333333333333,
+      "completion_tokens": 360,
+      "elapsed_s": 16.1,
+      "score": 4
+    },
+    {
+      "id": "fb6a8b82-b6db-4f68-83f7-2dfe6c5ccd66",
+      "source": "Human expert",
+      "human_mean": 4.133333333333334,
+      "completion_tokens": 408,
+      "elapsed_s": 18.4,
+      "score": 5
+    },
+    {
+      "id": "a43eb671-6e0f-40ff-8bb7-c441aa768705",
+      "source": "Arg-Search",
+      "human_mean": 2.066666666666667,
+      "completion_tokens": 489,
+      "elapsed_s": 21.2,
+      "score": 1
+    },
+    {
+      "id": "a93a1826-737c-4e88-abd1-7cbd71a568d4",
+      "source": "Summit",
+      "human_mean": 2.533333333333333,
+      "completion_tokens": 324,
+      "elapsed_s": 15.2,
+      "score": 2
+    },
+    {
+      "id": "78411cfa-e0ea-4a5e-90ce-cd129f750dbc",
+      "source": "Arg-Search",
+      "human_mean": 3.4,
+      "completion_tokens": 561,
+      "elapsed_s": 23.4,
+      "score": 2
+    },
+    {
+      "id": "4bd7730c-4f94-4dbd-a254-f0eb6441bb17",
+      "source": "Project Debater",
+      "human_mean": 4.066666666666666,
+      "completion_tokens": 272,
+      "elapsed_s": 13.2,
+      "score": 3
+    },
+    {
+      "id": "5aca2f9c-7c22-4fbd-8e52-f40651eebf6e",
+      "source": "Speech-GPT2",
+      "human_mean": 3.533333333333333,
+      "completion_tokens": 485,
+      "elapsed_s": 20.7,
+      "score": 1
+    },
+    {
+      "id": "26a270b1-0518-4979-abcf-6302903d354c",
+      "source": "Arg-Search",
+      "human_mean": 3.1333333333333333,
+      "completion_tokens": 510,
+      "elapsed_s": 21.8,
+      "score": 2
+    },
+    {
+      "id": "7254305b-b6d1-4a7c-8cd7-308742beccc6",
+      "source": "Speech-GPT2",
+      "human_mean": 3.8,
+      "completion_tokens": 438,
+      "elapsed_s": 18.8,
+      "score": 1
+    },
+    {
+      "id": "5ff2a8df-37f5-4ea7-9d6b-157253a6c778",
+      "source": "Human expert",
+      "human_mean": 4.266666666666667,
+      "completion_tokens": 578,
+      "elapsed_s": 24.4,
+      "score": 4
+    },
+    {
+      "id": "9a9c2159-4b2f-49b8-9b90-b894b0e63c30",
+      "source": "Summit",
+      "human_mean": 3.4,
+      "completion_tokens": 425,
+      "elapsed_s": 19.0,
+      "score": 2
+    },
+    {
+      "id": "8c328887-303d-4d02-9212-d979cb623fe2",
+      "source": "Arg-Human1",
+      "human_mean": 3.6666666666666665,
+      "completion_tokens": 370,
+      "elapsed_s": 16.4,
+      "score": 5
+    },
+    {
+      "id": "2eba3dfa-53ed-4c06-8852-771a548dbad6",
+      "source": "Speech-GPT2",
+      "human_mean": 3.2,
+      "completion_tokens": 309,
+      "elapsed_s": 13.8,
+      "score": 1
+    },
+    {
+      "id": "6a71f89a-619b-4018-ba6f-cb1feed25759",
+      "source": "Project Debater",
+      "human_mean": 3.8666666666666667,
+      "completion_tokens": 266,
+      "elapsed_s": 11.6,
+      "score": 2
+    },
+    {
+      "id": "b30256ea-5c43-48c4-bf56-2c09125139de",
+      "source": "Arg-GPT2",
+      "human_mean": 3.3333333333333335,
+      "completion_tokens": 510,
+      "elapsed_s": 21.5,
+      "score": 2
+    },
+    {
+      "id": "2107c73f-c35b-46c0-8298-b04d5e303bfe",
+      "source": "Summit",
+      "human_mean": 3.6,
+      "completion_tokens": 751,
+      "elapsed_s": 31.1,
+      "score": 2
+    },
+    {
+      "id": "3d9abf97-2e2c-4943-b601-9b4a0e0c9275",
+      "source": "Human expert",
+      "human_mean": 3.933333333333333,
+      "completion_tokens": 311,
+      "elapsed_s": 14.7,
+      "score": 5
+    }
+  ]
+}

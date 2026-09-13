@@ -1,0 +1,83 @@
+{
+  "model": "qwen3:8b",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "seed": 42,
+  "budget": 2000,
+  "requested_n": 8,
+  "sampled": 9,
+  "elapsed_s": 186.8,
+  "results": [
+    {
+      "id": "29a3d2d2-957e-486a-b5f0-218e6a8584b8",
+      "source": "Arg-Search",
+      "human_mean": 2.6666666666666665,
+      "completion_tokens": 389,
+      "elapsed_s": 19.0,
+      "score": 2
+    },
+    {
+      "id": "57b64ed2-d294-4b75-b96a-62e76e4bd7be",
+      "source": "Human expert",
+      "human_mean": 4.266666666666667,
+      "completion_tokens": 564,
+      "elapsed_s": 24.8,
+      "score": 4
+    },
+    {
+      "id": "9c56b3aa-630b-4cc3-b5bf-68b9fc217810",
+      "source": "Arg-Human2",
+      "human_mean": 3.933333333333333,
+      "completion_tokens": 320,
+      "elapsed_s": 14.8,
+      "score": 2
+    },
+    {
+      "id": "081eedca-3392-4802-8ba7-76274d5257b0",
+      "source": "Human expert",
+      "human_mean": 3.7333333333333334,
+      "completion_tokens": 389,
+      "elapsed_s": 17.6,
+      "score": 4
+    },
+    {
+      "id": "f5f8d74b-eea0-4961-8827-376c75eb8f3f",
+      "source": "Arg-Human1",
+      "human_mean": 4,
+      "completion_tokens": 517,
+      "elapsed_s": 22.1,
+      "score": 4
+    },
+    {
+      "id": "6c804ec6-f73a-4d29-a2d8-7a3c055090ad",
+      "source": "Summit",
+      "human_mean": 2.8,
+      "completion_tokens": 783,
+      "elapsed_s": 32.2,
+      "score": 1
+    },
+    {
+      "id": "ef72a421-3f24-41e2-9645-666e5aa46ad4",
+      "source": "Speech-GPT2",
+      "human_mean": 3.466666666666667,
+      "completion_tokens": 644,
+      "elapsed_s": 25.6,
+      "score": 2
+    },
+    {
+      "id": "1274fd2e-c9bc-4230-bc78-abdf08c68247",
+      "source": "Arg-GPT2",
+      "human_mean": 2.8,
+      "completion_tokens": 495,
+      "elapsed_s": 21.1,
+      "score": 2
+    },
+    {
+      "id": "aba1ac8b-fdcc-48d8-b890-155eb48978d1",
+      "source": "Project Debater",
+      "human_mean": 3.4,
+      "completion_tokens": 229,
+      "elapsed_s": 9.6,
+      "score": 2
+    }
+  ]
+}

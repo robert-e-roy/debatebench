@@ -84,7 +84,17 @@ already settled in ADR-013 §4.
     human ratings (`debate_speeches`, excluding its 81 control speeches;
     Rank-30k);
   - or fold that into B5's exit gate.
-- **Method established 2026-09-13, nothing run yet — see `JUDGE-VALIDATION.md`.**
+- **Subset run complete 2026-09-13 — see `JUDGE-VALIDATION.md`.** `qwen3:8b`
+  scored **Tau-C +0.513** against the human mean over a 117-speech stratified
+  subset (117/117 parsed, no failures), clearing the ≥0.38 threshold that was
+  fixed before any judge ran, and sitting at 127% of the measured human ceiling
+  of 0.405. **But only its *ordering* passes.** It scores human-written speeches
+  almost exactly as humans do (−0.06) and machine-generated ones one to two
+  points low (Speech-GPT2 −1.94), and Tau-C is blind to that because it measures
+  rank alone. So an absolute `argument_quality` score from this judge is not
+  trustworthy, while *comparing* two sides' scores — which is what ADR-013 §3
+  actually does to pick a winner — is supported. The full 631 has not been run.
+- **Method established from the paper first, per ADR-002.**
   The paper ADR-002 told us to read first (*Debatable Intelligence*, arXiv
   2506.05062) settles the statistic (Kendall's Tau-C against the per-speech mean
   of 15 human ratings), the data (`noystl/speech-quality-dataset`, the authors'

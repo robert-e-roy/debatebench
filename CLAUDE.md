@@ -61,8 +61,16 @@ code. See ADR-002 for full scope.
   *did* vary was fixed separately by having the audit cite a turn number
   instead of transcribing coordinates. The prompt says "list every assertion …
   Filter nothing out"; the model overrides it, and two prompt attempts have not
-  shifted it. Retrying will not help. **Next: open question 6**, which blocks
-  B7 and trusting any score from B5 onward.
+  shifted it. Retrying will not help. **Open question 6 is partly answered**
+  (2026-09-13, `JUDGE-VALIDATION.md`): on a 117-speech stratified subset of the
+  paper's own dataset, `qwen3:8b` scored **Tau-C +0.513** against the human
+  mean — 127% of the measured 0.405 human ceiling, clearing the ≥0.38 threshold
+  that was fixed before any judge ran, with 117/117 replies parsed. **Only its
+  ordering passes.** It rates human-written speeches as humans do (−0.06) and
+  machine-generated ones one to two points low (−1.94 worst), and Tau-C cannot
+  see that. So comparing two sides' scores is supported — which is what ADR-013
+  §3 does to pick a winner — while an absolute `argument_quality` number is not.
+  **Next: the full 631**, then B7, whose README must carry this distinction.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
