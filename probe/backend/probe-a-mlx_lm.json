@@ -5,10 +5,10 @@
   "captured_from": "the run's stdout, not written by the script: session 1's probe_a.py persisted only after every row finished, and this run was killed during A8, so its own file was never created. That defect is fixed in probe_a.py, which now saves after each row.",
   "caveats": {
     "A1": "ran with the old non-binding prompt ('Name three colours'). Both fields recorded exactly 20 completion tokens, which does indicate the cap bound here, but for parity with the other servers it should be re-run with the 400-word prompt now baked into the instrument.",
-    "A2": "INSTRUMENT FAILURE, not a server finding. The recorded sample is a repr of the response envelope, which means content extraction returned nothing and the old code fell back to str(payload). Whether mlx_lm honours response_format json_object is UNMEASURED.",
-    "A3": "INSTRUMENT FAILURE, same cause as A2. Whether mlx_lm honours json_schema is UNMEASURED — and this is the row ADR-013's open question actually needs.",
-    "A5": "INSTRUMENT FAILURE, same cause. Both samples are empty, so 'identical: false' says nothing about determinism. UNMEASURED.",
-    "A9": "never ran — the run was killed during A8."
+    "A2": "SUPERSEDED by probe-a-mlx_lm-budgeted.json, where it is honoured and the content parses. Two compounding causes here, and calling it simply an instrument failure was half right: the old code fell back to str(payload) when extraction failed (fixed), but extraction found nothing because this row's 120-token budget was spent thinking — the message came back with a `reasoning` key and no `content`. Budget starvation on a reasoning model, i.e. OPEN-QUESTIONS 13.",
+    "A3": "SUPERSEDED by probe-a-mlx_lm-budgeted.json, same cause as A2. Re-run at 2000 tokens, mlx_lm does NOT honour json_schema — it answers in prose. That is a real negative finding on the row ADR-013's open question needs, and it could not be seen until the budget was raised.",
+    "A5": "SUPERSEDED by probe-a-mlx_lm-budgeted.json, same cause as A2. Re-run at 2000 tokens, output is identical across two calls with seed 42 and temperature 0.",
+    "A9": "never ran here — the run was killed during A8. Measured in probe-a-mlx_lm-budgeted.json: both `content` and `reasoning` keys, so mlx_lm separates thinking into its own field."
   },
   "rows": {
     "A1": {

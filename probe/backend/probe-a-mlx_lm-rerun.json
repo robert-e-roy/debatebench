@@ -1,0 +1,34 @@
+{
+  "label": "mlx_lm-rerun",
+  "base_url": "http://127.0.0.1:8081/v1",
+  "model": "mlx-community/Qwen3-8B-4bit",
+  "rows": {
+    "A2": {
+      "status": 200,
+      "content_parses_as_json": false,
+      "sample": "",
+      "raw_message_when_no_content": "{'role': 'assistant', 'reasoning': \"\\nOkay, the user wants me to reply with a JSON object where the key is 'answer' and the value is the number 4. Let me make sure I understand the request correctly.\\"
+    },
+    "A3": {
+      "status": 200,
+      "conforms_to_schema": false,
+      "sample": "",
+      "raw_message_when_no_content": "{'role': 'assistant', 'reasoning': '\\nOkay, the user is asking \"What is two plus two?\" That\\'s a basic arithmetic question. Let me think. Two plus two is a common problem, right? So, 2 + 2. Let me add"
+    },
+    "A5": {
+      "identical": false,
+      "first": "",
+      "second": "",
+      "raw_message_when_no_content": "{'role': 'assistant', 'reasoning': '\\nOkay, the user asked me to name three colors. Let me think. First, I need to make sure I understand the request correctly. They just want three color names, right"
+    },
+    "A9": {
+      "status": 200,
+      "message_keys": [
+        "reasoning"
+      ],
+      "separate_reasoning_field": true,
+      "think_tag_in_content": false,
+      "content_sample": ""
+    }
+  }
+}

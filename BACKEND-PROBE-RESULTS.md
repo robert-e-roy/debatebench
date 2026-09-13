@@ -42,31 +42,50 @@ Ollama's rows therefore ran on **`phi4-mini`** and are *not* like-for-like.
 
 ## Part A — API compatibility
 
-| # | `vllm-mlx` (Qwen3-8B) | `mlx_lm.server` (Qwen3-8B) | Ollama (phi4-mini) |
+All three columns are **Qwen3-8B 4-bit**: `mlx-community/Qwen3-8B-4bit` on both
+Python servers, `qwen3:8b` on Ollama (Q4_K_M GGUF — same family and bit-width
+class, not byte-identical weights). Ollama's earlier `phi4-mini` pass is kept in
+`probe/backend/probe-a-ollama.json`; it is not comparable and is not used here.
+
+| # | `vllm-mlx` | `mlx_lm.server` | Ollama |
 |---|---|---|---|
-| A1 `max_tokens` | **honoured** — exactly 20 | **honoured** — exactly 20 | **honoured** — 20, `finish_reason: length` |
-| A1 `max_completion_tokens` | **ignored** — 305 tokens | **honoured** — exactly 20 | **ignored** — 633 tokens, `stop` |
-| A2 `json_object` | honoured, content parses | *not measured* | honoured, content parses |
-| A3 `json_schema` | **honoured, conforms** | *not measured* | **honoured, conforms** |
+| A1 `max_tokens` | **honoured** — exactly 20 | **honoured** — exactly 20 | **honoured** — 20, `length` |
+| A1 `max_completion_tokens` | **ignored** — 305 tokens | **honoured** — exactly 20 | **ignored** — 1287 tokens, `stop` |
+| A2 `json_object` | honoured, parses | **honoured**, parses | honoured, parses |
+| A3 `json_schema` | **honoured, conforms** | **NOT honoured** — returned prose, "Two plus two is **4**." | **honoured, conforms** |
 | A4 `stream: false` | one JSON object | one JSON object | one JSON object |
-| A5 seed 42 + temp 0, twice | **identical** | *not measured* | **identical** |
+| A5 seed 42 + temp 0, twice | **identical** | **identical** | **identical** |
 | A6 usage | present, non-zero | present, non-zero (+`prompt_tokens_details`) | present, non-zero (+`prompt_tokens_details`) |
-| A7 tiny budget, `finish_reason` | `stop` at **713** tokens (cap ignored, truncation unsignalled) | **`length`** at exactly 10 | `stop` at **444** (cap ignored) |
-| A8 over-context | **no rejection**; still generating at 260 s, engine wedged, abandoned | **no rejection**; ballooned to **23 GB**, client timeout at 180 s | client timeout at 180 s; post-disconnect behaviour not measured |
-| A9 reasoning field | *not measured* | *not measured* | content only, no separate field — **not comparable** (phi4-mini isn't a reasoning model) |
+| A7 tiny budget, `finish_reason` | `stop` at **713** tokens (cap ignored, truncation unsignalled) | **`length`** at exactly 10 | **`length`** at exactly 10 |
+| A8 over-context | **no rejection**; still generating at 260 s, engine wedged, abandoned (~160k-token prompt) | **no rejection**; ballooned to **23 GB**, client timeout at 180 s (~160k-token prompt) | **no rejection**; client timeout at 180 s (~37k-token prompt) |
+| A9 reasoning field | **no separate field** — `<think>` inside `content`, despite `--reasoning-parser qwen3` | **separate `reasoning` field**, alongside `content` | **separate `reasoning` field**, alongside `content` |
 | A10 bind address | `127.0.0.1` | `127.0.0.1` | **`*:11434` — wildcard, reachable off-box** |
 | A11 offline start | *not verified to standard* | *not verified to standard* | not applicable (already running) |
 
+**A3 is the row ADR-013's open question needed, and it divides 2–1 against the
+current default.** `vllm-mlx` and Ollama both honour `json_schema` and return
+conforming JSON; `mlx_lm.server` — which ADR-003 makes the default — ignores it
+and answers in prose. Structured output would retire the malformed-JSON failures
+that cost most of 2026-09-12/13 rather than validating around them.
+
 ### Why the gaps
 
-- **mlx_lm A2/A3/A5:** instrument failure, not a server finding. The probe's
-  content extraction returned nothing and fell back to printing the response
-  envelope, so "does it honour `json_object`" was never actually tested. Must
-  be re-run before anything is concluded.
-- **vllm-mlx A9:** blocked. A8's prompt wedged the generation route; two
-  attempts returned HTTP 503 `text_generation_busy`, and ~20 minutes later the
-  route still had not cleared.
-- **mlx_lm A9:** the run died at A8 and never reached it.
+- **mlx_lm A2/A3/A5: re-run and now measured** — see the table. The first pass
+  failed for two compounding reasons, and only one was a parsing bug. The probe
+  fell back to printing the response envelope when extraction failed (fixed),
+  but the *reason* extraction found nothing was **budget starvation**: at 60–120
+  tokens, Qwen3 through `mlx_lm` spent the whole budget thinking and returned a
+  message with a `reasoning` key and no `content` at all. That is
+  OPEN-QUESTIONS 13, and it is the same trap the judge hit before its budget
+  went to 6000. The rows were re-run at 2000 tokens
+  (`probe-a-mlx_lm-budgeted.json`). Calling it "an instrument failure" was half
+  right and is corrected here.
+- **vllm-mlx A9:** blocked during the first pass — A8's prompt wedged the
+  generation route, two attempts returned HTTP 503 `text_generation_busy`, and
+  ~20 minutes later it still had not cleared. **Measured after the server was
+  restarted**, and the answer is in the table above.
+- **mlx_lm A9:** the first run died at A8 and never reached it. **Measured on
+  the re-run**, and the answer is in the table above.
 - **A11 everywhere:** both Python servers were started with offline flags
   (`HF_HUB_OFFLINE=1`, `--offline`) and started without network errors, but the
   doc requires a packet capture or firewall block. Absence of an error is not
@@ -89,15 +108,23 @@ Ollama's rows therefore ran on **`phi4-mini`** and are *not* like-for-like.
 
 | # | Measured | Result |
 |---|---|---|
-| B2 | `vllm-mlx`, Qwen3-8B-4bit resident | **12 GB** `phys_footprint` |
+| B2 | `vllm-mlx`, Qwen3-8B-4bit, **at rest after a clean start** | **5.0 GB** `phys_footprint` |
+| B2 | `vllm-mlx`, same model, **while wedged on a ~160k-token prompt** | 12 GB (see correction below) |
 | B2 | `mlx_lm`, same model, during a ~160k-token prompt | **23 GB**, peak 23 GB |
 | B6 | `vllm-mlx` concurrency | **serialized** — rejects with `SimpleEngine serialized route is busy … blocking_serialized … waiters=0` |
 | B1, B3, B4, B5 | — | **not measured** |
 
 Two observations that bear on the rows above:
 
-- **vllm-mlx's 12 GB is roughly double B0's figure for the same model** under
-  `mlx_lm` (4.8 GiB after load, 6.6 GiB peak). Same weights, same machine.
+- **Correction (same session).** An earlier version of this file said
+  "vllm-mlx's 12 GB is roughly double B0's figure for the same model," and that
+  was wrong. The 12 GB was measured while the server was wedged holding the KV
+  cache for a ~160k-token prompt — my own A8 row — not at rest. Measured again
+  after a clean restart, it is **5.0 GB**, against B0's 4.8 GiB after load for
+  the same weights on the same machine: **the same, not double.** The claim was
+  also asserted in a commit message, which this corrects. It is a good example
+  of why a footprint reading has to record what the server was *doing* when it
+  was taken.
 - **mlx_lm's 23 GB is consistent with B0's KV-cache measurement** of
   144 KiB/token for Qwen3-8B: a ~160k-token prompt is ~23 GB of cache. It does
   not refuse an over-context prompt; it tries to allocate for it.
@@ -120,29 +147,43 @@ memory was 12–13% at the end of this session with `vllm-mlx` still holding
    the driving process had exited; only killing the server released it.
    For `debatebench` this means a single bad `budget`/prompt can take a backend
    out of service for the rest of a run.
-2. **No single budget field works everywhere.** `max_tokens` is honoured by all
-   three servers here and ignored by AFM (ADR-003). `max_completion_tokens` —
-   **which is what the adapter currently sends** (ADR-003, ADR-009) — is
-   honoured by `mlx_lm` and AFM and **ignored by `vllm-mlx` and Ollama**. On
-   those two the orchestrator's budget is not being applied server-side at all;
-   Hard Rule 5 catches the overshoot after the fact, which is how the 646-token
-   overshoot earlier today was caught.
+2. **No single budget field works everywhere**, now confirmed on identical
+   weights rather than inferred across different ones. `max_tokens` is honoured
+   by all three servers here and ignored by AFM (ADR-003).
+   `max_completion_tokens` — **which is what the adapter currently sends**
+   (ADR-003, ADR-009) — is honoured by `mlx_lm` and AFM and **ignored by
+   `vllm-mlx` and Ollama**: against a cap of 20 they returned 305 and 1287
+   completion tokens respectively, both with `finish_reason: "stop"`. On those
+   two the orchestrator's budget never reaches the server at all; Hard Rule 5
+   catches the overshoot after the fact, which is how the 646-token overshoot
+   on 2026-09-12 was caught.
 3. **`json_schema` is honoured by both servers that could be tested.** This is
    the row ADR-013's open question needed. Structured output would remove the
    malformed-JSON failures that cost most of this session, rather than
    validating around them.
 4. **Ollama binds a wildcard address by default.** `*:11434`, reachable from
    the network, where both Python servers bind loopback.
+5. **`vllm-mlx` leaves thinking inside `content`, even with
+   `--reasoning-parser qwen3`.** The reply carries only a `content` key — no
+   `reasoning` or `reasoning_content` — and it opens with `<think>`.
+   `mlx_lm.server` separates it into its own field (OPEN-QUESTIONS 13). Two
+   consequences: a reasoning model's thinking is charged to the same budget
+   *and* returned inline, and any JSON extraction that scans from the first
+   `{` to the last `}` can be misled by a brace inside a thinking block. That
+   is a risk this probe surfaces, not a diagnosis of any particular failure.
 
 ---
 
 ## What would finish this
 
-- Restart `vllm-mlx` (its engine is still wedged), then run A8, A9 and Part B
-  on it.
-- Re-run mlx_lm's A2/A3/A5 with the content-extraction bug fixed.
-- Decide whether Ollama is compared on `phi4-mini` (not like-for-like) or a
-  Qwen3-8B is pulled, which needs network.
+- **Part A is complete for all three servers on the same model**, except A8 on
+  `vllm-mlx` (abandoned after it wedged the engine; worth one more attempt with
+  the instrument's corrected ~37k-token prompt) and A11 everywhere, which needs
+  a packet capture rather than the absence of an error.
+- **Part B is the real gap**: B1, B3, B4 and B5 are unmeasured. The machine is
+  now quiet again (~90% free), so these are finally worth taking — one server
+  at a time, since two resident 8B models is what produced the Metal OOM.
+- B5 (`Qwen3-8B` + `Mistral-Small-24B` co-resident) should still go **last**.
 - B5 (`Qwen3-8B` + `Mistral-Small-24B` co-resident) was not attempted. On this
   evidence it should be attempted last and deliberately: two 8B-class models
   plus a large prompt already drove free memory from 91% to 6% in this session.

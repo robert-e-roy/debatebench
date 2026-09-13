@@ -36,6 +36,14 @@ TIMEOUT = httpx.Timeout(connect=5.0, read=300.0, write=60.0, pool=5.0)
 BINDING = [{"role": "user", "content": "Write a detailed 400 word essay about the history of rain measurement."}]
 SHORT = [{"role": "user", "content": "Name three colours."}]
 
+# Rows that need an *answer* back (A2, A3, A5, A9) must leave room for a
+# reasoning model to think first. Session 1 gave them 60-120 tokens, and Qwen3
+# through mlx_lm spent the lot thinking: the message came back with a
+# `reasoning` key and no `content` at all, which looked like a parsing bug and
+# was really budget starvation — the same trap the judge hit before its budget
+# went to 6000 (OPEN-QUESTIONS 13).
+REASONING_BUDGET = 2000
+
 
 def post(client: httpx.Client, url: str, body: dict, read: float | None = None):
     started = time.monotonic()
@@ -106,18 +114,20 @@ def run(base_url: str, model: str, label: str, wanted: set[str]) -> dict:
                 return None
 
         if "A1" in wanted:
-            out = {}
+            # Not named `out`: that shadows the results Path that save() closes
+            # over, and every row then fails with dict.write_text.
+            fields = {}
             for field in ("max_tokens", "max_completion_tokens"):
                 status, payload, _ = post(client, url, {
                     "model": model, "messages": BINDING, "stream": False, field: 20})
-                out[field] = {"status": status,
-                              "completion_tokens": usage_of(payload).get("completion_tokens"),
-                              "finish_reason": finish_reason_of(payload)}
-            record("A1", **out)
+                fields[field] = {"status": status,
+                                 "completion_tokens": usage_of(payload).get("completion_tokens"),
+                                 "finish_reason": finish_reason_of(payload)}
+            record("A1", **fields)
 
         if "A2" in wanted:
             status, payload, _ = post(client, url, {
-                "model": model, "stream": False, "max_tokens": 120,
+                "model": model, "stream": False, "max_tokens": REASONING_BUDGET,
                 "messages": [{"role": "user", "content":
                               "Reply with a JSON object mapping 'answer' to the number 4."}],
                 "response_format": {"type": "json_object"}})
@@ -129,7 +139,7 @@ def run(base_url: str, model: str, label: str, wanted: set[str]) -> dict:
             schema = {"type": "object", "properties": {"answer": {"type": "integer"}},
                       "required": ["answer"], "additionalProperties": False}
             status, payload, _ = post(client, url, {
-                "model": model, "stream": False, "max_tokens": 120,
+                "model": model, "stream": False, "max_tokens": REASONING_BUDGET,
                 "messages": [{"role": "user", "content": "What is two plus two?"}],
                 "response_format": {"type": "json_schema",
                                     "json_schema": {"name": "answer", "schema": schema, "strict": True}}})
@@ -147,7 +157,7 @@ def run(base_url: str, model: str, label: str, wanted: set[str]) -> dict:
                    has_choices=isinstance(payload, dict) and "choices" in payload)
 
         if "A5" in wanted:
-            body = {"model": model, "stream": False, "max_tokens": 60,
+            body = {"model": model, "stream": False, "max_tokens": REASONING_BUDGET,
                     "temperature": 0, "seed": 42, "messages": SHORT}
             _, first, _ = post(client, url, dict(body))
             _, second, _ = post(client, url, dict(body))
@@ -172,9 +182,13 @@ def run(base_url: str, model: str, label: str, wanted: set[str]) -> dict:
                    completion_tokens=usage_of(payload).get("completion_tokens"))
 
         if "A8" in wanted:
-            # Session 1: this wedged vllm-mlx for ~20 minutes and drove mlx_lm to
-            # 23 GB. Run it last, and expect to restart the server afterwards.
-            filler = "The council reviewed the transit budget and scheduled a vote. " * 12000
+            # Sized to *exceed* the window, not to dwarf it. Qwen3-8B's context is
+            # ~32k tokens; 2,800 repetitions is ~28k words, roughly 37k tokens, so
+            # the row still asks "what happens past the limit" while the KV cache
+            # stays a few GB. Session 1 sent 12,000 repetitions (~160k tokens, 5x
+            # the window): it wedged vllm-mlx for ~20 minutes, drove mlx_lm to
+            # 23 GB, and ended in a Metal OOM on the host. Still run this row last.
+            filler = "The council reviewed the transit budget and scheduled a vote. " * 2800
             status, payload, _ = post(client, url, {
                 "model": model, "stream": False, "max_tokens": 16,
                 "messages": [{"role": "user", "content": filler}]}, read=180.0)
@@ -183,7 +197,7 @@ def run(base_url: str, model: str, label: str, wanted: set[str]) -> dict:
 
         if "A9" in wanted:
             status, payload, _ = post(client, url, {
-                "model": model, "stream": False, "max_tokens": 200,
+                "model": model, "stream": False, "max_tokens": REASONING_BUDGET,
                 "messages": [{"role": "user", "content": "Think step by step: what is 17 times 23?"}]})
             message = message_of(payload)
             text, _ = content_of(payload)

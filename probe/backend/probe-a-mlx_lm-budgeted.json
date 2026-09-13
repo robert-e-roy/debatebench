@@ -1,0 +1,35 @@
+{
+  "label": "mlx_lm-budgeted",
+  "base_url": "http://127.0.0.1:8081/v1",
+  "model": "mlx-community/Qwen3-8B-4bit",
+  "rows": {
+    "A2": {
+      "status": 200,
+      "content_parses_as_json": true,
+      "sample": "\n\n{\"answer\": 4}",
+      "raw_message_when_no_content": null
+    },
+    "A3": {
+      "status": 200,
+      "conforms_to_schema": false,
+      "sample": "\n\nTwo plus two is **4**.",
+      "raw_message_when_no_content": null
+    },
+    "A5": {
+      "identical": true,
+      "first": "\n\nHere are three colors:  \n1. **Red**  \n2. **Blue**  \n3. **Green**",
+      "second": "\n\nHere are three colors:  \n1. **Red**  \n2. **Blue**  \n3. **Green**",
+      "raw_message_when_no_content": null
+    },
+    "A9": {
+      "status": 200,
+      "message_keys": [
+        "content",
+        "reasoning"
+      ],
+      "separate_reasoning_field": true,
+      "think_tag_in_content": false,
+      "content_sample": "\n\nTo find the product of $17 \\times 23$, we can use the distributive property to break the multiplication into simpler p"
+    }
+  }
+}
