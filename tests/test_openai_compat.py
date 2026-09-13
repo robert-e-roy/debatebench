@@ -40,7 +40,7 @@ def _generate(handler, request=REQUEST, base_url=BASE_URL):
     return asyncio.run(go())
 
 
-def test_request_shape_follows_adr_003():
+def test_request_shape_sends_both_budget_fields():
     seen = []
 
     def handler(request):
@@ -54,9 +54,21 @@ def test_request_shape_follows_adr_003():
     assert json.loads(sent.content) == {
         "model": "system",
         "messages": [{"role": "system", "content": "You are terse."}, {"role": "user", "content": "Say hi."}],
-        "max_completion_tokens": 64,  # never max_tokens, which fm serve ignores
+        # Both, at the same value (ADR-018 §4). fm serve honours only the first,
+        # vllm-mlx and Ollama only the second, mlx_lm both.
+        "max_completion_tokens": 64,
+        "max_tokens": 64,
         "stream": False,  # explicit, because fm serve streams otherwise
     }
+
+
+def test_the_two_budget_fields_never_disagree():
+    # A server honouring both must not see two different caps.
+    seen = []
+    _generate(lambda r: seen.append(r) or _ok(), request=replace(REQUEST, max_completion_tokens=123))
+    body = json.loads(seen[0].content)
+
+    assert body["max_tokens"] == body["max_completion_tokens"] == 123
 
 
 def test_seed_is_sent_only_when_the_request_carries_one():

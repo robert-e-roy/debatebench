@@ -43,8 +43,14 @@ class OpenAICompatibleBackend:
         body = {
             "model": self._model,
             "messages": [{"role": m.role, "content": m.content} for m in request.messages],
-            # fm serve ignores max_tokens; mlx_lm.server reads this too (ADR-003, ADR-009).
+            # Both fields, same value: no single one works everywhere (ADR-018 §4,
+            # superseding ADR-003's "never max_tokens"). fm serve honours only
+            # max_completion_tokens; vllm-mlx and Ollama honour only max_tokens and
+            # returned 305 and 1287 tokens against a cap of 20; mlx_lm honours both.
+            # Each server reads the one it knows and ignores the other, and since the
+            # value is identical there is nothing to reconcile.
             "max_completion_tokens": request.max_completion_tokens,
+            "max_tokens": request.max_completion_tokens,
             # fm serve streams when this is omitted (ADR-003).
             "stream": False,
         }
