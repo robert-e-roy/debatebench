@@ -117,17 +117,59 @@ Qwen3-8B, which sits just above the paper's ≥7B line. A plausible outcome is
 
 ---
 
-## Decisions this needs before any code
+## The human ceiling, measured from this data
 
-1. **The acceptance threshold.** The paper states none. Pick a Tau-C value that
-   means "trust this judge" **before** seeing our results, or it becomes
-   post-hoc justification.
-2. **Scope** — a dedicated session between B5 and B7, or folded into B5's exit
-   gate. Item 6 offers both. Folding it into a gate that has already passed
-   would quietly reopen that gate.
-3. **Accepting the coverage above**, explicitly, including that the winner logic
-   and the fact-check remain unvalidated.
-4. **Run size.** 631 speeches × ~600 words is roughly 1.75 h per model at this
-   machine's measured rates. A stratified subset (all 8 sources, proportional)
-   would give a first signal in well under an hour; the full set is the
-   publishable number.
+Tau-C runs **−1 to +1**: +1 perfect ordering agreement, 0 none, −1 inverted.
+But 1.0 is not the target. On a subjective task the 15 annotators do not agree
+with each other either, so **human-to-human agreement is the ceiling**, and it
+is computable here rather than borrowed — every individual rating is in the
+file.
+
+Procedure, identical to what a judge would face: leave one annotator out,
+correlate their ratings against the mean of the other 14 on the speeches they
+rated, Tau-C, averaged over annotators. 82 annotators; median 116 speeches each
+(range 2–239).
+
+| minimum speeches | aggregator | n | mean | median | min | max |
+|---|---|---|---|---|---|---|
+| ≥30 | raw mean | 64 | **0.405** | 0.404 | 0.116 | 0.840 |
+| ≥30 | rounded mean | 64 | 0.316 | 0.301 | 0.070 | 0.590 |
+| ≥50 | raw mean | 56 | **0.382** | 0.382 | 0.116 | 0.675 |
+| ≥50 | rounded mean | 56 | 0.295 | 0.297 | 0.070 | 0.522 |
+
+Two things follow, and both matter more than the headline number.
+
+**The rounding choice moves the ceiling by ~0.09** — a quarter of the way to the
+human ceiling itself. It is not a presentational detail, and any threshold has
+to name which aggregator it refers to.
+
+**This does not reconcile with the paper's figures, and that is unresolved.**
+Their ≥7B judges "cluster above 0.5 Tau-C", which is *above* the human ceiling
+measured here. Either they correlate against a mean that includes the annotator
+being scored (which inflates agreement), or their Figure 2(b) is a different
+comparison than leave-one-out. **Not verified — do not adopt 0.5 as a target
+without resolving it**, because on this measurement 0.5 would mean demanding a
+judge outperform every typical human annotator.
+
+## Decisions
+
+1. **Acceptance threshold — proposed, anchored on the table above.** Against the
+   **raw** mean: **≥ 0.38 is credible** (matches the median human annotator),
+   **0.30–0.38 marginal**, **< 0.30 is worse than a typical annotator** and the
+   judge should not be trusted. Chosen before any judge has been run, which is
+   the point. Revisit only if the paper-discrepancy above resolves in a way that
+   changes what the ceiling means — not because a result lands just under.
+2. **Scope — a dedicated session** between B5 and B7. Folding it into B5's
+   already-passed exit gate would quietly reopen that gate.
+3. **Coverage accepted as scoped**: this validates `argument_quality` against a
+   single blended human score. The winner logic, the steelman tiebreak,
+   `rebuttal_effectiveness` and the fact-check pass remain unvalidated, and B7's
+   README must say so rather than implying the judge was validated wholesale.
+4. **Run size — stratified subset first, then the full 631.** All 8 sources
+   proportionally, for a first signal in well under an hour; the full set is the
+   publishable number and only worth its ~1.75 h once the subset looks viable.
+
+**Dependency note:** this analysis uses `scipy` from the system Python, not the
+package venv. ADR-008 fixes the shipped runtime at `httpx` + PyYAML, and a
+validation script is no more part of the runtime than `probe/backend/` is.
+Nothing here is added to the package's dependency surface.
