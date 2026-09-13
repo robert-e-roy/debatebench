@@ -2,8 +2,8 @@
 
 **Status:** partial. **Part A is complete for all three servers on the same
 model**, except A8 on `vllm-mlx` (abandoned when it wedged the engine) and A11
-everywhere (needs a packet capture, not the absence of an error). Part B is
-measured for `vllm-mlx` only, and B5 not at all. The exit
+everywhere (needs a packet capture, not the absence of an error). **Part B is
+complete**, including B5 under `mlx_lm`. The exit
 gate in `BACKEND-PROBE.md` ("every row in A and B filled in for all three
 servers") is **not met**, and this file says which rows are missing and why.
 **No recommendation is made here** — the data doesn't yet support one.
@@ -132,7 +132,30 @@ measures swap.
 | B4 | Ollama, 3,315-token prompt | 13.6 s to last token, **~243 tok/s** prefill — fastest of the three (upper bound, as above) |
 | B6 | Ollama concurrency | **serialized but queued** — second call served (200, 120 tokens), 1.91× a single call |
 | B2 | Ollama | not measured — its model runs in a child `runner` process that is absent at rest, so `footprint` has no stable target |
-| B5 | — | **not measured** |
+| B5 | `mlx_lm`, Qwen3-8B **+** Mistral-Small-24B co-resident | **18.0 GiB, both held** — no critical pressure, floor never approached |
+| B5 | `vllm-mlx`, Ollama | **not testable as invoked** — see below |
+
+**B5 is the row B0 never finished, and the pair fits.** `mlx_lm` held both
+models at **18.0 GiB** (Qwen3-8B alone 4.95, Mistral-Small-24B 13.0, both
+18.0). Alongside `vllm-mlx`'s resident 5.0 GB that is ~23 GB on a 32 GB
+machine, and it ran at **78–79% free with swap flat at 4.86 GB**, never nearing
+the instrument's 10% floor. B0 estimated the pair at ~19.6 GiB and hit critical
+pressure before completing the stage; this run did not. The difference is not
+that B0 was wrong — B0 measured alongside a working desktop and said so — but
+it does mean **the pair is viable on a quiet machine**, which B0 left open.
+
+**Mid-run I concluded the opposite and had to correct it.** After the large
+model loaded, the process sat at 13.0 GiB — Mistral's own size — which looked
+like eviction rather than co-residence. Re-requesting Qwen3-8B took 6.2 s and
+took the footprint to 18.0 GiB, and a second call returned in 0.3 s with the
+footprint unchanged: both retained. The run had simply ended before the pair
+were simultaneously resident, and the "17 GiB peak" was that transition, not a
+swap.
+
+**Not testable elsewhere, which is itself the finding.** `vllm-mlx` was invoked
+as `vllm-mlx serve <one model>`, so a single process cannot hold two; testing
+it needs a second server instance and twice the overhead. Ollama has no 24B
+pulled, and fetching one needs network, which A11's offline posture excludes.
 
 **`mlx_lm`'s B3 reproduces B0's headline almost exactly — 33.5 against 33.9 —
 which is the best evidence the instrument is sound.** Read together, the three
@@ -247,18 +270,19 @@ on `vllm-mlx` with the corrected ~37k prompt and answered (it wedges the engine
 at a modest overage too). **Part B is complete for all three except B5**, with
 B1 recorded but explicitly not comparable to B0.
 
-Two rows remain, and neither is a small job:
+**B5 is done** — the pair fits, at 18.0 GiB, without critical pressure. One row
+is genuinely outstanding, and two are closed as not-testable rather than unmet:
 
-- **A11 (offline start), all three.** The doc asks for a packet capture or a
-  firewall block. Both Python servers were started with offline flags and threw
-  no network error, but absence of an error is not the evidence requested, so
-  this is recorded as unverified rather than passed.
-- **B5 (`Qwen3-8B` + `Mistral-Small-24B` co-resident), not attempted.** It
-  should be, but deliberately and on a recovered machine: it co-loads roughly
-  19 GB of weights, and this session repeatedly drove free memory to 6–12% and
-  produced a host-level Metal OOM (`kIOGPUCommandBufferCallbackErrorOutOfMemory`)
-  with far less than that resident. Attempted at the wrong moment it reproduces
-  the crash instead of measuring it.
+- **A11 (offline start), all three — still open.** The doc asks for a packet
+  capture or a firewall block. Both Python servers were started with offline
+  flags and threw no network error, but absence of an error is not the evidence
+  requested, so this is recorded as unverified rather than passed.
+- **B5 under `vllm-mlx` — not testable as invoked.** `vllm-mlx serve <one
+  model>` gives one model per process, so co-residency there means a second
+  server instance and twice the fixed overhead. That is a different question
+  from the one B5 asks.
+- **B5 under Ollama — not testable offline.** No 24B is pulled, and fetching
+  one needs network, which A11's own offline posture excludes.
 
 **Every timing row needs a settled machine, and this session kept unsettling
 it.** An earlier draft of this line claimed the machine was "quiet again

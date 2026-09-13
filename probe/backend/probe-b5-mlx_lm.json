@@ -1,0 +1,37 @@
+{
+  "label": "mlx_lm",
+  "base_url": "http://127.0.0.1:8081/v1",
+  "small_model": "mlx-community/Qwen3-8B-4bit",
+  "large_model": "mlx-community/Mistral-Small-24B-Instruct-2501-4bit",
+  "floor_percent": 10.0,
+  "baseline_free_percent": 85.0,
+  "steps": [
+    {
+      "model": "mlx-community/Qwen3-8B-4bit",
+      "ok": true,
+      "status": 200,
+      "elapsed_s": 0.6,
+      "body": null,
+      "stage": "small",
+      "free_percent_after": 69.0,
+      "footprint_gib_after": 4.95
+    },
+    {
+      "model": "mlx-community/Mistral-Small-24B-Instruct-2501-4bit",
+      "ok": true,
+      "status": 200,
+      "elapsed_s": 11.1,
+      "body": null,
+      "stage": "large",
+      "free_percent_after": 37.0,
+      "footprint_gib_after": 13.0
+    }
+  ],
+  "watch": {
+    "peak_footprint_gib": 17.0,
+    "min_free_percent": 24.0,
+    "samples": 20
+  },
+  "floor_hit_during_run": false,
+  "final_free_percent": 37.0
+}
