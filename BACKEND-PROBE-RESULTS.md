@@ -269,13 +269,37 @@ memory was 12–13% at the end of this session with `vllm-mlx` still holding
    two the orchestrator's budget never reaches the server at all; Hard Rule 5
    catches the overshoot after the fact, which is how the 646-token overshoot
    on 2026-09-12 was caught.
-3. **`json_schema` is honoured by both servers that could be tested.** This is
+3. **`json_schema` is honoured by two of the three, and not by `mlx_lm`.** An
+   earlier draft of this finding said "both servers that could be tested",
+   written while `mlx_lm`'s rows were still unmeasured; all three were tested
+   later and it ignores `response_format` in both modes. This is
    the row ADR-013's open question needed. Structured output would remove the
    malformed-JSON failures that cost most of this session, rather than
    validating around them.
 4. **Ollama binds a wildcard address by default.** `*:11434`, reachable from
    the network, where both Python servers bind loopback.
-5. **`vllm-mlx` leaves thinking inside `content`, even with
+5. **The judge's fact-check audit produces malformed JSON on every backend
+   tried — four of them.** `mlx_lm` (Qwen3-8B), Ollama (phi4-mini), `vllm-mlx`
+   (Qwen3-8B) and Ollama (qwen3:8b) have each broken it, in four distinct ways:
+   a Python-style `\'` escape, a lone string where a key belongs (`"ver/Cited
+   by the CON's opening passage"`), a phase index pointing at a turn that does
+   not exist, and a truncated key (`"phase, 1,` where `"phase_index": 1,`
+   belongs). The *scoring* call parses reliably on all of them. Only the audit
+   fails, which points at the audit prompt — longer, more items, more
+   coordinates to copy — rather than at any server.
+
+   On Ollama it is **deterministic, not flaky**: two runs of the same command
+   failed identically, same fault at the same character offset. On `vllm-mlx`
+   it varied between runs. So retrying is not a fix on either.
+
+   This is the strongest argument for sending `response_format` — constrained
+   decoding makes `"phase, 1,` unemittable, and Ollama was verified on
+   2026-09-13 to honour the judge's *real* nested schema, enum-constrained
+   statuses and all, first attempt. It is deliberately not done: it weakens
+   ADR-013's parse-failure rule and ADR-017 §8's reported/absent distinction,
+   and making a failing gate pass by removing the check is the move this
+   project refuses. It needs its own decision, after open question 6.
+6. **`vllm-mlx` leaves thinking inside `content`, even with
    `--reasoning-parser qwen3`.** The reply carries only a `content` key — no
    `reasoning` or `reasoning_content` — and it opens with `<think>`.
    `mlx_lm.server` separates it into its own field (OPEN-QUESTIONS 13). Two
