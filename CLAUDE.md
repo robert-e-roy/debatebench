@@ -52,10 +52,17 @@ code. See ADR-002 for full scope.
   every score. **B6 is built but its live gate is NOT met** (2026-09-13): the
   fact-check pass runs end to end and produced a full claims ledger — including
   a claim contradicted by the *opponent's* recorded evidence, the finding
-  `prep_grounded` cannot produce — but a second run of the same command missed
-  the opinion and so failed the `not_checkable` check. The mechanism works; its
-  reliability is unproven. **Next: open question 6**, which blocks B7 and
-  trusting any score from B5 onward.
+  `prep_grounded` cannot produce — but it never lists the opinion, so nothing
+  is ever marked `not_checkable` and the third check fails. **This is a
+  classification failure, not a reliability one**, and an earlier version of
+  this line got that wrong: it read as flakiness because the first evidence was
+  a run that passed and a run that didn't. Four runs across two backends have
+  since missed the opinion every time, and the malformed-JSON problem that
+  *did* vary was fixed separately by having the audit cite a turn number
+  instead of transcribing coordinates. The prompt says "list every assertion …
+  Filter nothing out"; the model overrides it, and two prompt attempts have not
+  shifted it. Retrying will not help. **Next: open question 6**, which blocks
+  B7 and trusting any score from B5 onward.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
