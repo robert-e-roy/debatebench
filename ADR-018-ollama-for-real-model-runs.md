@@ -99,9 +99,14 @@ one it understands and ignores the other; because the value is identical there
 is no conflict to resolve. ADR-003's "never `max_tokens`" is superseded — it
 described AFM's quirk as if it were a rule for all servers.
 
-This is a code change to `openai_compat.py` and is not yet made. Until it is,
-budgets are unenforced server-side on Ollama and `vllm-mlx`, and Hard Rule 5's
-after-the-fact check is the only thing holding the line.
+**Implemented 2026-09-13** in `openai_compat.py`, and verified live rather than
+assumed: the same request that previously drew 1287 completion tokens from
+Ollama now returns 20 with `finish_reason: "length"`, and AFM — which honours
+only `max_completion_tokens` and was the real regression risk — still returns
+exactly 20 with no objection to the extra field. 272 offline tests and all 7
+live AFM tests pass. `vllm-mlx` was not re-checked; its process had exited by
+then, and the Ollama result already demonstrates the fix on a server that
+ignored the old field.
 
 ### 5. Network binding is a run-time requirement, not a defect
 
@@ -144,8 +149,8 @@ loses the two rows that matter more here.
 
 - **ADR-003 rule 2 is superseded** (§4): send both budget fields. `CLAUDE.md`'s
   backend section repeats the old rule and is updated with it.
-- **`openai_compat.py` must change** to send both fields. Until then, budgets
-  are advisory on two of four servers.
+- **`openai_compat.py` sends both fields** as of 2026-09-13 (§4). Budgets now
+  reach all four servers; before the change they were advisory on two of them.
 - **`BACKEND-PROBE.md`'s exit-gate wording is corrected** — it asserts a default
   that no ADR sets.
 - **`CLAUDE.md`'s Ollama paragraph is replaced.** It describes only the

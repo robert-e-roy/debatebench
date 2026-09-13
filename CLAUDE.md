@@ -164,9 +164,9 @@ huggingface.co on every start. AFM goes through the same adapter via `fm serve`
 - send budgets as **both** `max_tokens` and `max_completion_tokens`, set to the
   same value (ADR-018 §4, superseding ADR-003's "never `max_tokens`"). No single
   field works everywhere: AFM honours only `max_completion_tokens`, `vllm-mlx`
-  and Ollama honour only `max_tokens`, `mlx_lm` honours both. **Not yet
-  implemented** — until it is, budgets are unenforced server-side on `vllm-mlx`
-  and Ollama and Hard Rule 5's check is all that holds;
+  and Ollama honour only `max_tokens`, `mlx_lm` honours both. **Implemented and
+  verified live** (2026-09-13): the request that drew 1287 tokens from Ollama
+  against a cap of 20 now returns 20, and AFM is unaffected;
 - check `usage.completion_tokens` against the budget yourself — `finish_reason`
   doesn't signal truncation.
 
