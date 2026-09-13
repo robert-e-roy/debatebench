@@ -66,6 +66,13 @@ code. See ADR-002 for full scope.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.
+- `JUDGE-VALIDATION.md` — the method for OPEN-QUESTIONS item 6 (does a candidate
+  judge's scores track human judgement), established from the paper ADR-002
+  requires reading first. Records the statistic, the verified dataset, the judge
+  prompt, **what it does and does not validate**, and four decisions that are
+  still open. Nothing has been run yet.
+- `BACKEND-PROBE.md`, `BACKEND-PROBE-RESULTS.md`, `probe/backend/` — the
+  three-server comparison behind ADR-018, its instruments and its raw rows.
 - `debate-formats-research.md` — background research on real debate formats; not
   a spec.
 - `R0-repo-review-session.md`, `R0-RESULTS.md` — the R0 repo review behind

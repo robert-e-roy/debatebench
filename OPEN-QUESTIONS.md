@@ -84,6 +84,17 @@ already settled in ADR-013 §4.
     human ratings (`debate_speeches`, excluding its 81 control speeches;
     Rank-30k);
   - or fold that into B5's exit gate.
+- **Method established 2026-09-13, nothing run yet — see `JUDGE-VALIDATION.md`.**
+  The paper ADR-002 told us to read first (*Debatable Intelligence*, arXiv
+  2506.05062) settles the statistic (Kendall's Tau-C against the per-speech mean
+  of 15 human ratings), the data (`noystl/speech-quality-dataset`, the authors'
+  own filtered 631 speeches, cached locally and verified), and the judge prompt.
+  It also makes the coverage limit explicit: their annotators gave one *blended*
+  1–5 score, so this speaks to `argument_quality` only — the winner logic, the
+  steelman tiebreak, `rebuttal_effectiveness` and the fact-check stay
+  unvalidated. **Four decisions are still open and are listed in that file**,
+  the first being the acceptance threshold, which has to be chosen before
+  results are seen or it becomes post-hoc justification.
 - **Blocks:** trusting any result from B5 onward; B7.
 
 ### 7. B0 probes smaller models than the intended pairing — RESOLVED
