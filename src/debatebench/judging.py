@@ -512,6 +512,10 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
         "",
         available,
         "",
+        "Identify each turn by the `turn` number shown in its header above — the "
+        "single number after the opening bracket. Do not copy phase_index or "
+        "side_index; they are shown for reading only.",
+        "",
         "Answer with one JSON object and nothing else:",
         _CLAIM_SHAPE,
     ])
@@ -527,7 +531,7 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
 
 _CLAIM_SHAPE = """{
   "claims": [
-    {"phase_index": 1, "side_index": 0, "claim": "what was asserted",
+    {"turn": 3, "claim": "what was asserted",
      "verdict": "supported", "evidence_ids": ["am-1"]}
   ]
 }"""
@@ -542,18 +546,25 @@ def parse_claims(
     if not isinstance(listed, list):
         raise JudgeError("the fact-check reply has no claims list")
 
-    turns = {(turn.phase_index, turn.side_index) for turn in transcript.turns}
+    # The audit cites the turn number the rendering already prints, and the
+    # coordinates are mapped back here. Asking it to transcribe phase_index and
+    # side_index was the field it kept mangling: three of the four malformed
+    # replies measured across four backends corrupted a coordinate, not prose.
+    # The stored Claim and the score file still carry both (ADR-015 §4).
+    by_number = {number: turn for number, turn in enumerate(transcript.turns, start=1)}
     claims = []
     for position, entry in enumerate(listed):
         where = f"claims[{position}]"
         if not isinstance(entry, dict):
             raise JudgeError(f"{where} is not a JSON object")
-        phase_index, side_index = entry.get("phase_index"), entry.get("side_index")
-        if (phase_index, side_index) not in turns:
+        number = entry.get("turn")
+        if isinstance(number, bool) or number not in by_number:
             raise JudgeError(
-                f"{where} points at phase {phase_index!r}, side {side_index!r}, "
-                "which is not a turn in this transcript"
+                f"{where} cites turn {number!r}, and this transcript has turns "
+                f"1-{len(by_number)}"
             )
+        phase_index = by_number[number].phase_index
+        side_index = by_number[number].side_index
         claim = entry.get("claim")
         if not isinstance(claim, str) or not claim.strip():
             raise JudgeError(f"{where} has no claim text")

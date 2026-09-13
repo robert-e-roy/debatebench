@@ -28,17 +28,18 @@ CITED = ("am-1",)  # a passage the pro side actually retrieves in the fixture po
 
 
 def claim(
-    phase_index: int = 1,
-    side_index: int = 0,
+    turn: int = 3,
     text: str = "Brindlewick cut household emissions by 14 percent.",
     verdict: str = "supported",
     evidence_ids=None,
 ) -> dict:
+    """One audit entry. The wire shape cites the turn number the rendering
+    prints; the coordinates are mapped back in code, so a model never has to
+    transcribe phase_index and side_index — the field it kept mangling."""
     if evidence_ids is None:
         evidence_ids = CITED if verdict in ("supported", "contradicted") else ()
     return {
-        "phase_index": phase_index,
-        "side_index": side_index,
+        "turn": turn,
         "claim": text,
         "verdict": verdict,
         "evidence_ids": list(evidence_ids),
@@ -77,6 +78,23 @@ def test_a_claim_can_be_contradicted_by_the_opponents_evidence(run_dir: Path, pr
 
     (entry,) = audit.claims
     assert (entry.verdict, entry.evidence_ids) == ("contradicted", ("am-5",))
+
+
+def test_a_turn_number_maps_back_to_its_coordinates(run_dir: Path, prepared_sources):
+    # The whole point of citing a turn number: the model never transcribes
+    # phase_index/side_index, but the recorded claim still carries them.
+    _, transcript, _ = prep_debate(run_dir)
+    expected = list(enumerate(transcript.turns, start=1))
+
+    audit, _ = checked(transcript, claims_reply(claim(turn=3), claim(turn=4)))
+
+    third, fourth = dict(expected)[3], dict(expected)[4]
+    assert [(c.phase_index, c.side_index) for c in audit.claims] == [
+        (third.phase_index, third.side_index),
+        (fourth.phase_index, fourth.side_index),
+    ]
+    # And they are genuinely different turns, or this would pass vacuously.
+    assert (third.phase_index, third.side_index) != (fourth.phase_index, fourth.side_index)
 
 
 def test_the_audit_is_a_second_call_with_its_own_budget(run_dir: Path, prepared_sources):
@@ -142,8 +160,10 @@ BROKEN = [
     ("an unknown verdict", lambda: claims_reply(claim(verdict="probably true")),
      "verdict is 'probably true', not one of"),
     ("a claim with no text", lambda: claims_reply(claim(text="  ")), "has no claim text"),
-    ("a turn that isn't in the transcript", lambda: claims_reply(claim(phase_index=9)),
-     "which is not a turn in this transcript"),
+    ("a turn number the transcript doesn't have", lambda: claims_reply(claim(turn=99)),
+     r"cites turn 99, and this transcript has turns 1-4"),
+    ("a turn number that isn't a number", lambda: claims_reply(claim(turn="second")),
+     r"cites turn 'second', and this transcript has turns 1-4"),
     ("a passage the transcript never recorded", lambda: claims_reply(claim(evidence_ids=("am-99",))),
      "cites 'am-99', which the transcript never recorded"),
     ("supported but citing nothing", lambda: claims_reply(claim(evidence_ids=())),

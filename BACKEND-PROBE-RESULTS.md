@@ -292,13 +292,30 @@ memory was 12–13% at the end of this session with `vllm-mlx` still holding
    failed identically, same fault at the same character offset. On `vllm-mlx`
    it varied between runs. So retrying is not a fix on either.
 
-   This is the strongest argument for sending `response_format` — constrained
-   decoding makes `"phase, 1,` unemittable, and Ollama was verified on
-   2026-09-13 to honour the judge's *real* nested schema, enum-constrained
-   statuses and all, first attempt. It is deliberately not done: it weakens
-   ADR-013's parse-failure rule and ADR-017 §8's reported/absent distinction,
-   and making a failing gate pass by removing the check is the move this
-   project refuses. It needs its own decision, after open question 6.
+   **Largely fixed 2026-09-13 without `response_format`.** Three of the four
+   corruptions were in the coordinate fields, not the prose — the model was
+   mis-transcribing `phase_index`/`side_index`. The audit now cites the `turn`
+   number the rendering already prints, and the coordinates are mapped back in
+   code; the recorded claim and the score file still carry both (ADR-015 §4).
+   On Ollama, where the corruption had been *deterministic* — two runs failing
+   identically at the same character offset — two consecutive runs afterwards
+   parsed cleanly. Removing what the model had to transcribe fixed what
+   instructing it more firmly had not.
+
+   Sending `response_format` remains the stronger guarantee, and remains
+   deliberately not done: it weakens ADR-013's parse-failure rule and ADR-017
+   §8's reported/absent distinction, and making a failing gate pass by removing
+   the check it fails is the move this project refuses. It needs its own
+   decision, after open question 6.
+
+   **What is left is not a JSON problem.** B6's gate still fails, on both
+   `vllm-mlx` and Ollama, for one narrow reason: the audit does not list the
+   opinion ("This is the most important moral question of our time") at all, so
+   no claim is ever marked `not_checkable`. The prompt says "list every
+   assertion … Filter nothing out" and the model overrides it — the prior that
+   a fact-check audits *facts* beats the instruction. Two prompt attempts have
+   not shifted it. That is a classification problem, not a format one, and it
+   is the only thing between B6 and its gate.
 6. **`vllm-mlx` leaves thinking inside `content`, even with
    `--reasoning-parser qwen3`.** The reply carries only a `content` key — no
    `reasoning` or `reasoning_content` — and it opens with `<think>`.
