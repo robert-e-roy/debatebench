@@ -1,7 +1,9 @@
 # Backend Probe — Results (session 1, **partial**)
 
-**Status:** partial. Part A is complete for Ollama, complete-bar-four-rows for
-`mlx_lm.server`, and A1–A7 only for `vllm-mlx`. Part B has two rows. The exit
+**Status:** partial. **Part A is complete for all three servers on the same
+model**, except A8 on `vllm-mlx` (abandoned when it wedged the engine) and A11
+everywhere (needs a packet capture, not the absence of an error). Part B is
+measured for `vllm-mlx` only, and B5 not at all. The exit
 gate in `BACKEND-PROBE.md` ("every row in A and B filled in for all three
 servers") is **not met**, and this file says which rows are missing and why.
 **No recommendation is made here** — the data doesn't yet support one.
@@ -22,16 +24,18 @@ gives different numbers.
 |---|---|---|---|
 | `vllm-mlx` | **`github.com/vllm-mlx/vllm-mlx`** | 0.4.1 (wheel) | Apache-2.0 |
 | `mlx_lm.server` | `github.com/ml-explore/mlx-lm` | mlx-lm 0.31.3, mlx 0.32.2 | MIT |
-| Ollama | Ollama.app | 0.34.0 | **not verified locally** |
+| Ollama | Ollama.app | 0.34.0 | MIT (confirmed by the maintainer of this repo) |
 
 **Finding for ADR-003's amendment:** the installed `vllm-mlx` is a **fourth**
 project, not one of the three that amendment lists (`vllm-project/vllm-metal`,
 `waybarrios/vllm-mlx`, `vllm-swift`). It is its own org, `vllm-mlx/vllm-mlx`,
 Apache-2.0. Anyone reproducing this must pin that, not "vllm-mlx".
 
-Ollama's licence row is honest about its limits: the only licence file found
-in the bundle was `MLX_C_LICENSE` (MIT), which covers a **bundled dependency**,
-not Ollama itself. Not checked further.
+Ollama's licence is **MIT**, confirmed by this repo's maintainer. Worth noting
+how it was *not* established: the only licence file this probe found in the app
+bundle was `MLX_C_LICENSE` (MIT), which covers a **bundled dependency** rather
+than Ollama itself, and reading that as Ollama's own licence would have been
+wrong. Recorded here as attested, not as measured.
 
 Models: `mlx-community/Qwen3-8B-4bit` on both Python servers. **Ollama could
 not serve it** — it has only `phi4-mini` and `ornith-coder` locally, and
@@ -57,7 +61,7 @@ class, not byte-identical weights). Ollama's earlier `phi4-mini` pass is kept in
 | A5 seed 42 + temp 0, twice | **identical** | **identical** | **identical** |
 | A6 usage | present, non-zero | present, non-zero (+`prompt_tokens_details`) | present, non-zero (+`prompt_tokens_details`) |
 | A7 tiny budget, `finish_reason` | `stop` at **713** tokens (cap ignored, truncation unsignalled) | **`length`** at exactly 10 | **`length`** at exactly 10 |
-| A8 over-context | **no rejection**; still generating at 260 s, engine wedged, abandoned (~160k-token prompt) | **no rejection**; ballooned to **23 GB**, client timeout at 180 s (~160k-token prompt) | **no rejection**; client timeout at 180 s (~37k-token prompt) |
+| A8 over-context | **no rejection**; wedges the engine. 160k-token prompt: still generating at 260 s. **Re-run at ~37k, a modest overage: same result** — timeout at 180 s, engine wedged again, free memory to 12% | **no rejection**; ballooned to **23 GB**, client timeout at 180 s (~160k-token prompt) | **no rejection**; client timeout at 180 s (~37k-token prompt) |
 | A9 reasoning field | **no separate field** — `<think>` inside `content`, despite `--reasoning-parser qwen3` | **separate `reasoning` field**, alongside `content` | **separate `reasoning` field**, alongside `content` |
 | A10 bind address | `127.0.0.1` | `127.0.0.1` | **`*:11434` — wildcard, reachable off-box** |
 | A11 offline start | *not verified to standard* | *not verified to standard* | not applicable (already running) |
@@ -106,15 +110,70 @@ that cost most of 2026-09-12/13 rather than validating around them.
 
 ## Part B — performance
 
+Taken with `footprint(1)`, B0's instrument, on a settled machine (88% free,
+load 1.59, `vllm-mlx` the only resident model server). The instrument refuses
+to record a timing row below 60% free rather than publish a figure that
+measures swap.
+
 | # | Measured | Result |
 |---|---|---|
-| B2 | `vllm-mlx`, Qwen3-8B-4bit, **at rest after a clean start** | **5.0 GB** `phys_footprint` |
+| B2 | `vllm-mlx`, Qwen3-8B-4bit, **at rest after a clean start** | **5.0 GB** `phys_footprint` (B0: 4.8 GiB, same weights) |
 | B2 | `vllm-mlx`, same model, **while wedged on a ~160k-token prompt** | 12 GB (see correction below) |
 | B2 | `mlx_lm`, same model, during a ~160k-token prompt | **23 GB**, peak 23 GB |
-| B6 | `vllm-mlx` concurrency | **serialized** — rejects with `SimpleEngine serialized route is busy … blocking_serialized … waiters=0` |
-| B1, B3, B4, B5 | — | **not measured** |
+| B3 | `vllm-mlx` decode, short prompt, warm | **36.6 tok/s** — two samples, both 36.6 (B0: 33.9 under `mlx_lm`) |
+| B4 | `vllm-mlx`, 3,313-token prompt | 16.1 s to last token, **~205 tok/s** prefill — an **upper bound**, see below |
+| B6 | `vllm-mlx` concurrency | **serialized** — the second call returned **HTTP 503 in 0.08 s and was never served**; Part A's error text says `blocking_serialized … waiters=0` |
+| B2 | `mlx_lm`, Qwen3-8B-4bit at rest | **5,118 MB** — the same as `vllm-mlx`'s 5,011 MB and B0's 4.8 GiB |
+| B3 | `mlx_lm` decode, short prompt, warm | **33.5 tok/s** (samples 33.5, 32.2) — B0 measured **33.9** for these weights |
+| B4 | `mlx_lm`, 3,313-token prompt | 17.0 s to last token, **~195 tok/s** prefill (upper bound, as above) |
+| B6 | `mlx_lm` concurrency | **serialized but queued** — the second call *was* served (200, 120 tokens), taking 1.78× a single call |
+| B1 | both Python servers | **not comparable to B0 — see below** |
+| B3 | Ollama decode, short prompt, warm | **29.1 tok/s** (samples 29.1, 29.1) — slowest of the three |
+| B4 | Ollama, 3,315-token prompt | 13.6 s to last token, **~243 tok/s** prefill — fastest of the three (upper bound, as above) |
+| B6 | Ollama concurrency | **serialized but queued** — second call served (200, 120 tokens), 1.91× a single call |
+| B2 | Ollama | not measured — its model runs in a child `runner` process that is absent at rest, so `footprint` has no stable target |
+| B5 | — | **not measured** |
 
-Two observations that bear on the rows above:
+**`mlx_lm`'s B3 reproduces B0's headline almost exactly — 33.5 against 33.9 —
+which is the best evidence the instrument is sound.** Read together, the three
+servers are far closer than any single reading suggested today, and no one of
+them wins outright:
+
+| | decode (B3) | prefill (B4, upper bound) | second simultaneous request (B6) |
+|---|---|---|---|
+| `vllm-mlx` | **36.6 tok/s** | ~205 tok/s | **refused**, HTTP 503, never served |
+| `mlx_lm` | 33.5 tok/s | ~195 tok/s | queued and served, 1.78× |
+| Ollama | 29.1 tok/s | **~243 tok/s** | queued and served, 1.91× |
+
+Decode and prefill rank in opposite orders: `vllm-mlx` decodes fastest and
+prefills slowest, Ollama the reverse. Memory is within 2% across all three and
+against B0's 4.8 GiB. **None of them runs two requests in parallel** — the
+difference is only whether the second is queued or refused, and `vllm-mlx` is
+the one that refuses.
+
+**B1 is reported as not comparable, deliberately.** Launch to first
+`/v1/models` answer was 5 s, and the first *generation* 1.1 s — but that means
+the weights were already in the OS file cache after a day of loading them, not
+that a cold start takes 5 s. B0's 37.6 s was measured on a genuinely cold
+machine. Publishing 5 s against 37.6 s would claim a 7× improvement that is
+really a warm page cache, so both numbers are recorded and neither is compared.
+
+Observations that bear on the rows above:
+
+- **B3 nearly went in wrong, and the correction is the point.** The first
+  sample read **9.3 tok/s**, which would have published `vllm-mlx` as 3.6×
+  slower than B0's figure for identical weights. It was a cold first generation
+  on an idle server; re-taken warm it is 35.7 then 36.6. The instrument now
+  discards a warm-up call and reports two samples, because a single unrepeated
+  sample has produced a false headline three times in this session.
+- **B6's "ratio 1.0" was a rejection, not concurrency.** The second call
+  returned in 0.08 s, and the first version of that row timed it and called it
+  parallelism. Checking the status shows **503, no tokens, never served**. The
+  row now records status and token count and will not call anything concurrent
+  that was turned away.
+- **B4 is non-streaming**, so it times the *last* token. B0 had a streaming
+  client for true time-to-first-token and this does not; ~205 tok/s is an upper
+  bound on prefill, not a like-for-like figure.
 
 - **Correction (same session).** An earlier version of this file said
   "vllm-mlx's 12 GB is roughly double B0's figure for the same model," and that
@@ -147,6 +206,13 @@ memory was 12–13% at the end of this session with `vllm-mlx` still holding
    the driving process had exited; only killing the server released it.
    For `debatebench` this means a single bad `budget`/prompt can take a backend
    out of service for the rest of a run.
+
+   **This is not an artefact of an absurd prompt.** The first A8 sent ~160k
+   tokens, 5× the context window, which invited the objection that nobody would
+   do that. Re-run at **~37k — a modest overage on a ~32k window** — the result
+   was identical: no rejection, timeout at 180 s, engine wedged again, free
+   memory down to 12%. A prompt only slightly too long does the same damage as
+   one grossly too long, and neither is refused up front.
 2. **No single budget field works everywhere**, now confirmed on identical
    weights rather than inferred across different ones. `max_tokens` is honoured
    by all three servers here and ignored by AFM (ADR-003).
@@ -176,14 +242,25 @@ memory was 12–13% at the end of this session with `vllm-mlx` still holding
 
 ## What would finish this
 
-- **Part A is complete for all three servers on the same model**, except A8 on
-  `vllm-mlx` (abandoned after it wedged the engine; worth one more attempt with
-  the instrument's corrected ~37k-token prompt) and A11 everywhere, which needs
-  a packet capture rather than the absence of an error.
-- **Part B is the real gap**: B1, B3, B4 and B5 are unmeasured. The machine is
-  now quiet again (~90% free), so these are finally worth taking — one server
-  at a time, since two resident 8B models is what produced the Metal OOM.
-- B5 (`Qwen3-8B` + `Mistral-Small-24B` co-resident) should still go **last**.
-- B5 (`Qwen3-8B` + `Mistral-Small-24B` co-resident) was not attempted. On this
-  evidence it should be attempted last and deliberately: two 8B-class models
-  plus a large prompt already drove free memory from 91% to 6% in this session.
+**Part A is complete for all three servers on the same model.** A8 was re-run
+on `vllm-mlx` with the corrected ~37k prompt and answered (it wedges the engine
+at a modest overage too). **Part B is complete for all three except B5**, with
+B1 recorded but explicitly not comparable to B0.
+
+Two rows remain, and neither is a small job:
+
+- **A11 (offline start), all three.** The doc asks for a packet capture or a
+  firewall block. Both Python servers were started with offline flags and threw
+  no network error, but absence of an error is not the evidence requested, so
+  this is recorded as unverified rather than passed.
+- **B5 (`Qwen3-8B` + `Mistral-Small-24B` co-resident), not attempted.** It
+  should be, but deliberately and on a recovered machine: it co-loads roughly
+  19 GB of weights, and this session repeatedly drove free memory to 6–12% and
+  produced a host-level Metal OOM (`kIOGPUCommandBufferCallbackErrorOutOfMemory`)
+  with far less than that resident. Attempted at the wrong moment it reproduces
+  the crash instead of measuring it.
+
+**Every timing row needs a settled machine, and this session kept unsettling
+it.** An earlier draft of this line claimed the machine was "quiet again
+(~90% free)" — it was not: probing had driven it to 28%. Take these one server
+at a time.

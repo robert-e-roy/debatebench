@@ -64,15 +64,25 @@ def footprint_mb(pid: int) -> float | None:
 
 def generate(client: httpx.Client, url: str, model: str, messages, cap: int):
     """One non-streaming call. Returns (elapsed_s, completion_tokens, prompt_tokens)."""
+    elapsed, completion, prompt, _ = timed(client, url, model, messages, cap)
+    return elapsed, completion, prompt
+
+
+def timed(client: httpx.Client, url: str, model: str, messages, cap: int):
+    """As generate(), plus the HTTP status — a call that was *rejected* returns in
+    milliseconds and must never be mistaken for a fast one (B6)."""
     started = time.monotonic()
     # max_tokens, not max_completion_tokens: Part A found vllm-mlx and Ollama
     # ignore the latter, and an uncapped reply would not be a decode measurement.
     response = client.post(url, json={"model": model, "messages": messages,
                                       "stream": False, "max_tokens": cap})
     elapsed = time.monotonic() - started
-    payload = response.json()
+    try:
+        payload = response.json()
+    except ValueError:
+        return elapsed, None, None, response.status_code
     usage = payload.get("usage") or {}
-    return elapsed, usage.get("completion_tokens"), usage.get("prompt_tokens")
+    return elapsed, usage.get("completion_tokens"), usage.get("prompt_tokens"), response.status_code
 
 
 def run(base_url: str, model: str, label: str, wanted: set[str], pid: int | None) -> dict:
@@ -105,10 +115,17 @@ def run(base_url: str, model: str, label: str, wanted: set[str], pid: int | None
             if not quiet:
                 record("B3", not_measured=f"free memory {free}% < {MIN_FREE_PERCENT}%")
             else:
-                elapsed, completion, _ = generate(client, url, model, SHORT, 200)
-                record("B3", decode_tok_per_s=round((completion or 0) / elapsed, 1),
-                       completion_tokens=completion, elapsed_s=round(elapsed, 2),
-                       note="end-to-end, non-streaming, as B0 measured it")
+                # Discard a warm-up call. An idle server's first generation ran at
+                # 9.3 tok/s where the next two ran at 35.7 and 36.6 — publishing the
+                # cold one would have claimed vllm-mlx was 3.6x slower than B0's
+                # 33.9 tok/s for the same weights, which is false.
+                generate(client, url, model, SHORT, 200)
+                samples = [generate(client, url, model, SHORT, 200) for _ in range(2)]
+                rates = [round((completion or 0) / elapsed, 1) for elapsed, completion, _ in samples]
+                record("B3", decode_tok_per_s=max(rates), samples_tok_per_s=rates,
+                       completion_tokens=[c for _, c, _ in samples],
+                       elapsed_s=[round(e, 2) for e, _, _ in samples],
+                       note="end-to-end, non-streaming, as B0 measured it; warm-up discarded")
 
         if "B4" in wanted:
             if not quiet:
@@ -133,20 +150,34 @@ def run(base_url: str, model: str, label: str, wanted: set[str], pid: int | None
                 with httpx.Client(timeout=TIMEOUT) as second:
                     import threading
                     results = []
+
                     def fire():
                         try:
-                            results.append(generate(second, url, model, SHORT, 120)[0])
+                            results.append(timed(second, url, model, SHORT, 120))
                         except Exception as e:
-                            results.append(f"failed: {type(e).__name__}")
+                            results.append((None, None, None, f"raised {type(e).__name__}"))
+
                     thread = threading.Thread(target=fire)
                     thread.start()
-                    generate(client, url, model, SHORT, 120)
+                    timed(client, url, model, SHORT, 120)
                     thread.join()
                 both = time.monotonic() - started
-                record("B6", single_s=round(one, 2), two_together_s=round(both, 2),
+                elapsed, completion, _, status = results[0] if results else (None, None, None, None)
+                # A rejected call returns in milliseconds. Without checking status and
+                # tokens, that reads as "real concurrency" — which is how this row first
+                # reported ratio 1.0 against an engine Part A found to be
+                # blocking_serialized with waiters=0.
+                served = status == 200 and bool(completion)
+                record("B6",
+                       single_s=round(one, 2), two_together_s=round(both, 2),
                        ratio=round(both / one, 2) if one else None,
-                       second_call=results[0] if results else None,
-                       note="ratio near 1 means real concurrency, near 2 means serialized")
+                       second_call_status=status, second_call_completion_tokens=completion,
+                       second_call_elapsed_s=round(elapsed, 2) if elapsed else elapsed,
+                       second_call_actually_served=served,
+                       verdict=("concurrent" if served and one and both / one < 1.5
+                                else "serialized_or_rejected"),
+                       note="a ratio near 1 only means concurrency if the second call was "
+                            "actually served; otherwise it was turned away, not run in parallel")
 
     save()
     print(f"  -> {out}")

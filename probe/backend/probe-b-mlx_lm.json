@@ -1,45 +1,45 @@
 {
-  "label": "vllm-mlx",
-  "base_url": "http://127.0.0.1:8082/v1",
+  "label": "mlx_lm",
+  "base_url": "http://127.0.0.1:8081/v1",
   "model": "mlx-community/Qwen3-8B-4bit",
-  "free_percent_at_start": 87.0,
+  "free_percent_at_start": 79.0,
   "rows": {
     "B2": {
-      "phys_footprint_mb": 5011.0,
-      "pid": 71120,
+      "phys_footprint_mb": 5118.0,
+      "pid": 88928,
       "note": "at rest unless a generation was in flight"
     },
     "B3": {
-      "decode_tok_per_s": 36.6,
+      "decode_tok_per_s": 33.5,
       "samples_tok_per_s": [
-        36.6,
-        36.6
+        33.5,
+        32.2
       ],
       "completion_tokens": [
         200,
         200
       ],
       "elapsed_s": [
-        5.46,
-        5.46
+        5.97,
+        6.21
       ],
       "note": "end-to-end, non-streaming, as B0 measured it; warm-up discarded"
     },
     "B4": {
-      "elapsed_s": 16.13,
+      "elapsed_s": 17.0,
       "prompt_tokens": 3313,
       "completion_tokens": 16,
-      "approx_prefill_tok_per_s": 205.4,
+      "approx_prefill_tok_per_s": 194.9,
       "note": "non-streaming, so this is time to LAST token; a true time-to-first-token needs a streaming client B0 had and this does not. Treat as an upper bound."
     },
     "B6": {
-      "single_s": 3.39,
-      "two_together_s": 3.4,
-      "ratio": 1.0,
-      "second_call_status": 503,
-      "second_call_completion_tokens": null,
-      "second_call_elapsed_s": 0.08,
-      "second_call_actually_served": false,
+      "single_s": 3.63,
+      "two_together_s": 6.46,
+      "ratio": 1.78,
+      "second_call_status": 200,
+      "second_call_completion_tokens": 120,
+      "second_call_elapsed_s": 6.46,
+      "second_call_actually_served": true,
       "verdict": "serialized_or_rejected",
       "note": "a ratio near 1 only means concurrency if the second call was actually served; otherwise it was turned away, not run in parallel"
     }

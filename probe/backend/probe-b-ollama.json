@@ -1,0 +1,42 @@
+{
+  "label": "ollama",
+  "base_url": "http://127.0.0.1:11434/v1",
+  "model": "qwen3:8b",
+  "free_percent_at_start": 79.0,
+  "rows": {
+    "B3": {
+      "decode_tok_per_s": 29.1,
+      "samples_tok_per_s": [
+        29.1,
+        29.1
+      ],
+      "completion_tokens": [
+        200,
+        200
+      ],
+      "elapsed_s": [
+        6.88,
+        6.86
+      ],
+      "note": "end-to-end, non-streaming, as B0 measured it; warm-up discarded"
+    },
+    "B4": {
+      "elapsed_s": 13.62,
+      "prompt_tokens": 3315,
+      "completion_tokens": 16,
+      "approx_prefill_tok_per_s": 243.4,
+      "note": "non-streaming, so this is time to LAST token; a true time-to-first-token needs a streaming client B0 had and this does not. Treat as an upper bound."
+    },
+    "B6": {
+      "single_s": 4.32,
+      "two_together_s": 8.24,
+      "ratio": 1.91,
+      "second_call_status": 200,
+      "second_call_completion_tokens": 120,
+      "second_call_elapsed_s": 8.22,
+      "second_call_actually_served": true,
+      "verdict": "serialized_or_rejected",
+      "note": "a ratio near 1 only means concurrency if the second call was actually served; otherwise it was turned away, not run in parallel"
+    }
+  }
+}
