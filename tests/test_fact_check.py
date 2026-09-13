@@ -116,6 +116,22 @@ def test_without_evidence_the_prompt_says_so(run_dir: Path):
     system = build_fact_check_request(transcript, 4000).messages[0].content
 
     assert "Nothing was recorded to check against" in system
+    assert "Cite no ids at all" in system  # or it invents them from the turn numbering
+
+
+def test_without_evidence_invented_citations_do_not_abort_the_run(run_dir: Path):
+    # Measured against vllm-mlx: with nothing recorded, the judge cited '1'..'6',
+    # the turn numbers from the rendering. Those ids are discarded anyway
+    # (ADR-015 §2), so refusing them would fail a run over nothing.
+    _, transcript = debated(run_dir)
+    audit, _ = checked(
+        transcript,
+        claims_reply(claim(verdict="supported", evidence_ids=("1", "2", "3"))),
+    )
+
+    (entry,) = audit.claims
+    assert (entry.verdict, entry.evidence_ids) == ("not_checkable", ())
+    assert audit.note and "no prep evidence" in audit.note
 
 
 # --- a malformed audit is an error, never a guess ----------------------------

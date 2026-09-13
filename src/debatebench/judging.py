@@ -253,7 +253,13 @@ def render(transcript: Transcript) -> str:
     for number, turn in enumerate(transcript.turns, start=1):
         speaker = run.sides[turn.side_index]
         cut = " — reached its budget and may be cut off" if turn.hit_budget else ""
-        lines.append(f"[{number}. {turn.phase.capitalize()} - {speaker.side.upper()}{cut}]")
+        # The coordinates are shown, not just the running number: the audit has to
+        # cite phase_index/side_index, and inferring them from a 1..n display is
+        # how a judge ends up pointing at a phase that doesn't exist.
+        lines.append(
+            f"[turn {number} | phase_index {turn.phase_index}, side_index {turn.side_index}"
+            f" | {turn.phase.capitalize()} - {speaker.side.upper()}{cut}]"
+        )
         if turn.evidence:
             lines.append(f"Evidence this side retrieved ({len(turn.evidence)} passages):")
             lines += [f"  ({item.id}) {item.text.strip()}" for item in turn.evidence]
@@ -462,7 +468,11 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
     available = (
         f"The recorded passage ids you may cite: {', '.join(known)}."
         if known
-        else "Nothing was recorded to check against: this debate had no prep phase."
+        else (
+            "Nothing was recorded to check against: this debate had no prep phase. "
+            "Cite no ids at all — there are none — and give every assertion the "
+            "verdict not_checkable."
+        )
     )
     system = "\n".join([
         "You are auditing a finished debate. For each argument turn, list every "
@@ -560,6 +570,11 @@ def _evidence_citations(
     A supported or contradicted verdict citing nothing, or citing a passage that
     isn't in the record, is unfalsifiable — exactly what this pass exists to avoid.
     """
+    if not known:
+        # Nothing was recorded, so no citation can be checked either way, and every
+        # verdict is forced to not_checkable with its ids cleared (ADR-015 §2).
+        # Refusing here would abort a run over ids that are about to be discarded.
+        return ()
     if cited is None:
         cited = []
     if not isinstance(cited, list) or not all(isinstance(item, str) for item in cited):
