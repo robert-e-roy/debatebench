@@ -154,6 +154,18 @@ diagnosed from single draws when a single input yields 11 or 20 claims. Any
 prompt change must be measured over N draws per condition, comparing verdict
 *rates*, before anything is concluded from it.
 
+**The protocol, decided 2026-09-14 before any run against it** (full text in
+`BUILD-GUIDE.md` B6): **N = 5** draws per condition; the gate passes if **one
+ledger of the five carries all three clauses at once**; **no sixth draw** — if
+five do not produce it, that is a recorded failure, and re-running past N to
+reach a pass voids the gate. All five ledgers are kept either way, with their
+transcript. A pass says the configuration *can* produce all three, not that it
+does reliably; the five ledgers are what any rate claim must cite.
+
+Clauses (1) and (2) are near-certain to turn up somewhere in five draws at the
+variance measured above, so in practice this gate binds on clause (3) — zero
+`not_checkable` in every post-ADR-019 draw so far.
+
 **Clause (3) is unmet, and the reason is narrower than "the model skips
 opinions".** Zero `not_checkable` in all seven runs — but the opinions *are*
 listed, which means ADR-015's "Filter nothing out" instruction is working. They

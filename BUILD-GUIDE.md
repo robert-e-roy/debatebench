@@ -255,6 +255,30 @@ finding `prep_grounded` alone can never produce, and the reason the pass
 exists. (3) A side asserts an opinion or prediction — verdict
 `not_checkable`, not a false `unsupported`.
 
+**How the gate is measured — decided 2026-09-14, before any run against it.**
+The audit is not reproducible (see `probe/b6/README.md`): one transcript, one
+seed, returned an 11-claim ledger with no `contradicted` and a 20-claim ledger
+with three, eleven minutes apart. A gate phrased as a conjunction over one run
+is therefore satisfiable by re-running until a draw is lucky, so the standard
+fixes the number of draws in advance, the way `JUDGE-VALIDATION`'s ≥0.38
+threshold was fixed before any judge ran.
+
+- **N = 5 draws** per condition, decided in advance.
+- **Pass:** at least one of the five ledgers contains all three clauses at
+  once.
+- **No sixth draw.** If five do not produce it, that is the result and it is
+  recorded as a failure. Re-running past N to reach a pass voids the gate.
+- **All five ledgers are kept**, pass or fail, with the transcript that
+  produced them — the rule `probe/b6/README.md` now states, and the one whose
+  absence cost a day of wrong diagnosis.
+
+**What a pass licenses, and what it does not.** That the configuration *can*
+produce all three findings together — not that it does so reliably. The five
+ledgers record the rate; any claim about reliability has to cite it. This is
+deliberately a capability gate: clauses (1) and (2) are near-certain to appear
+somewhere in five draws given the variance measured, so the binding constraint
+is clause (3), which has fired in **zero** post-ADR-019 draws so far.
+
 **Status 2026-09-14 — still unmet, and the diagnosis has changed.** Every
 one of the three checks has now been observed; none of them together. The
 2026-09-13 runs produced (1) and (2) — including a claim contradicted by the
