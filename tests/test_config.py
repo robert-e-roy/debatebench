@@ -30,6 +30,14 @@ def _drop(*keys):
     return mutate
 
 
+_JUDGE_BLOCK = {
+    "model": "qwen3:8b",
+    "base_url": "http://127.0.0.1:11434/v1",
+    "budget": 6000,
+    "output": "scores.json",
+}
+
+
 def _no_prep(data):
     data["format"]["phases"] = ["opening", "rebuttal", "conclusion"]
     for side in data["teams"]:
@@ -58,6 +66,29 @@ def test_valid_file_loads(run_dir: Path):
     assert first.team.name == "Progressive Climate Advocate"
     assert first.team.values == ("collective-action", "precaution", "equity")
     assert second.team.corpus is None  # optional
+
+
+def test_absent_judge_block_is_allowed(run_dir: Path):
+    # Every run.yaml written before ADR-020 has no judge: block and stays valid.
+    assert load_run(run_dir / "run.yaml").judge is None
+
+
+def test_judge_block_loads(run_dir: Path):
+    edit_yaml(run_dir / "run.yaml", _set("judge", value=_JUDGE_BLOCK))
+    judge = load_run(run_dir / "run.yaml").judge
+
+    assert judge is not None
+    assert judge.model == "qwen3:8b"
+    assert judge.base_url == "http://127.0.0.1:11434/v1"
+    assert judge.budget == 6000
+    assert judge.output == (run_dir / "scores.json").resolve()
+    assert judge.fact_check is True  # ADR-015 §3's default, not written in the file
+
+
+def test_judge_fact_check_can_be_turned_off_in_the_file(run_dir: Path):
+    edit_yaml(run_dir / "run.yaml", _set("judge", value=_JUDGE_BLOCK | {"fact_check": False}))
+    judge = load_run(run_dir / "run.yaml").judge
+    assert judge is not None and judge.fact_check is False
 
 
 def test_without_prep_no_prep_budget_needed(run_dir: Path):
@@ -182,7 +213,22 @@ RUN_FAILURES = [
     ("unknown team entry key", _set("teams", 0, "temperature", value=0.7), "unknown key 'temperature' in teams[0]"),
     ("removed format.rounds", _set("format", "rounds", value=3), "format.rounds was removed"),
     ("removed format.prep", _set("format", "prep", value=True), "format.prep was removed"),
-    ("removed judge block", _set("judge", value={"model": "x"}), "judge: block was removed"),
+    # judge: is a real block again (ADR-020 §1), so its own validation replaces
+    # the removed-key case that used to live here.
+    ("judge not a mapping", _set("judge", value="qwen3:8b"), "judge must be a mapping"),
+    ("judge missing output", _set("judge", value={k: v for k, v in _JUDGE_BLOCK.items() if k != "output"}),
+     "judge.output is required"),
+    ("judge unknown key", _set("judge", value=_JUDGE_BLOCK | {"temperature": 0.7}),
+     "unknown key 'temperature' in judge"),
+    ("judge base_url without scheme", _set("judge", value=_JUDGE_BLOCK | {"base_url": "127.0.0.1:9/v1"}),
+     "judge.base_url must be an http:// or https:// URL"),
+    ("judge budget is a boolean", _set("judge", value=_JUDGE_BLOCK | {"budget": True}),
+     "judge.budget must be an integer of at least 1"),
+    ("judge fact_check is not a boolean", _set("judge", value=_JUDGE_BLOCK | {"fact_check": "yes"}),
+     "judge.fact_check must be true or false"),
+    # ADR-020 §6: the same path would rotate the transcript away and write over it.
+    ("judge.output is the transcript", _set("judge", value=_JUDGE_BLOCK | {"output": "transcript.json"}),
+     "judge.output and output are the same file"),
     # types
     ("teams not a list", _set("teams", value="teams/liberal.yaml"), "teams must be a list"),
     ("team entry not a mapping", _set("teams", 0, value="teams/liberal.yaml"), "teams[0] must be a mapping"),

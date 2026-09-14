@@ -10,7 +10,12 @@ completion-token cap for its one scoring call — ADR-013 found this was
 genuinely missing, not just undocumented. **Amended 2026-09-12** (via
 ADR-016): each `format.phases` entry may carry a `:length` suffix
 (`rebuttal:long`); see ADR-016 §5 for the grammar and the mapping-vs-string
-hint. A `length` key in a `teams:` entry is an error.
+hint. A `length` key in a `teams:` entry is an error. **Amended 2026-09-14**
+(via ADR-020): §1 is partly reversed. `run.yaml` gains an optional `judge:`
+block and `judge` accepts either that file or a transcript, with flags
+overriding. §1's "flags for `judge`" was argued when the command had one flag;
+it has four. Its separate reason for dropping `judge:` — that nothing read it
+— still stands, and is why ADR-020 only adds a block that *is* read.
 **Depends on:** ADR-002 ("Config", "CLI shape"), ADR-003 (token-budget enforcement
 findings), `debate-formats-research.md`
 **Resolves:** OPEN-QUESTIONS.md items 3, 8, 10 (schema-level slice), 11

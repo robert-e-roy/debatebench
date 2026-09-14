@@ -30,7 +30,9 @@ code. See ADR-002 for full scope.
   real-model runs; send both budget fields, superseding ADR-003 rule 2),
   `ADR-019` (in the fact-check, a contradiction outranks a backing passage;
   `supported` narrows to "uncontested" — a prompt rule with no code
-  enforcement) — accepted; together they are the spec.
+  enforcement), `ADR-020` (judge settings live in an optional `judge:` block in
+  `run.yaml`; `judge` takes a run.yaml or a transcript; flags override —
+  amending ADR-007 §1) — accepted; together they are the spec.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
@@ -233,7 +235,11 @@ Two file types — see ADR-002 and ADR-007 for full schema and rationale:
   present, or missing while `prep` is present), `sources`, `seed` (optional —
   generated and recorded in the transcript if omitted, never silently
   guessed-and-hidden), and a **required** `output` path. Exactly two entries
-  in `teams:`. No `judge:` block — nothing reads it.
+  in `teams:`. An **optional `judge:` block** (ADR-020) carries the judge's
+  `model`, `base_url`, `budget`, `output` and optional `fact_check` — read by
+  `judge`, validated but never acted on by `debate`. Its `output` may not be
+  the transcript path (ADR-020 §6). ADR-007 removed a `judge:` block on the
+  grounds that nothing read it; this one is read.
 - `teams/*.yaml` — durable persona files (`id`, `name`, `voice`, `stance`,
   `corpus`, `values`), **hand-authored for now** (see ADR-006 — no
   PersonaForge/PersonaKit dependency exists yet; the earlier "compatible"
@@ -246,10 +252,18 @@ Load YAML only through the package's strict loader, never plain `safe_load`
 (ADR-008 lists the YAML 1.1 coercions it blocks).
 
 `debate` takes exactly one argument, the path to a `run.yaml`. No other flags
-— see ADR-007. `judge` takes a transcript path plus flags: `--model` and
-`--output` (both required), an optional `--base-url`, and `--fact-check` /
-`--no-fact-check` (default on). The asymmetry is deliberate, not an oversight
-(ADR-007, "CLI invocation").
+— see ADR-007. `judge` takes **either** that same `run.yaml`, reading its
+`judge:` block and taking the transcript from `output:`, **or** a transcript
+path plus `--model`, `--base-url`, `--budget` and `--output`, with
+`--fact-check` / `--no-fact-check` (default on). The two are told apart by
+extension, and **flags override the block** (ADR-020 §3–4), so an A/B needs no
+edit: `judge run.yaml --model phi4-mini:latest`. The overridden value is what
+the score file records, never the file's.
+
+**ADR-007 §1's "the asymmetry is deliberate" no longer describes the tool.**
+It was argued when `judge` had one flag; it now has four, and ADR-020 records
+why that reversed. `debate` still has no override flags — adding them would
+touch Hard Rule 7 and needs its own ADR.
 
 ## Backend
 

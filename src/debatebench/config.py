@@ -23,15 +23,15 @@ PHASES = ("prep", "opening", "rebuttal", "retort", "conclusion")
 MOTION_SIDES = ("pro", "con")  # for and against the motion (ADR-007 §7)
 LENGTHS = ("short", "medium", "long")  # a phase entry's :suffix (ADR-016 §1)
 
-_RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output"}
+_RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output", "judge"}
 _FORMAT_KEYS = {"phases"}
+_JUDGE_KEYS = {"model", "base_url", "budget", "output", "fact_check"}
 _SIDE_KEYS = {"team", "side", "model", "base_url", "budget", "prep_budget"}
 _TEAM_KEYS = {"id", "name", "voice", "stance", "values", "corpus"}
 
-# Keys ADR-007 removed, with what replaced them.
-_REMOVED_RUN_KEYS = {
-    "judge": "the judge: block was removed (ADR-007); judge settings are flags on the judge command",
-}
+# Keys ADR-007 removed, with what replaced them. ADR-020 gave judge: back a
+# meaning, so it is no longer listed here.
+_REMOVED_RUN_KEYS: dict[str, str] = {}
 _REMOVED_FORMAT_KEYS = {
     "prep": "format.prep was removed (ADR-007); list 'prep' in format.phases to run Prep",
     "rounds": "format.rounds was removed (ADR-007); repeat phase names in format.phases instead",
@@ -81,6 +81,17 @@ class Side:
 
 
 @dataclass(frozen=True)
+class JudgeConfig:
+    """run.yaml's optional judge: block (ADR-020 §1). Flags override every field."""
+
+    model: str
+    base_url: str
+    budget: int
+    output: Path
+    fact_check: bool
+
+
+@dataclass(frozen=True)
 class RunConfig:
     path: Path
     topic: str
@@ -91,6 +102,7 @@ class RunConfig:
     seed: int
     seed_generated: bool  # run.yaml had no seed: log this one and record it (ADR-007 §5)
     output: Path
+    judge: JudgeConfig | None  # ADR-020 §1; absent is valid and is the pre-ADR-020 shape
 
 
 def load_run(path: str | Path) -> RunConfig:
@@ -123,6 +135,7 @@ def load_run(path: str | Path) -> RunConfig:
     if seed is None:
         seed = secrets.randbelow(_GENERATED_SEED_BOUND)
     output = _resolve(run_path, _str(run_path, data, "output", "output"))
+    judge = _judge(run_path, data, output)
 
     return RunConfig(
         path=run_path,
@@ -134,6 +147,7 @@ def load_run(path: str | Path) -> RunConfig:
         seed=seed,
         seed_generated=seed_generated,
         output=output,
+        judge=judge,
     )
 
 
@@ -176,6 +190,45 @@ def _sources(run_path: Path, data: dict[str, Any]) -> tuple[str, ...]:
     if len(set(sources)) != len(sources):
         raise _fail(run_path, "sources lists the same source twice")
     return sources
+
+
+def _judge(run_path: Path, data: dict[str, Any], transcript: Path) -> JudgeConfig | None:
+    """run.yaml's optional judge: block (ADR-020 §1). Absent is valid."""
+    if "judge" not in data:
+        return None
+    block = data["judge"]
+    if not isinstance(block, dict):
+        raise _fail(
+            run_path,
+            f"judge must be a mapping with model, base_url, budget and output, "
+            f"got {_describe(block)}",
+        )
+    _check_keys(run_path, block, _JUDGE_KEYS, "judge")
+
+    output = _resolve(run_path, _str(run_path, block, "output", "judge.output"))
+    if output == transcript:
+        raise _fail(
+            run_path,
+            f"judge.output and output are the same file ({output}); judge would rotate "
+            "the transcript away and write the score file over it (ADR-020 §6). Give the "
+            "score file its own path, such as scores.json",
+        )
+    return JudgeConfig(
+        model=_str(run_path, block, "model", "judge.model"),
+        base_url=_base_url(run_path, block, "judge.base_url"),
+        budget=_int(run_path, block, "budget", "judge.budget", minimum=1),
+        output=output,
+        fact_check=_opt_bool(run_path, block, "fact_check", "judge.fact_check", default=True),
+    )
+
+
+def _opt_bool(path: Path, data: dict[str, Any], key: str, where: str, *, default: bool) -> bool:
+    if key not in data:
+        return default
+    value = data[key]
+    if not isinstance(value, bool):
+        raise _fail(path, f"{where} must be true or false, got {_describe(value)}")
+    return value
 
 
 def _phases(path: Path, data: dict[str, Any]) -> tuple[tuple[str, ...], tuple[str | None, ...]]:

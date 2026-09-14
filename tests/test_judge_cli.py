@@ -11,6 +11,7 @@ from debatebench import judge_cli
 from debatebench.judge_cli import main
 from debatebench.transcript import write_transcript
 from fakes import FakeBackend, reply
+from helpers import edit_yaml
 from test_fact_check import claim, claims_reply
 from test_judging import debated, judge_reply, side
 
@@ -69,21 +70,89 @@ REQUIRED = ["--model", "--base-url", "--budget", "--output"]
 
 
 @pytest.mark.parametrize("missing", REQUIRED)
-def test_every_required_flag_is_required(transcript_file: Path, tmp_path: Path, missing: str):
+def test_every_required_flag_is_required(transcript_file: Path, tmp_path: Path, missing: str, capfd):
     argv = [str(transcript_file), "--model", "m", "--base-url", "http://x/v1",
             "--budget", "100", "--output", str(tmp_path / "s.json")]
     index = argv.index(missing)
-    with pytest.raises(SystemExit) as e:
-        main(argv[:index] + argv[index + 2:])
-    assert e.value.code == 2
+    # ADR-020 §4 moved requiredness out of argparse so one parser serves both
+    # forms, so this is exit 1 with a message rather than argparse's exit 2 —
+    # and the message has to name the flag and the other way to supply it.
+    assert main(argv[:index] + argv[index + 2:]) == 1
+    err = capfd.readouterr().err
+    assert missing in err and "run.yaml" in err
 
 
 def test_base_url_has_no_default(transcript_file: Path, tmp_path: Path, capfd):
     # ADR-017 §2: a hidden default would hide which server produced a score.
-    with pytest.raises(SystemExit):
-        main([str(transcript_file), "--model", "m", "--budget", "100",
-              "--output", str(tmp_path / "s.json")])
+    # ADR-020 kept that true; only the exit path changed.
+    assert main([str(transcript_file), "--model", "m", "--budget", "100",
+                 "--output", str(tmp_path / "s.json")]) == 1
     assert "--base-url" in capfd.readouterr().err
+
+
+# --- ADR-020: the judge: block in run.yaml -----------------------------------
+
+
+def _with_judge_block(run_dir: Path, **overrides) -> Path:
+    """Give the fixture run.yaml a judge: block, and hand back its path."""
+    block = {
+        "model": "block-model",
+        "base_url": "http://127.0.0.1:9/v1",
+        "budget": 4000,
+        "output": "scores.json",
+        "fact_check": False,
+        **overrides,
+    }
+    return edit_yaml(run_dir / "run.yaml", lambda data: data.__setitem__("judge", block))
+
+
+def test_judge_reads_the_block_and_finds_the_transcript_itself(
+    transcript_file: Path, run_dir: Path, fake_judge
+):
+    # ADR-020 §3: one word, and the transcript comes from the run's own output:.
+    made = fake_judge(judge_reply(side(0), side(1)))
+    run_yaml = _with_judge_block(run_dir)
+
+    assert main([str(run_yaml)]) == 0
+
+    document = json.loads((run_dir / "scores.json").read_text())
+    assert document["judge_model"] == "block-model"
+    assert document["judge_budget"] == 4000
+    assert document["fact_check_enabled"] is False
+    assert len(made[0].requests) == 1
+
+
+def test_a_flag_overrides_the_block(transcript_file: Path, run_dir: Path, fake_judge):
+    # ADR-020 §4: a one-off change needs no edit to the file.
+    fake_judge(judge_reply(side(0), side(1)))
+    run_yaml = _with_judge_block(run_dir)
+
+    assert main([str(run_yaml), "--model", "flag-model"]) == 0
+
+    document = json.loads((run_dir / "scores.json").read_text())
+    assert document["judge_model"] == "flag-model"  # the flag, not the block
+    assert document["judge_budget"] == 4000  # untouched settings still come from the file
+
+
+def test_fact_check_flag_overrides_the_block(transcript_file: Path, run_dir: Path, fake_judge):
+    fake_judge(judge_reply(side(0), side(1)), claims_reply(claim(verdict="unsupported")))
+    run_yaml = _with_judge_block(run_dir)  # fact_check: false in the file
+
+    assert main([str(run_yaml), "--fact-check"]) == 0
+
+    assert json.loads((run_dir / "scores.json").read_text())["fact_check_enabled"] is True
+
+
+def test_a_run_yaml_without_a_judge_block_says_what_to_do(run_dir: Path, capfd):
+    assert main([str(run_dir / "run.yaml")]) == 1
+    err = capfd.readouterr().err
+    assert "no judge: block" in err and "--model" in err
+
+
+def test_a_broken_run_yaml_reports_a_config_error(run_dir: Path, capfd):
+    edit_yaml(run_dir / "run.yaml", lambda data: data.__setitem__("seeed", 42))
+    assert main([str(run_dir / "run.yaml")]) == 1
+    assert "config error" in capfd.readouterr().err
 
 
 def test_the_fact_check_runs_by_default(transcript_file: Path, run_dir: Path, fake_judge, capfd):

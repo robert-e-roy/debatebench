@@ -7,8 +7,9 @@
 #   ollama serve            # in another terminal, if it isn't already running
 #   debate examples/run.yaml
 #
-# Both sides share one server here, which is fine but serialized: no backend
-# measured in BACKEND-PROBE-RESULTS.md runs two requests in parallel.
+# Both sides share one server here, which is fine but serialized: Ollama runs
+# one slot by default (-np 1), so the second request queues. That is a setting
+# rather than a property of the server — see BACKEND-PROBE-RESULTS.md.
 topic: "A federal carbon tax would do more good than harm."
 
 format:
@@ -36,3 +37,15 @@ seed: 42
 # Required. `debate` writes here and nowhere else (Hard Rule 7); any file
 # already here is rotated to transcript.json.1.
 output: transcript.json
+
+# Optional (ADR-020). With this block, `judge examples/run.yaml` needs no flags
+# and finds the transcript at output: above. Flags still override it, so
+# `judge examples/run.yaml --model phi4-mini:latest` swaps the judge alone.
+# `debate` validates this block but never acts on it — the two passes stay two.
+judge:
+  model: qwen3:8b
+  base_url: http://127.0.0.1:11434/v1
+  budget: 6000
+  # Must not be the transcript path above, or the score file would overwrite it.
+  output: scores.json
+  fact_check: true

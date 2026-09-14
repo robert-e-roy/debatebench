@@ -74,16 +74,17 @@ teams:
     budget: 2000
 seed: 42
 output: transcript.json
+
+judge:
+  model: qwen3:8b
+  base_url: http://127.0.0.1:11434/v1
+  budget: 6000
+  output: scores.json
 ```
 
 ```bash
 debate run.yaml
-
-judge transcript.json \
-  --model qwen3:8b \
-  --base-url http://127.0.0.1:11434/v1 \
-  --budget 6000 \
-  --output scores.json
+judge  run.yaml
 ```
 
 > **Where `examples/` lives.** The wheel installs the package only, so a
@@ -92,9 +93,30 @@ judge transcript.json \
 > source tree and in the sdist, not in the wheel.
 
 `debate` takes exactly one argument — the path to a `run.yaml` — and no flags.
-Every setting, including where the transcript goes, lives in that file. `judge`
-is the opposite: flags, no config file, because the same transcript gets
-re-judged with different settings. That asymmetry is intentional.
+Every setting, including where the transcript goes, lives in that file.
+
+`judge` takes either the same `run.yaml`, reading its optional `judge:` block
+and taking the transcript from `output:`, or a transcript plus flags. The two
+are told apart by extension. Flags override the block, so a one-off comparison
+needs no edit:
+
+```bash
+judge run.yaml --model phi4-mini:latest     # same config, a different judge
+```
+
+The transcript-plus-flags form is the only one that works for a transcript with
+no `run.yaml` beside it, and it is unchanged:
+
+```bash
+judge transcript.json \
+  --model qwen3:8b \
+  --base-url http://127.0.0.1:11434/v1 \
+  --budget 6000 \
+  --output scores.json
+```
+
+`judge:` is optional — a `run.yaml` without it is valid, and is what every
+config written before ADR-020 looks like.
 
 Both commands write **only** their JSON output to the given path. Everything
 they say about progress goes to stderr, so the file is never polluted by logs
@@ -303,7 +325,10 @@ Things measured that may surprise you:
 - **No single token-budget field works everywhere**, so the adapter sends both
   `max_tokens` and `max_completion_tokens` with the same value. AFM honours only
   the second; Ollama and `vllm-mlx` honour only the first.
-- **None of the three serves two requests in parallel.** They queue or refuse.
+- **None of the three served two requests in parallel** as configured here —
+  they queue or refuse. For Ollama that is a setting, not the server: it runs
+  one slot by default (`-np 1`, `OLLAMA_NUM_PARALLEL` unset). Raising it is
+  untested; see `BACKEND-PROBE-RESULTS.md`.
 - **No server rejects an over-context prompt.** It will try, and can wedge the
   engine for the rest of a run. Watch your budgets.
 - Run model servers with `HF_HUB_OFFLINE=1`. Ollama has no Hugging Face
