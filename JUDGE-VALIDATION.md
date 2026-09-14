@@ -63,6 +63,34 @@ where this judge is least calibrated. Ordering still holds, which is what the
 winner depends on — but nobody should read a 17/30 from it as "this argument was
 mediocre".
 
+### Corroborated on a real debate, 2026-09-14
+
+B7's gate runs put this judge on a `debatebench` transcript rather than on the
+paper's dataset, and the calibration finding reproduced immediately — in the
+direction the table above predicts, but more starkly than a −0.76 mean bias
+suggests.
+
+**A prep-less debate scored the PRO 100/100.** Every dimension at its maximum,
+including `evidence_grounding: 25/25` on a transcript containing **zero
+recorded evidence**, justified by calling "the EU's cap-and-trade and Canada's
+tax" well-anchored — neither of which appears anywhere in the transcript.
+
+That is not a bug, and an earlier reading of it here as one was wrong.
+ADR-013 §4 defines exactly this weak mode: with no prep, the judge scores
+"general argumentative rigor from its own knowledge, with nothing recorded to
+check against — a materially weaker guarantee, visibly labeled as such". The
+`prep_grounded: false` sitting in the same object is that label doing its job.
+
+What it *is* is the clearest available picture of the bias: on machine-generated
+turns this judge does not merely mis-scale, it **saturates**. The prep-enabled
+run scored 97 against 95 — both sides near-perfect, the winner turning on a
+2-point margin. Ordering did the work the validation supports; the absolute
+numbers carried no information at all.
+
+**This is the concrete case behind the README's warning.** Nobody should read
+`evidence_grounding: 25/25` as "well-evidenced" on a transcript with no
+evidence in it.
+
 ## Corroborating run — stratified subset, 117 speeches
 
 117/117 scored, **zero parse failures, zero errors**, 36.5 minutes.

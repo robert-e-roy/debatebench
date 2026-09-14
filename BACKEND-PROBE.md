@@ -38,7 +38,7 @@ three:
 | A8 | Prompt that exceeds the model's context window | HTTP status and error shape — same as `fm serve`'s HTTP 500 `server_error`, or something more specific? |
 | A9 | A reasoning model (Qwen3 family) at a small budget | Does thinking leak into `content`, or arrive separately (as `mlx_lm.server` does via a `reasoning` field — OPEN-QUESTIONS item 13)? |
 | A10 | Start with minimal/default flags, no explicit host | Binds to `127.0.0.1` or `0.0.0.0`? (Security-relevant per ADR-003's amendment.) |
-| A11 | Start with `HF_HUB_OFFLINE=1` set | Zero network calls at startup — confirm via a packet capture or a firewall block, not just absence of an error. |
+| A11 | Start with `HF_HUB_OFFLINE=1` set | Zero network calls at startup — confirm via a packet capture or a firewall block, not just absence of an error. **Deferred to the operator (2026-09-14)**: the check needs the network cut for the duration of a start, which a probe sharing a working machine should not do, and it is ~2 minutes with Wi-Fi off. Procedure and per-server levers in `BACKEND-PROBE-RESULTS.md`, "A11 — the operator's check". The row's premise is `huggingface_hub`-specific and does **not** transfer to Ollama. |
 
 ## Part B — Performance (numbers, not impression)
 
@@ -78,7 +78,12 @@ silently skipped row.
 
 Every row in A and B filled in for all three servers, in the same session,
 on the same machine state, with Part Zero's naming pinned precisely enough
-that someone else could reproduce the exact setup. A recommendation that
+that someone else could reproduce the exact setup.
+
+**Amended 2026-09-14: A11 is the one stated exception.** It is closed as an
+operator check rather than a probe row, for the reason in its own cell above.
+That is an exception recorded in the open, with a written procedure — not a row
+quietly dropped to make a gate pass. A recommendation that
 changes which server real-model runs use needs its own ADR citing this file,
 not a silent switch. **Corrected 2026-09-13:** this line used to say "changes
 ADR-003's current default (`mlx_lm.server`)". No ADR ever made

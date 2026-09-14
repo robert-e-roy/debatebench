@@ -1,0 +1,38 @@
+# A runnable run.yaml for one Ollama server (ADR-018's recommended backend).
+#
+# Deliberately has no `prep` phase: prep needs retrieval pools that already
+# exist on disk, and nothing downloads them, so a prep run would fail on a
+# clean machine. See the README's "Prep" section to enable it.
+#
+#   ollama serve            # in another terminal, if it isn't already running
+#   debate examples/run.yaml
+#
+# Both sides share one server here, which is fine but serialized: no backend
+# measured in BACKEND-PROBE-RESULTS.md runs two requests in parallel.
+topic: "A federal carbon tax would do more good than harm."
+
+format:
+  # `name:length` sets the response length (ADR-016): short=2, medium=5,
+  # long=10 sentences. No space after the colon.
+  phases: [opening:medium, rebuttal:medium, conclusion:short]
+
+teams:
+  - team: teams/advocate.yaml
+    side: pro
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+
+  - team: teams/skeptic.yaml
+    side: con
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+
+# Recorded in the transcript. Omit it and one is generated and recorded, never
+# silently guessed.
+seed: 42
+
+# Required. `debate` writes here and nowhere else (Hard Rule 7); any file
+# already here is rotated to transcript.json.1.
+output: transcript.json

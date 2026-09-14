@@ -49,19 +49,31 @@ code. See ADR-002 for full scope.
   invented place names that exist only in that side's evidence. **B5 is done**
   (2026-09-12): `judge` scores a transcript in one call, five dimensions per
   side, with the total and winner computed outside the model and printed beside
-  every score. **B6 is built but its live gate is NOT met** (2026-09-13): the
-  fact-check pass runs end to end and produced a full claims ledger — including
-  a claim contradicted by the *opponent's* recorded evidence, the finding
-  `prep_grounded` cannot produce — but it never lists the opinion, so nothing
-  is ever marked `not_checkable` and the third check fails. **This is a
-  classification failure, not a reliability one**, and an earlier version of
-  this line got that wrong: it read as flakiness because the first evidence was
-  a run that passed and a run that didn't. Four runs across two backends have
-  since missed the opinion every time, and the malformed-JSON problem that
-  *did* vary was fixed separately by having the audit cite a turn number
-  instead of transcribing coordinates. The prompt says "list every assertion …
-  Filter nothing out"; the model overrides it, and two prompt attempts have not
-  shifted it. Retrying will not help. **Open question 6 is answered for
+  every score. **B6 is built and its live gate is still NOT met** (updated
+  2026-09-14): the fact-check pass runs end to end and produces a full claims
+  ledger, but no single run has produced all three of its checks at once.
+  **Each check has now been seen — never together.** The 2026-09-13 runs gave
+  (1) and (2), including a claim contradicted by the *opponent's* recorded
+  evidence, the finding `prep_grounded` cannot produce, and missed the opinion
+  every time. The 2026-09-14 B7 gate run — the first with prep evidence behind
+  a fresh install — gave (1) and (3): 18 claims, 17 `supported` each citing the
+  claimant's own passages with correct ids, one `not_checkable` on a real
+  opinion, and **zero `contradicted`**. **The earlier diagnosis on this line
+  was wrong and is corrected here**: it said the model "never lists the
+  opinion", called that a settled classification failure, and concluded
+  "retrying will not help". Given a real evidence record the audit listed the
+  opinion and classified it correctly on the first attempt. The variable was
+  never the prompt's firmness — it was whether anything had been recorded to
+  check against, and a prep-less transcript degrades to all `not_checkable` by
+  design (ADR-015 §2), so those runs never tested the gate at all. What remains
+  is the cross-side check, **and it is not a wiring fault**: the run had a
+  contradiction available (`am-3` against `am-4`) and claim 14 was exactly its
+  shape, yet `build_fact_check_request` sends the whole transcript plus every
+  evidence id from both sides, `render()` attributes each passage to the side
+  that retrieved it, and the prompt says verbatim "read every listed passage
+  from BOTH sides". The malformed-JSON problem that *did* vary was fixed
+  separately by having the audit cite a turn number instead of transcribing
+  coordinates. See `BUILD-GUIDE.md` B6 for the full ledger. **Open question 6 is answered for
   `qwen3:8b`** (2026-09-14, `JUDGE-VALIDATION.md`): over the full 631 speeches
   of the paper's own dataset it scored **Tau-C +0.547** against the human mean —
   135% of the measured 0.405 human ceiling, clearing the ≥0.38 threshold fixed
@@ -73,8 +85,22 @@ code. See ADR-002 for full scope.
   pick a winner — while an absolute `argument_quality` number is not, and this
   tool judges machine-generated turns, where calibration is worst. The winner
   logic, steelman tiebreak, `rebuttal_effectiveness` and fact-check remain
-  unvalidated. **Next: B7**, whose README must carry that distinction rather
-  than claim the judge was validated.
+  unvalidated. **B7 is done** (2026-09-14) and its gate is met: `LICENSE`
+  (MIT), `NOTICE` carrying ADR-001's attributions, a `README.md` written
+  against actual CLI behaviour, PyPI packaging metadata, and a runnable
+  `examples/`. A wheel built from this tree, installed into a venv that had
+  never seen the source and pulling only `httpx` and PyYAML, ran two full
+  debates against Ollama and judged both — scored, fact-checked transcripts
+  stamped `0.1.0.dev0`. The prep-enabled run re-verified B4 live from the
+  installed package: side-filtered retrieval disjoint across sides
+  (`am-1/2/3+ds-1` against `am-4/5/6/7+ds-2`, zero overlap), off-topic rows
+  filtered out, `order: 0` on both prep turns, evidence absent rather than
+  empty elsewhere, and a side citing its own passage by name in its opening.
+  The README carries the ordering-passes/calibration-fails distinction and
+  flags B6's gap **at the `--fact-check` flag itself**, since that flag is on
+  by default. **Nothing is published**: the name is kept by decision (open
+  question 5), and `debatebench` was still unclaimed on both PyPI and TestPyPI
+  on 2026-09-14.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.

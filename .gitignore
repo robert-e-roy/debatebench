@@ -4,6 +4,20 @@ __pycache__/
 .venv/
 .pytest_cache/
 
+# Build artifacts (`uv build` writes here). Ignored by a global excludes file on
+# the machine this was developed on, which does not survive a clone.
+dist/
+build/
+*.egg-info/
+
 # Editors / macOS
 *.swp
 .DS_Store
+
+# Run artifacts. The README tells people to run `debate examples/run.yaml`,
+# whose `output:` resolves next to the run.yaml — so a transcript, its rotated
+# `.1` backup, and the score file all land inside examples/ on a plain clone.
+examples/transcript.json
+examples/transcript.json.1
+examples/scores.json
+examples/scores.json.1

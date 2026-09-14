@@ -64,13 +64,21 @@ already settled in ADR-013 §4.
   transcripts: 256 speeches across 32 debates, with official adjudication scores.
   ADR-002's collision check covered "debate"-named projects, not this exact name.
   The PyPI name `debatebench` was still unclaimed on 2026-09-11.
-- **Options:** keep the name and state the distinction in the README; or rename
-  before anything is published.
-- **Side note:** its adjudicated speech scores could be a judge-validation
-  candidate (item 6), subject to the licensing gate. Its license hasn't been
-  checked.
-- **Blocks:** B7 (PyPI registration) — ideally decided before the first public
-  GitHub push.
+- **DECIDED 2026-09-14: keep the name, and state the distinction in the
+  README.** The two are different kinds of thing — that one is a benchmark
+  *dataset* of British Parliamentary transcripts with official adjudication
+  scores; this is a *tool* that generates and scores debates — so the collision
+  is of names, not of function. The PyPI name was re-checked and is **still
+  unclaimed: 404 on both PyPI and TestPyPI on 2026-09-14**. The README opens
+  with a "Not the DebateBench benchmark" section linking the arXiv paper, so
+  anyone arriving for the benchmark is redirected in one line.
+- **Accepted cost, knowingly:** searching the name finds two projects. That was
+  decided in advance rather than discovered afterwards.
+- **Side note:** its adjudicated speech scores could have been a
+  judge-validation candidate (item 6), subject to the licensing gate; its
+  licence was never checked, and item 6 was answered from a different dataset,
+  so this stayed unused.
+- **No longer blocks B7.**
 
 ### 6. No build session validates the judge
 
@@ -110,7 +118,12 @@ already settled in ADR-013 §4.
   unvalidated. **Four decisions are still open and are listed in that file**,
   the first being the acceptance threshold, which has to be chosen before
   results are seen or it becomes post-hoc justification.
-- **Blocks:** trusting any result from B5 onward; B7.
+- **Blocked** trusting any result from B5 onward, and blocked B7. **Cleared
+  for B7 on 2026-09-14**, not by the caveats going away but by B7 shipping
+  with them stated: the README carries the ordering-passes/calibration-fails
+  split and names what stays unvalidated, rather than claiming "the judge was
+  validated". The caution against reading an absolute score, or comparing
+  scores across debates, is permanent and does not expire with this item.
 
 ### 7. B0 probes smaller models than the intended pairing — RESOLVED
 

@@ -250,6 +250,41 @@ finding `prep_grounded` alone can never produce, and the reason the pass
 exists. (3) A side asserts an opinion or prediction — verdict
 `not_checkable`, not a false `unsupported`.
 
+**Status 2026-09-14 — still unmet, and the diagnosis has changed.** Every
+one of the three checks has now been observed; none of them together. The
+2026-09-13 runs produced (1) and (2) — including a claim contradicted by the
+*opponent's* recorded passage — and missed the opinion each time. The
+2026-09-14 B7 gate run, the first with prep evidence behind a fresh install,
+produced (1) and (3): 18 claims, 17 `supported` each citing the claimant's
+own passages with correct ids, and one `not_checkable` on a real opinion
+("the CON's focus on 'leakage' overlooks the urgency of action") — with
+**zero `contradicted`**.
+
+The old note here, that the model "never lists the opinion" and that
+retrying would not help, is **disproven**. Given a real record the audit
+listed the opinion and classified it correctly first time. The variable was
+never how firmly the prompt was worded; it was whether anything had been
+recorded to check against — and a prep-less transcript degrades to all
+`not_checkable` by design (ADR-015 §2), so those runs never tested this gate
+at all.
+
+The remaining gap is the cross-side check, **and it is not a wiring fault.**
+The 2026-09-14 run had a contradiction available — `am-3` (pro: recycling
+"turns a regressive tax into a progressive transfer") against `am-4` (con:
+regressive "before any rebate arrives … reimbursed last") — and claim 14,
+the PRO asserting its revenue-sharing "neutralizes regressive impacts", is
+precisely clause (2)'s shape. It was marked `supported` on `am-3` alone.
+Ruled out by reading the source: `build_fact_check_request` sends the whole
+transcript plus every evidence id from both sides, `render()` attributes each
+passage to the side that retrieved it, and the prompt says verbatim "read
+every listed passage from BOTH sides … catching that is the point of this
+audit".
+
+One further observation from the same ledger, unresolved: claim 10 attributes
+the PRO's Brindlewick claim to the **CON**, because the CON restated it in
+order to rebut it. A side quoting its opponent to attack them is not
+asserting the thing.
+
 ---
 
 ## B7 — Packaging and publish
@@ -265,12 +300,25 @@ file (MIT), PyPI packaging metadata, confirm
 minimum.
 
 **Exit gate:** a clean environment can `pip install`, run a full debate against
-a real MLX model, judge it, and get a scored, fact-checked transcript — with
+a real model, judge it, and get a scored, fact-checked transcript — with
 zero manual setup beyond the install, a `run.yaml`, and the model servers it
-points at already running (`mlx_lm.server`, `fm serve`). The judge must be a
+points at already running. The judge must be a
 model whose context holds a full transcript. AFM can't (~4,096-token limit; see
 ADR-003's probe results). If the tool should start those servers itself, that
 needs a new ADR.
+
+**Amended 2026-09-14, substance unchanged.** This line used to say "a real MLX
+model" and name `mlx_lm.server` / `fm serve`. ADR-018 has since recommended
+**Ollama** for real-model runs, and open question 6 measured a judge on exactly
+one model, `qwen3:8b`, running there — so that is what the gate is run against.
+Nothing is relaxed: it must still be a full debate, judged with the fact-check
+on, from a wheel installed into an environment that has never seen the source
+tree.
+
+**Passing this does not close B6.** B6's gate asks for three specific verdicts,
+one of which (`not_checkable` on an opinion) has never appeared. B7's asks only
+that the pass runs and writes its ledger. Both are true at once, and neither
+substitutes for the other.
 
 ---
 

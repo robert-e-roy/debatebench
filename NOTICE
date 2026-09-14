@@ -1,0 +1,70 @@
+debatebench
+Copyright (c) 2026 Robert E. Roy
+Licensed under the MIT License (see LICENSE).
+
+This project was designed after a review of four existing multi-agent debate
+projects (the "R0 review" — see ADR-001 and R0-RESULTS.md). No source code was
+copied verbatim from any of them. What was taken is design, reimplemented here,
+and it is recorded below because ADR-001 requires attribution for it.
+
+All four projects are MIT-licensed.
+
+Note on identification: ADR-001 records these projects by the names below and
+does not record repository URLs. They are reproduced exactly as that ADR names
+them rather than resolved to links that were never verified.
+
+
+DESIGN LIFTS — attribution required
+-----------------------------------
+
+1. aragora-debate, events.py
+
+   The event seam: a typed EventType enum plus a DebateEvent dataclass, with
+   both synchronous and asynchronous dispatch and per-callback exception
+   isolation so one bad subscriber cannot take down a run.
+
+   Reimplemented, roughly 120 lines, in src/debatebench/events.py.
+
+2. arbgjr/multi-agent-debate, protocols.py
+
+   The backend seam's shape: a single-method `async generate(...)` Protocol
+   rather than a multi-method abstract base class.
+
+   Reimplemented, roughly 20 lines, in src/debatebench/backend.py.
+
+
+CONDITIONAL LIFT — not taken
+----------------------------
+
+3. aragora-debate, evidence.py
+
+   A stdlib-only, LLM-free evidence-hygiene scorer with five separately scored
+   dimensions (citation density, specificity, evidence diversity, temporal
+   relevance, logical chain).
+
+   ADR-001 made attribution for this conditional on adopting that scorer.
+   It was NOT adopted: ADR-013 scores evidence grounding with the judging model
+   as one rubric dimension instead. This entry is kept rather than dropped so
+   that the condition, and the fact that it was not met, stay on the record.
+
+
+IDEAS, NO CODE
+--------------
+
+ADR-001 classifies the following as ideas rather than lifts, so they carry no
+attribution requirement. They are credited here anyway, because they shaped the
+design and crediting them costs nothing.
+
+4. paolodalprato/agent-discussion-arena
+
+   The phase model — Opening, then rounds, then a verdict as a distinct terminal
+   phase rather than a vote folded into the turn loop.
+
+   Also: that one openai-compatible adapter with a configurable base_url can
+   serve MLX (mlx_lm.server), Ollama, LM Studio and OpenAI through a single
+   code path, instead of a bespoke adapter per provider.
+
+5. rd-serendipity/ai-debate-arena
+
+   Alternating initiative — swapping which side opens each phase, so that
+   neither side keeps a first-mover advantage for a whole debate.

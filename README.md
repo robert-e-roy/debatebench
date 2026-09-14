@@ -1,0 +1,309 @@
+# debatebench
+
+A command-line tool for running structured, multi-turn, **adversarial** debates
+between two LLMs, then scoring the transcript against a fixed rubric.
+
+Two commands:
+
+- **`debate`** — runs the debate, writes a transcript as JSON.
+- **`judge`** — reads that transcript, writes a score file as JSON.
+
+It is built for a narrow job: comparing models, prompts, or personas on
+sustained argument, where the interesting signal is how a position survives
+contact with a good opponent. There is no consensus, voting, or convergence
+logic anywhere in it, and that is deliberate — see *Not in scope*.
+
+## Not the DebateBench benchmark
+
+There is an existing, unrelated **DebateBench**
+([arXiv 2502.06279](https://arxiv.org/abs/2502.06279), Feb 2025): a benchmark
+*dataset* of British Parliamentary debate transcripts with official adjudication
+scores. This project is not it, is not derived from it, and does not include it.
+
+This `debatebench` is a *tool* that generates and scores debates. The name
+collision is real and was kept knowingly; if you are looking for the benchmark,
+follow the link above.
+
+## Status
+
+Working and used, but pre-1.0 and not yet published to an index. Install from a
+checkout:
+
+```bash
+pip install .
+```
+
+Built and gated so far: config and validation, the backend seam, the phase loop,
+transcript writing, prep retrieval, judge scoring, and the fact-check pass.
+**One known gap**, stated plainly because it affects a default: see
+[`--fact-check`](#fact-check) below.
+
+## Quickstart
+
+You need a running OpenAI-compatible model server. [Ollama](https://ollama.com)
+is the recommended one (see *Backends*):
+
+```bash
+ollama pull qwen3:8b
+ollama serve                      # if it isn't already running
+```
+
+Then:
+
+```bash
+debate examples/run.yaml
+
+judge examples/transcript.json \
+  --model qwen3:8b \
+  --base-url http://127.0.0.1:11434/v1 \
+  --budget 6000 \
+  --output examples/scores.json
+```
+
+`debate` takes exactly one argument — the path to a `run.yaml` — and no flags.
+Every setting, including where the transcript goes, lives in that file. `judge`
+is the opposite: flags, no config file, because the same transcript gets
+re-judged with different settings. That asymmetry is intentional.
+
+Both commands write **only** their JSON output to the given path. Everything
+they say about progress goes to stderr, so the file is never polluted by logs
+and you never need shell redirection to keep it clean.
+
+## `run.yaml`
+
+```yaml
+topic: "A federal carbon tax would do more good than harm."
+
+format:
+  phases: [opening:medium, rebuttal:medium, conclusion:short]
+
+teams:
+  - team: teams/advocate.yaml
+    side: pro
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+  - team: teams/skeptic.yaml
+    side: con
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+
+seed: 42
+output: transcript.json
+```
+
+| Key | |
+|---|---|
+| `topic` | The motion. Required. |
+| `format.phases` | The whole debate, in order. **The only** thing that decides what runs — there are no separate `prep`/`rounds` flags. Repeat a name to repeat a phase. |
+| `teams` | Exactly two. One must be `side: pro`, the other `side: con`. |
+| `model`, `base_url` | Per team, both required. `base_url` has no default. The two sides may point at different servers. |
+| `budget` | Per-phase cap in completion tokens, enforced by the orchestrator. |
+| `prep_budget` | Required **if and only if** `prep` is in `phases`. An error either way round. |
+| `sources` | Shared retrieval pools. Optional, and only meaningful with `prep`. |
+| `seed` | Optional. If omitted, one is generated, logged, and recorded in the transcript — never silently guessed. |
+| `output` | Required. The transcript path, resolved relative to the `run.yaml`. |
+
+Response length is a suffix on the phase, `name:length` — `short` (2 sentences),
+`medium` (5), `long` (10). No space after the colon. `prep` takes no suffix.
+
+Validation is strict: unknown keys, duplicate keys, an unknown phase name, or
+two teams on the same side are all errors, and each one names what it found and
+what it expected.
+
+### Team files
+
+Durable identity, referenced by path from `run.yaml`:
+
+```yaml
+id: carbon-tax-advocate
+name: "Climate Policy Advocate"
+voice: "direct, urgency-driven, cites institutional consensus"
+stance: progressive
+values: [collective-action, precaution, equity]
+corpus: my-corpus.jsonl      # optional, see Prep
+```
+
+A team file never carries `model` or `budget`. Those are properties of a run,
+not of a persona, and putting them here is rejected.
+
+## Phases
+
+`opening`, `rebuttal`, `retort`, `conclusion`, and the optional `prep`. Phases
+are data: the loop iterates the list you configured.
+
+Every configured phase must get a response from **both** sides or the run aborts
+and no transcript is written. There is no fallback to one side, no skipping a
+failed turn with a log line. A partial debate is not a debate, and a benchmark
+that quietly drops turns is worse than one that stops.
+
+### Prep
+
+`prep` gives each side private research before it argues. It is off unless you
+put it in `phases`.
+
+Retrieval is deterministic, runs in the orchestrator, and costs no tokens: two
+JSONL pools are filtered and ranked in plain Python, and only the *synthesis* of
+what came back is a model call, capped by `prep_budget`.
+
+Two pools, filtered differently:
+
+- **Shared pools** (`sources:`) hold both sides' material mixed together, so
+  they are filtered on topic **and** side.
+- **A team's own `corpus:`** holds only its own material, so it is filtered on
+  topic alone.
+
+Rows are JSONL. A shared pool carries `side`; a team corpus does not:
+
+```json
+{"id": "am-1", "topic": "carbon tax", "side": "pro", "source": "args-me", "text": "..."}
+{"id": "lc-1", "topic": "carbon tax", "source": "my-corpus", "text": "..."}
+```
+
+Top 10 per pool. Each side's prep is private to that side — the opponent never
+sees it, though the judge does, because scoring evidence grounding requires it.
+
+**Nothing downloads anything.** Pools must already be on disk at
+`~/.cache/debatebench/sources/<name>.jsonl`, overridable with
+`DEBATEBENCH_SOURCES_DIR`. Shared pool names come from a vetted list
+(`args-me`, `debatesum`) because each one's licence was checked by hand; any
+other name is a config error. If **both** pools return nothing, the run fails
+rather than quietly debating from nothing.
+
+## The judge
+
+One call, both sides, five dimensions scored independently and never blended:
+
+| Dimension | Max |
+|---|---|
+| `argument_quality` | 30 |
+| `evidence_grounding` | 25 |
+| `steelman_fidelity` | 20 |
+| `rebuttal_effectiveness` | 15 |
+| `clarity` | 10 |
+
+The **winner is arithmetic, computed outside the model**: higher total, then
+`steelman_fidelity` as the tiebreak, then an explicit draw. The model is never
+asked who won. Every dimension is printed beside the total, because a total on
+its own explains nothing.
+
+A dimension that fails to parse is an **error**, never a zero — a zero would be
+a silent score.
+
+### What the judge has actually been validated to do
+
+`qwen3:8b` was measured against the 631-speech human-rated dataset from
+*Debatable Intelligence* ([arXiv 2506.05062](https://arxiv.org/abs/2506.05062)),
+using that paper's own statistic and prompt: **Kendall's Tau-C +0.547** against
+the mean of 15 human ratings per speech, with 631/631 replies parsed. The
+human-to-human ceiling on the same data, measured leave-one-annotator-out, is
+0.405 — so it ranks speeches about as consistently as the annotators agree with
+each other.
+
+**Only the ordering is validated. The calibration is not**, and the difference
+matters here:
+
+- Human-authored speeches score within 0.18 of human ratings.
+- **Machine-generated speeches score 0.95 to 1.52 low.**
+
+Tau-C measures rank and is blind to that gap. So: **comparing the two sides of
+one debate is supported** — which is exactly what the winner logic does — while
+reading an absolute `argument_quality` as a quality measure, or comparing scores
+across different debates, **is not**. The caveat bites hardest here, because
+this tool scores machine-generated turns, which is where the judge is least
+calibrated.
+
+Unvalidated entirely: the winner logic itself, the steelman tiebreak,
+`rebuttal_effectiveness`, and the fact-check pass. Only `qwen3:8b` has been
+measured; other judges are unknown.
+
+Pick a judge that is neither debater, and whose context holds a whole
+transcript. Apple Foundation Models cannot — its ~4,096-token session limit is
+smaller than most transcripts.
+
+### `--fact-check`
+
+**On by default.** It runs a second call that audits each claim against what the
+transcript actually records — both sides' evidence and turns — never against the
+model's own knowledge of the world. Verdicts are `supported`, `contradicted`,
+`unsupported`, and `not_checkable`.
+
+> **Known gap.** This pass has not met its exit gate. Across four runs on two
+> backends, the audit never classifies an opinion as `not_checkable` — it skips
+> non-factual statements instead of listing them, despite being told to filter
+> nothing out. Claims it *does* list have been accurate, including one caught
+> contradicting the opponent's own recorded evidence. Treat the ledger as
+> incomplete rather than wrong, and use `--no-fact-check` to skip the second
+> call entirely.
+
+## Backends
+
+One OpenAI-compatible adapter with a configurable `base_url` covers everything.
+A probe of three servers on identical weights
+(`BACKEND-PROBE-RESULTS.md`) produced the recommendations here:
+
+| | Notes |
+|---|---|
+| **Ollama** | **Recommended for real runs.** Honours `response_format` in both modes, queues a second request instead of refusing it, prefills fastest. Costs ~20% decode speed. Model names are Ollama's own (`qwen3:8b`). |
+| `vllm-mlx` | Fastest decode. Refuses a concurrent request with HTTP 503. Leaves reasoning inside `content`. |
+| `mlx_lm.server` | Ignores `response_format` entirely. Its own authors say it is not for production. Model name must be the exact repo id. |
+| Apple Foundation Models | Fine for development via `fm serve`. Context is too small to judge with. |
+
+Things measured that may surprise you:
+
+- **No single token-budget field works everywhere**, so the adapter sends both
+  `max_tokens` and `max_completion_tokens` with the same value. AFM honours only
+  the second; Ollama and `vllm-mlx` honour only the first.
+- **None of the three serves two requests in parallel.** They queue or refuse.
+- **No server rejects an over-context prompt.** It will try, and can wedge the
+  engine for the rest of a run. Watch your budgets.
+- Run model servers with `HF_HUB_OFFLINE=1`. Ollama has no Hugging Face
+  dependency; its equivalent is `OLLAMA_NO_CLOUD`.
+- Check what address your server bound with `lsof`, not with the documentation.
+  Ollama has been observed on a wildcard address, reachable off-box.
+
+## Output
+
+Both files are JSON, carry a `schema_version`, and rotate any existing file to
+`<path>.1` rather than overwriting it.
+
+The **transcript** records the resolved run (topic, seed, phases, and a snapshot
+of each side's team file, so it stays readable after the team file changes) plus
+every turn keyed by `(phase_index, side_index)`. Each turn carries its text,
+token usage, budget, whether it hit that budget, finish reason, latency, and
+start time. Prep turns additionally carry the raw `evidence` passages they were
+given. Credentials in a `base_url` are stripped before it is recorded.
+
+The **score file** records the judge model, its budget, every dimension with its
+justification, each side's total, the winner and the reason, and — when enabled
+— the fact-check ledger.
+
+## Not in scope
+
+Deliberately absent, and not to be added casually:
+
+- **Consensus, voting, or convergence logic.** The premise is sustained,
+  non-converging adversarial positions. Consensus-seeking in the turn loop is
+  the specific thing that ruled out the projects reviewed before this one.
+- **Formal verification** of claims. Domain-mismatched for non-formalizable
+  motions.
+- **Cloud-provider-specific features**, and **UI or dashboard code**.
+
+## Testing
+
+```bash
+pytest
+```
+
+Every default test runs against a scripted fake backend, so the suite is
+deterministic and needs no model. Live-model tests are opt-in:
+
+```bash
+DEBATEBENCH_LIVE_TESTS=1 pytest
+```
+
+## Licence
+
+MIT — see `LICENSE`. Design lifted from four MIT-licensed projects is
+attributed in `NOTICE`.

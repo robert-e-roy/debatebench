@@ -1,12 +1,18 @@
-# Backend Probe — Results (session 1, **partial**)
+# Backend Probe — Results (session 1, complete but for A11)
 
-**Status:** partial. **Part A is complete for all three servers on the same
-model**, except A8 on `vllm-mlx` (abandoned when it wedged the engine) and A11
-everywhere (needs a packet capture, not the absence of an error). **Part B is
-complete**, including B5 under `mlx_lm`. The exit
-gate in `BACKEND-PROBE.md` ("every row in A and B filled in for all three
-servers") is **not met**, and this file says which rows are missing and why.
-**No recommendation is made here** — the data doesn't yet support one.
+**Status:** **Part A is complete for all three servers on the same model**,
+except A11, which is **deferred to the operator by decision (2026-09-14)**
+rather than left blank — see "A11 — the operator's check" below. **Part B is
+complete**, including B5 under `mlx_lm`. The exit gate in `BACKEND-PROBE.md`
+("every row in A and B filled in for all three servers") is **met with that one
+stated exception**, which the gate itself now records.
+
+An earlier version of this line also excepted A8 on `vllm-mlx` as "abandoned
+when it wedged the engine". That was stale: A8 was re-run with the corrected
+~37k prompt and is in the table below.
+
+**No recommendation is made here.** It lives in **ADR-018**, which cites this
+file — the shape the exit gate asks for, rather than a silent switch.
 
 **Not** written to `RESULTS.md`: that file is B0's and would have been
 destroyed.
@@ -72,7 +78,7 @@ class, not byte-identical weights). Ollama's earlier `phi4-mini` pass is kept in
 | A8 over-context | **no rejection**; wedges the engine. 160k-token prompt: still generating at 260 s. **Re-run at ~37k, a modest overage: same result** — timeout at 180 s, engine wedged again, free memory to 12% | **no rejection**; ballooned to **23 GB**, client timeout at 180 s (~160k-token prompt) | **no rejection**; client timeout at 180 s (~37k-token prompt) |
 | A9 reasoning field | **no separate field** — `<think>` inside `content`, despite `--reasoning-parser qwen3` | **separate `reasoning` field**, alongside `content` | **separate `reasoning` field**, alongside `content` |
 | A10 bind address | `127.0.0.1` | `127.0.0.1` | **`*:11434` — wildcard, reachable off-box** |
-| A11 offline start | *not verified to standard* | *not verified to standard* | not applicable (already running) |
+| A11 offline start | **operator check** — started clean under `HF_HUB_OFFLINE=1` and `--offline`, which is the weak evidence the row rules out | **operator check** — started clean under `HF_HUB_OFFLINE=1`, same caveat | **a different question** — no `huggingface_hub` anywhere; its levers are `OLLAMA_NO_CLOUD` and `disable_ollama_cloud` |
 
 **A2 and A3 together are the rows ADR-013's open question needed, and they
 divide 2–1.** `mlx_lm.server` **ignores `response_format` entirely**, in both
@@ -105,10 +111,53 @@ backend offers neither.
   restarted**, and the answer is in the table above.
 - **mlx_lm A9:** the first run died at A8 and never reached it. **Measured on
   the re-run**, and the answer is in the table above.
-- **A11 everywhere:** both Python servers were started with offline flags
-  (`HF_HUB_OFFLINE=1`, `--offline`) and started without network errors, but the
-  doc requires a packet capture or firewall block. Absence of an error is not
-  the evidence asked for, so this is recorded as unverified.
+- **A11 everywhere:** deferred to the operator by decision, not skipped — the
+  procedure and the per-server levers are in the next section. Both Python
+  servers did start clean under offline flags, which is exactly the evidence
+  the row says is insufficient.
+
+### A11 — the operator's check (not run here)
+
+The row asks for zero network calls at startup, "confirmed via a packet capture
+or a firewall block, **not just absence of an error**." That standard is right,
+and this probe did not meet it: both Python servers were started with
+`HF_HUB_OFFLINE=1` (and `--offline` on `vllm-mlx`) and raised no network error,
+which is precisely the weaker evidence the row rules out.
+
+It is **deferred to whoever operates the machine**, for two reasons: the check
+needs the network cut for the duration of a start, which a probe sharing a
+machine with live work should not do — and it takes about two minutes.
+
+1. **Turn Wi-Fi off** (or unplug the cable). *This is the firewall block the row
+   asks for* — nothing needs installing.
+2. Start the server the way a run starts it, with the levers below set.
+3. Serve one request against a model that is already local.
+4. **A clean start and a served reply is a pass.** A hang, a timeout, or any
+   `huggingface.co` error in the log is a fail — and the error text is the
+   finding, so capture it rather than just noting that it failed.
+
+To *see* the absence rather than infer it, with the network still up, any one of:
+
+- `nettop -m tcp -p <pid>` — that process's sockets, live, nothing to install
+- `sudo lsof -i -nP -p <pid>` — what the pid has open right now
+- `sudo tcpdump -n host huggingface.co` — the packet capture the row names
+
+**The lever differs by server, which is why "not applicable" was the wrong entry
+for Ollama** — the row's premise simply doesn't reach it:
+
+| | What reaches the network at start | Lever |
+|---|---|---|
+| `vllm-mlx` 0.4.1 | `huggingface_hub` resolving the repo id | `HF_HUB_OFFLINE=1`, plus its own `--offline` |
+| `mlx_lm` 0.31.3 | the same `huggingface_hub` path | `HF_HUB_OFFLINE=1` (ADR-002 already requires it) |
+| Ollama 0.34.0 | **no `huggingface_hub` at all** — its own registry, and a pulled model is already on disk | `OLLAMA_NO_CLOUD=1`, and `disable_ollama_cloud` in `~/.ollama/server.json` |
+
+Read off the installed versions rather than assumed: `huggingface_hub` **1.31.0**
+exposes `HF_HUB_OFFLINE` (default `False`) beside `ENDPOINT =
+'https://huggingface.co'`, and Ollama **0.34.0**'s `ollama help serve` lists
+`OLLAMA_NO_CLOUD` and no Hugging Face variable of any kind. **Re-check after any
+upgrade** — these are the projects' own release notes, not ours:
+`github.com/huggingface/huggingface_hub/releases`,
+`github.com/ollama/ollama/releases`, `github.com/ml-explore/mlx-lm/releases`.
 
 ### Method corrections made during the run
 
@@ -276,8 +325,14 @@ memory was 12–13% at the end of this session with `vllm-mlx` still holding
    the row ADR-013's open question needed. Structured output would remove the
    malformed-JSON failures that cost most of this session, rather than
    validating around them.
-4. **Ollama binds a wildcard address by default.** `*:11434`, reachable from
-   the network, where both Python servers bind loopback.
+4. **Ollama binds a wildcard address here.** `*:11434`, reachable from the
+   network, where both Python servers bind loopback. **Re-verified 2026-09-14**
+   with `lsof -nP -iTCP:11434 -sTCP:LISTEN` (`*:11434 (LISTEN)`), and a request
+   to this machine's own en0 address answered 200. Two details worth carrying:
+   `ollama help serve` on 0.34.0 documents the default as `127.0.0.1:11434`,
+   and `OLLAMA_HOST` is unset on this machine — yet the app-launched server is
+   on the wildcard anyway. **Check a bind with `lsof`; never infer it from a
+   documented default.**
 5. **The judge's fact-check audit produces malformed JSON on every backend
    tried — four of them.** `mlx_lm` (Qwen3-8B), Ollama (phi4-mini), `vllm-mlx`
    (Qwen3-8B) and Ollama (qwen3:8b) have each broken it, in four distinct ways:
@@ -337,10 +392,12 @@ B1 recorded but explicitly not comparable to B0.
 **B5 is done** — the pair fits, at 18.0 GiB, without critical pressure. One row
 is genuinely outstanding, and two are closed as not-testable rather than unmet:
 
-- **A11 (offline start), all three — still open.** The doc asks for a packet
-  capture or a firewall block. Both Python servers were started with offline
-  flags and threw no network error, but absence of an error is not the evidence
-  requested, so this is recorded as unverified rather than passed.
+- **A11 (offline start) — closed as an operator check, not left unmet.** The
+  row's standard is unchanged; what changed is who runs it. Two minutes with
+  Wi-Fi off closes it, and the procedure, the per-server levers and the
+  release-notes pages to re-check after an upgrade are under "A11 — the
+  operator's check". Ollama's column there is a different question rather than a
+  missing cell: it has no `huggingface_hub` to put offline.
 - **B5 under `vllm-mlx` — not testable as invoked.** `vllm-mlx serve <one
   model>` gives one model per process, so co-residency there means a second
   server instance and twice the fixed overhead. That is a different question
