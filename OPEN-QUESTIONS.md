@@ -229,6 +229,54 @@ unchanged hard cap; no cross-field validation; a mismatch surfaces via
 
 ---
 
+### 14. A transcript the judge can't parse is permanently unjudgeable
+
+**Blocks:** nothing yet; it bit `examples/run-prep.yaml` on 2026-09-14 and will
+bite any run whose scoring reply happens to be malformed.
+
+`judge` sends `seed=transcript.run.seed` with both its calls, so that re-judging
+one transcript is reproducible (ADR-017 §6). That guarantee has a consequence
+nobody wrote down: when the scoring reply comes back as invalid JSON, **every
+retry reproduces it exactly**. Measured, four attempts on one transcript, the
+same fault at the same character offset each time:
+
+```
+judging failed: the reply's JSON is malformed: Expecting ',' delimiter:
+line 13 column 279 (char 1896)
+The text at the fault: …ogic is sound and focused on systemic flaws.""},
+```
+
+The defect is a **doubled closing quote** — the model wrote `flaws.""}` where
+`flaws."}` was meant. `_repair_escapes` does not catch it, correctly: it drops
+backslash escapes JSON doesn't define, and this is not one.
+
+Repairing it mechanically is not obviously safe. `""},` is also the exact shape
+of a legitimate empty string (`"justification": ""`), so a rule that collapses
+`""` would silently rewrite valid replies. Distinguishing them means knowing
+whether text preceded the quotes, which is context a character-level repair
+does not have.
+
+Options, none chosen:
+
+1. **A narrower repair** — collapse `""` only when the preceding character is
+   neither `:` nor whitespace, so an empty value is untouched. Still a guess
+   about intent, which is what ADR-017 §4 was written to avoid.
+2. **Re-ask with a different seed on a parse failure.** Cheap and effective, and
+   flatly contrary to ADR-017 §4's refusal of a retry loop — but the refusal was
+   written when a retry meant "hope for better luck", and a *deliberate* seed
+   change is a different thing. It would need the score file to record that it
+   happened, or reproducibility becomes a lie.
+3. **Do nothing and let it fail**, which is the current behaviour and honest,
+   but leaves a transcript that cost eight model calls permanently unscored.
+4. **Constrain the reply** — `response_format` is honoured by Ollama in both
+   modes per `BACKEND-PROBE-RESULTS.md`, and nothing sends it. This may be the
+   real answer, and it is the only option that prevents rather than repairs.
+
+Option 4 is untested here and should be measured before the others are argued
+about. Note that it binds the backend: `mlx_lm` honours `response_format` in
+neither mode, so anything relying on it would work on Ollama and silently not
+on MLX.
+
 ## Recorded elsewhere — index
 
 | Where | Open question |

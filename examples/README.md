@@ -3,10 +3,19 @@
 A debate you can run in two commands, and the three files it needs.
 
 ```
-run.yaml              one run: topic, phases, the two sides, and the judge
-teams/advocate.yaml   the pro side's identity
-teams/skeptic.yaml    the con side's identity
+run.yaml                    one run, no prep: topic, phases, two sides, the judge
+run-prep.yaml               the same motion WITH prep, and no dataset download
+teams/advocate.yaml         climate-policy advocate
+teams/skeptic.yaml          free-market skeptic
+teams/social-democrat.yaml  programme design, international precedent   + corpus
+teams/tea-party.yaml        enumerated powers, local control            + corpus
+teams/neutral.yaml          even-handed analyst, for use as a control   + corpus
 ```
+
+Any two of the five can face each other, as long as one is `side: pro` and the
+other `side: con`. **A team file carries no side** — which side a persona argues
+is set in `run.yaml`, so the same file is reused across motions and across
+sides.
 
 ## Run it
 
@@ -72,19 +81,92 @@ The wheel installs the package only, so `pip install debatebench` gives you no
 installed from a wheel, copy the config out of the top-level `README.md`
 quickstart instead.
 
-## No prep here, on purpose
+## The teams
+
+The last three carry a `corpus:` — their own research pool, used by the prep
+phase. `advocate.yaml` and `skeptic.yaml` do not, which is why `run.yaml` has no
+prep and `run-prep.yaml` uses the other pair.
+
+**`neutral.yaml` is a control.** It argues whichever side you assign it, but
+from evidence and while stating what the evidence does not settle. Neutral
+against neutral isolates the model's contribution; neutral against an advocate
+isolates the persona's. Pair it with `debate`'s override flags and you can move
+one variable at a time:
+
+```bash
+debate run-prep.yaml --model phi4-mini:latest   # same personas, another model
+```
+
+### The corpora are fiction, deliberately
+
+Every row in `*-corpus.jsonl` is invented, says so in its own text, and names
+places that do not exist — Kessering, Mourne Ridge, the Ostrander review. That
+is not laziness about sourcing; it is what makes grounding **testable**. A model
+cannot know an invented figure from pretraining, so when a speech cites one, it
+demonstrably read the record rather than recalled the world. The fact-check pass
+checks claims against the transcript for the same reason.
+
+Do not mistake these for evidence about real carbon pricing. Point `corpus:` at
+your own JSONL to use real material:
+
+```json
+{"id": "x-1", "topic": "carbon tax", "source": "my-corpus", "text": "…"}
+```
+
+A team's own corpus carries **no `side`** field — everything in it already
+belongs to that side. Shared `sources:` pools do carry one, because they hold
+both sides mixed together.
+
+Each corpus also ends with one deliberately off-topic row, which is filtered out
+and is there to prove that filtering happens.
+
+## Prep without downloading anything
 
 `run.yaml` has no `prep` phase. Prep retrieves from JSONL pools that must
 already exist on disk, and **nothing downloads them**, so a prep run on a clean
 machine fails by design rather than debating from nothing.
 
-To turn it on you need three things, not one:
+**`run-prep.yaml` turns it on without any of that**, because retrieval layers
+two pools and either one alone is enough: with no `sources:` key it searches
+each team's own `corpus:` and nothing else. That is the whole reason the three
+new teams carry corpora.
+
+```bash
+debate examples/run-prep.yaml
+judge  examples/run-prep.yaml
+```
+
+What that produces, measured on `qwen3:8b` with the seed in the file: eight
+turns over four phases, five evidence rows recorded per side with no overlap
+between them, and a fact-check of **18 claims, all `supported`**, seventeen of
+them citing the speaker's own passages by id. Compare `run.yaml`, which can only
+ever return `not_checkable` because it records nothing to check against.
+
+**You will not see a `contradicted` verdict here, and that is the corpora's
+doing rather than the judge's.** Each team's corpus describes its own invented
+world — Kessering, Mourne Ridge — so the two sides never make opposing claims
+about the same fact. A contradiction needs both sides holding passages on one
+point, which is what the shared `sources:` pools provide and a pair of private
+corpora structurally cannot.
+
+> **If `judge` fails with "the reply's JSON is malformed", retrying will not
+> help.** `judge` sends the debate's own seed so that re-judging is reproducible
+> (ADR-017 §6), which means a malformed reply reproduces byte for byte — four
+> attempts on one transcript gave the identical fault at the identical offset.
+> Change the judge model, or change `seed:` and re-run `debate`. This is open
+> question 14, not a settled design.
+
+To add the *shared* pools on top you need three things, not one:
 
 1. a pool at `~/.cache/debatebench/sources/args-me.jsonl` (or point
    `DEBATEBENCH_SOURCES_DIR` elsewhere), with rows like
    `{"id": "am-1", "topic": "carbon tax", "side": "pro", "source": "args-me", "text": "…"}`;
 2. `sources: [args-me]` at the top level of `run.yaml`;
 3. `prep` first in `phases`, and a `prep_budget` on **both** sides.
+
+Shared pool names come from a vetted list (`args-me`, `debatesum`) because each
+licence was checked by hand — any other name is a config error. A team's own
+`corpus:` is a path and has no such restriction.
 
 `prep_budget` without `prep` in `phases`, or `prep` without `prep_budget`, is a
 validation error either way — that combination is almost always a half-finished

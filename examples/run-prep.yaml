@@ -1,0 +1,48 @@
+# The same motion as run.yaml, but WITH prep — and with no `sources:` at all.
+#
+# This is the point of the file: prep normally wants the shared args-me /
+# debatesum pools, which are a manual one-time download. Two teams that each
+# carry their own `corpus:` need none of that, so this runs on a clean machine:
+#
+#   debate examples/run-prep.yaml
+#   judge  examples/run-prep.yaml
+#
+# Because evidence is recorded, the fact-check has something to check against.
+# run.yaml (no prep) can only ever return not_checkable.
+topic: "A federal carbon tax would do more good than harm."
+
+format:
+  # `prep` may appear once and must come first. Each side researches privately;
+  # the opponent never sees the other's passages, though the judge does.
+  phases: [prep, opening:medium, rebuttal:medium, conclusion:short]
+
+teams:
+  - team: teams/social-democrat.yaml     # carries social-democrat-corpus.jsonl
+    side: pro
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+    # Required because `prep` is in phases, and an error if it is there without
+    # it. One pool for the whole prep phase, not a per-phase cap.
+    prep_budget: 1500
+
+  - team: teams/tea-party.yaml           # carries tea-party-corpus.jsonl
+    side: con
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+    prep_budget: 1500
+
+# No `sources:` key. Retrieval falls back to each team's own corpus alone, which
+# is why this needs no prepared datasets. Add `sources: [args-me]` once you have
+# the shared pools and both layers are searched.
+
+seed: 7
+output: transcript-prep.json
+
+judge:
+  model: qwen3:8b
+  base_url: http://127.0.0.1:11434/v1
+  budget: 6000
+  output: scores-prep.json
+  fact_check: true

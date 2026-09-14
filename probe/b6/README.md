@@ -62,6 +62,14 @@ always a defensible answer. ADR-019 §1 makes contradiction win.
 **ADR-019 is a prompt rule with no code enforcement** (its §3), so whether the
 judge obeys it is exactly what a run here measures.
 
+**Clause (2) needs a shared pool, not private corpora.** Measured 2026-09-14 on
+`examples/run-prep.yaml`, where both sides prep from their own `corpus:` alone:
+18 claims, all `supported`, zero `contradicted`. That is not the judge failing
+ADR-019 — each team's corpus describes its own invented jurisdictions, so no
+two passages bear on the same fact and there is nothing to contradict. A gate
+run must use a pool where both sides hold passages on one point, the way
+`args-me`'s `am-3` and `am-4` both speak to whether a carbon tax is regressive.
+
 ## What the ADR-019 runs measured
 
 Seven runs, one saved prep transcript, same seed, `--budget 6000`, `qwen3:8b`
