@@ -1,0 +1,246 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "started_at": "2026-09-14T13:25:02Z",
+  "finished_at": "2026-09-14T13:27:57Z",
+  "run": {
+    "topic": "A federal carbon tax would do more good than harm.",
+    "seed": 42,
+    "budget_tolerance": 16,
+    "phases": [
+      "prep",
+      "opening",
+      "rebuttal",
+      "conclusion"
+    ],
+    "sides": [
+      {
+        "index": 0,
+        "team_file": "teams/advocate.yaml",
+        "team": {
+          "id": "carbon-tax-advocate",
+          "name": "Climate Policy Advocate",
+          "voice": "direct, urgency-driven, cites institutional consensus",
+          "stance": "progressive",
+          "values": [
+            "collective-action",
+            "precaution",
+            "equity"
+          ],
+          "corpus": null
+        },
+        "side": "pro",
+        "model": "qwen3:8b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": 1500
+      },
+      {
+        "index": 1,
+        "team_file": "teams/skeptic.yaml",
+        "team": {
+          "id": "free-market-skeptic",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "con",
+        "model": "qwen3:8b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": 1500
+      }
+    ]
+  },
+  "turns": [
+    {
+      "phase_index": 0,
+      "phase": "prep",
+      "side_index": 0,
+      "order": 0,
+      "text": "**Prep Notes: Federal Carbon Tax Arguments**  \n\n1. **Planning Certainty for Industry (am-2)**  \n   - **Evidence**: A carbon tax provides firms with a predictable price signal, enabling long-term planning and investment in low-carbon technologies. This reduces uncertainty compared to cap-and-trade systems, where firms face fluctuating compliance costs.  \n   - **Why It Matters**: Businesses prioritize stability over volatile regulatory frameworks. A tax’s fixed rate incentivizes innovation and compliance without the administrative complexity of tradable permits.  \n\n2. **Equity Through Revenue Recycling (am-3)**  \n   - **Evidence**: Returning tax revenues as a flat dividend neutralizes regressive impacts. Low-income households, disproportionately affected by energy costs, receive direct financial support, turning the tax into a progressive transfer.  \n   - **Why It Matters**: This design ensures the tax does not exacerbate inequality. It aligns with progressive values by targeting emissions while protecting vulnerable populations.  \n\n3. **Proven Emissions Reduction (am-1)**  \n   - **Evidence**: The town of Brindlewick achieved a 14% drop in household emissions in two years after implementing a carbon tax. This demonstrates the policy’s efficacy in driving behavioral change and reducing pollution.  \n   - **Why It Matters**: Real-world success validates the tax’s ability to cut emissions quickly, outperforming hypothetical models. It underscores the practicality of the policy.  \n\n4. **Economic Efficiency Over Regulation (ds-1)**  \n   - **Evidence**: Economists across the political spectrum favor taxes over regulation because they allow firms to choose the cheapest abatement methods. This avoids the inefficiencies of top-down mandates.  \n   - **Why It Matters**: A tax leverages market mechanisms, ensuring cost-effective emissions reductions. It respects enterprise autonomy while achieving environmental goals.  \n\n**Key Themes**:  \n- **Market-Driven Solutions**: Taxes align with economic theory by empowering firms to innovate.  \n- **Equity and Justice**: Revenue-sharing ensures fairness and broadens public support.  \n- **Proven Outcomes**: Empirical evidence from Brindlewick and economist consensus strengthen the case for the tax’s effectiveness.  \n\n**Strategic Focus**: Emphasize the tax’s efficiency, equity, and real-world success to counter claims of ineffectiveness or unfairness.",
+      "usage": {
+        "prompt_tokens": 292,
+        "completion_tokens": 827
+      },
+      "budget": 1500,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 30435,
+      "started_at": "2026-09-14T13:25:02Z",
+      "evidence": [
+        {
+          "id": "am-2",
+          "source": "args-me",
+          "text": "Unlike a cap-and-trade scheme, a tax gives firms a price they can plan around. Planning certainty is worth more to industry than the headline rate."
+        },
+        {
+          "id": "am-3",
+          "source": "args-me",
+          "text": "Revenue returned as a flat dividend more than covers higher energy bills for the poorest households, which turns a regressive tax into a progressive transfer."
+        },
+        {
+          "id": "am-1",
+          "source": "args-me",
+          "text": "A carbon tax puts the cost of emissions where it belongs, on the people choosing to emit. The town of Brindlewick cut household emissions by 14 percent in two years after adopting one."
+        },
+        {
+          "id": "ds-1",
+          "source": "debatesum",
+          "text": "Economists across the spectrum prefer a tax to regulation because it lets each firm decide where abatement is cheapest, rather than having a rule-writer guess."
+        }
+      ]
+    },
+    {
+      "phase_index": 0,
+      "phase": "prep",
+      "side_index": 1,
+      "order": 0,
+      "text": "**Prep Notes: Arguments Against the Motion**  \n**1. Leakage and Border Adjustment Failures (am-6)**  \n- **Evidence**: Border adjustments are supposed to mitigate carbon leakage, but no customs service has scaled the complex task of valuing carbon in imports. This creates loopholes for carbon-intensive industries to relocate, undermining the tax’s effectiveness.  \n- **Impact**: A carbon tax without functional border adjustments becomes a “tax on competitiveness,” harming domestic industries and failing to reduce global emissions.  \n\n**2. Regressive Fiscal Impact (am-4)**  \n- **Evidence**: A carbon tax disproportionately burdens low-income households, which spend a larger share of income on fuel. Rebates are delayed or insufficient, exacerbating financial strain.  \n- **Impact**: This violates the principle of limited-government taxation, disproportionately harming individual liberty and economic equity.  \n\n**3. Ineffectiveness for Rural Communities (am-7)**  \n- **Evidence**: Rural drivers lack substitutes for essential commutes (e.g., no public transit). A price signal cannot incentivize behavior change where alternatives do not exist.  \n- **Impact**: The tax fails to address emissions in critical sectors, reducing its environmental efficacy and alienating key constituencies.  \n\n**4. Carbon Leakage via Offshoring (am-5)**  \n- **Evidence**: The Ferncastle smelter example demonstrates that firms relocate to jurisdictions with laxer regulations, shifting emissions rather than reducing them.  \n- **Impact**: The tax becomes a “carbon leakage trap,” defeating its purpose and incentivizing harmful economic practices.  \n\n**5. Evasion Through Exemptions (ds-2)**  \n- **Evidence**: Every carbon tax enacted has included exemptions for major emitters, effectively taxing households instead of corporations.  \n- **Impact**: This erodes the tax’s broad-based intent, concentrating burdens on the public while shielding polluters, violating the principle of cost-benefit neutrality.  \n\n---  \n**Key Themes**:  \n- **Economic Inequity**: Regressive impacts and exemption loopholes harm low-income households and distort market fairness.  \n- **Policy Ineffectiveness**: Leakage, offshoring, and lack of substitutes undermine the tax’s environmental and economic goals.  \n- **Governance Overreach**: Complex border adjustments and exemptions reveal the impracticality of a broad-based carbon tax under limited-government principles.",
+      "usage": {
+        "prompt_tokens": 337,
+        "completion_tokens": 1046
+      },
+      "budget": 1500,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 38480,
+      "started_at": "2026-09-14T13:25:32Z",
+      "evidence": [
+        {
+          "id": "am-6",
+          "source": "args-me",
+          "text": "Border adjustments are the usual answer to leakage, but they require valuing the carbon embedded in every imported good, which no customs service has ever done at scale."
+        },
+        {
+          "id": "am-4",
+          "source": "args-me",
+          "text": "A carbon tax is regressive before any rebate arrives. The household spending the largest share of its income on fuel pays first and is reimbursed last, if at all."
+        },
+        {
+          "id": "am-7",
+          "source": "args-me",
+          "text": "Rural drivers have no substitute for the trip to work. A price signal only changes behaviour where an alternative exists, and for them it does not."
+        },
+        {
+          "id": "am-5",
+          "source": "args-me",
+          "text": "Taxing emissions at home while trading partners do not simply moves the factory, and with it the emissions. The Ferncastle smelter closed and reopened across the border within a year."
+        },
+        {
+          "id": "ds-2",
+          "source": "debatesum",
+          "text": "Every carbon tax passed so far has arrived with exemptions for the largest emitters, which is how a broad-based tax becomes a narrow one on households."
+        }
+      ]
+    },
+    {
+      "phase_index": 1,
+      "phase": "opening",
+      "side_index": 0,
+      "order": 0,
+      "text": "A federal carbon tax is a proven, equitable, and economically efficient tool to accelerate emissions reductions while protecting vulnerable communities. By providing industries with predictable price signals, it spurs innovation and long-term planning—contrary to claims of regulatory overreach, it empowers businesses to choose the cheapest abatement methods. The Brindlewick example proves that such a tax can slash household emissions by 14% in just two years, demonstrating real-world effectiveness. Crucially, revenue recycling as a flat dividend ensures the tax is progressive, offsetting regressive impacts and turning it into a tool for climate justice. This policy aligns market mechanisms with climate goals, delivering measurable results without sacrificing fairness—proving that a carbon tax is both urgent and wise.",
+      "usage": {
+        "prompt_tokens": 580,
+        "completion_tokens": 341
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 14220,
+      "started_at": "2026-09-14T13:26:11Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 1,
+      "phase": "opening",
+      "side_index": 1,
+      "order": 1,
+      "text": "A federal carbon tax, as proposed, risks becoming a regressive burden on low-income households while failing to deliver meaningful emissions reductions. The absence of functional border adjustments and the prevalence of loopholes for major emitters render the tax a “tax on competitiveness,” incentivizing carbon leakage and shifting pollution overseas rather than curbing it. Rural communities, where substitutes for fossil fuels are nonexistent, face no behavioral incentive to change, rendering the tax ineffective in critical sectors. Exemptions for corporations further erode the policy’s fairness, disproportionately taxing households while shielding polluters—a violation of cost-benefit neutrality. Ultimately, the complexity of implementation and the tax’s inequitable impact undermine its viability as a limited-government solution, making it a flawed instrument for both climate and economic goals.",
+      "usage": {
+        "prompt_tokens": 750,
+        "completion_tokens": 558
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 22849,
+      "started_at": "2026-09-14T13:26:25Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 0,
+      "text": "The PRO argues that the Brindlewick example demonstrates a carbon tax’s efficacy, slashing household emissions by 14% through revenue recycling as a flat dividend. However, this ignores the reality that such gains are exceptional, not scalable, and depend on flawed assumptions about compliance and leakage mitigation. Even if Brindlewick worked, the absence of functional border adjustments and rampant exemptions for corporations (as seen in every enacted tax) ensures the policy disproportionately burdens low-income households while shielding polluters—a direct violation of cost-benefit neutrality. Rural communities, where substitutes for fossil fuels are nonexistent, remain unaffected, rendering the tax ineffectual in critical sectors. Ultimately, the complexity of implementation and the regressive fiscal impact undermine its viability as a limited-government solution, making it a flawed instrument for both climate and economic goals.",
+      "usage": {
+        "prompt_tokens": 937,
+        "completion_tokens": 454
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 17190,
+      "started_at": "2026-09-14T13:26:48Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 1,
+      "text": "The CON’s strongest argument is that Brindlewick’s success is an exception, not a model for national implementation, and that without border adjustments and loopholes, the tax would be regressive. However, Brindlewick’s outcome demonstrates the *potential* of a carbon tax when paired with revenue recycling and robust enforcement—scaling this requires federal design, not local experiments. The CON’s warnings about rural inequities ignore that a tax can incentivize rural renewable energy investment, not just penalize fossil fuel dependence. Exemptions for corporations are a policy choice, not an inherent flaw; the tax’s equity lies in its revenue-sharing mechanism, which neutralizes regressive impacts. Finally, the CON’s focus on “leakage” overlooks the urgency of action: without market signals, we risk irreversible climate harm, and a well-designed tax—rooted in institutional consensus and equity—offers a pragmatic, scalable path forward.",
+      "usage": {
+        "prompt_tokens": 1103,
+        "completion_tokens": 593
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 23696,
+      "started_at": "2026-09-14T13:27:05Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 0,
+      "order": 0,
+      "text": "A federal carbon tax, when paired with revenue recycling and robust enforcement, delivers measurable emissions reductions while ensuring equity through direct financial support to low-income households—proven by real-world success like Brindlewick. This market-driven approach aligns with institutional consensus on economic efficiency, prioritizes climate justice, and offers a pragmatic, scalable solution to urgent environmental challenges.",
+      "usage": {
+        "prompt_tokens": 1290,
+        "completion_tokens": 336
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 13191,
+      "started_at": "2026-09-14T13:27:29Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 1,
+      "order": 1,
+      "text": "The federal carbon tax, despite its proponents’ claims, fundamentally undermines limited-government principles by creating regressive fiscal burdens, incentivizing carbon leakage, and failing to address emissions in critical sectors like rural areas. Its reliance on complex, unenforceable border adjustments and loopholes for corporations erodes market fairness and distorts economic incentives, making it a flawed instrument for both climate action and fiscal responsibility.",
+      "usage": {
+        "prompt_tokens": 1382,
+        "completion_tokens": 364
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 15336,
+      "started_at": "2026-09-14T13:27:42Z",
+      "length": "short"
+    }
+  ]
+}
