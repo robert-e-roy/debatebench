@@ -145,6 +145,21 @@ server was killed and memory recovered within a second.
   - AFM under load;
   - the three-model case.
 
+## Later operator observations (not probe measurements)
+
+- **2026-09-14 — `gemma4:12b` runs fine on this machine**, reported by the
+  operator after running it, not measured here. No footprint, decode rate or
+  co-residence figure was taken, so it does not extend the table above; it is
+  recorded because a working 12B sits between the two sizes this probe did
+  measure — Qwen3-8B at 4.8 GiB resident, and the 24B whose 13.0 GiB of weights
+  drove memory pressure critical — and B0's headline finding is about exactly
+  that gap.
+
+  To become a measurement it needs the same three columns the table uses
+  (footprint after load, decode tok/s, time to first token), and, for the
+  question B0 actually asked, whether it co-resides with a second model under
+  normal workload.
+
 ## What a follow-up run would add
 
 - **The same probe with heavy apps closed**, keeping the same cut-offs. That
