@@ -143,6 +143,20 @@ def test_fact_check_flag_overrides_the_block(transcript_file: Path, run_dir: Pat
     assert json.loads((run_dir / "scores.json").read_text())["fact_check_enabled"] is True
 
 
+def test_judge_reads_the_transcript_the_block_names(
+    transcript_file: Path, run_dir: Path, fake_judge
+):
+    # ADR-020 §7: an explicit input, not the run's output:.
+    elsewhere = run_dir / "archived.json"
+    elsewhere.write_bytes(transcript_file.read_bytes())
+    transcript_file.unlink()  # so only the named one can satisfy the run
+    fake_judge(judge_reply(side(0), side(1)))
+    run_yaml = _with_judge_block(run_dir, transcript="archived.json")
+
+    assert main([str(run_yaml)]) == 0
+    assert (run_dir / "scores.json").is_file()
+
+
 def test_a_run_yaml_without_a_judge_block_says_what_to_do(run_dir: Path, capfd):
     assert main([str(run_dir / "run.yaml")]) == 1
     err = capfd.readouterr().err

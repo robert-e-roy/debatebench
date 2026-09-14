@@ -85,6 +85,23 @@ def test_judge_block_loads(run_dir: Path):
     assert judge.fact_check is True  # ADR-015 §3's default, not written in the file
 
 
+def test_judge_transcript_defaults_to_the_run_output(run_dir: Path):
+    # ADR-020 §7: omitted means "the transcript this run produces".
+    edit_yaml(run_dir / "run.yaml", _set("judge", value=_JUDGE_BLOCK))
+    config = load_run(run_dir / "run.yaml")
+    assert config.judge is not None
+    assert config.judge.transcript == config.output
+
+
+def test_judge_transcript_may_name_another_run_s_transcript(run_dir: Path):
+    # Judging last week's transcript with this week's settings (ADR-020 §7).
+    edit_yaml(run_dir / "run.yaml", _set("judge", value=_JUDGE_BLOCK | {"transcript": "old.json"}))
+    config = load_run(run_dir / "run.yaml")
+    assert config.judge is not None
+    assert config.judge.transcript == (run_dir / "old.json").resolve()
+    assert config.judge.transcript != config.output
+
+
 def test_judge_fact_check_can_be_turned_off_in_the_file(run_dir: Path):
     edit_yaml(run_dir / "run.yaml", _set("judge", value=_JUDGE_BLOCK | {"fact_check": False}))
     judge = load_run(run_dir / "run.yaml").judge
@@ -226,6 +243,9 @@ RUN_FAILURES = [
      "judge.budget must be an integer of at least 1"),
     ("judge fact_check is not a boolean", _set("judge", value=_JUDGE_BLOCK | {"fact_check": "yes"}),
      "judge.fact_check must be true or false"),
+    ("judge.transcript collides with judge.output",
+     _set("judge", value=_JUDGE_BLOCK | {"transcript": "scores.json"}),
+     "judge.output and judge.transcript are the same file"),
     # ADR-020 §6: the same path would rotate the transcript away and write over it.
     ("judge.output is the transcript", _set("judge", value=_JUDGE_BLOCK | {"output": "transcript.json"}),
      "judge.output and output are the same file"),

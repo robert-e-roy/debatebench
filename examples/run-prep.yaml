@@ -41,6 +41,9 @@ seed: 7
 output: transcript-prep.json
 
 judge:
+  # Optional: defaults to the `output:` above. Stated here so the block says
+  # what it reads as well as what it writes.
+  transcript: transcript-prep.json
   model: qwen3:8b
   base_url: http://127.0.0.1:11434/v1
   budget: 6000

@@ -135,7 +135,7 @@ def _settings(args: argparse.Namespace) -> tuple[Path, JudgeConfig]:
                 "Add one (ADR-020), or name a transcript and pass --model, --base-url, "
                 "--budget and --output"
             )
-        block, transcript_path = config.judge, config.output
+        block, transcript_path = config.judge, config.judge.transcript
 
     def pick(flag: object, field: str, cli: str) -> object:
         if flag is not None:
@@ -149,6 +149,7 @@ def _settings(args: argparse.Namespace) -> tuple[Path, JudgeConfig]:
         )
 
     return transcript_path, JudgeConfig(
+        transcript=transcript_path,
         model=pick(args.model, "model", "--model"),
         base_url=pick(args.base_url, "base_url", "--base-url"),
         budget=pick(args.budget, "budget", "--budget"),

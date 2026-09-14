@@ -238,9 +238,11 @@ Two file types — see ADR-002 and ADR-007 for full schema and rationale:
   generated and recorded in the transcript if omitted, never silently
   guessed-and-hidden), and a **required** `output` path. Exactly two entries
   in `teams:`. An **optional `judge:` block** (ADR-020) carries the judge's
-  `model`, `base_url`, `budget`, `output` and optional `fact_check` — read by
-  `judge`, validated but never acted on by `debate`. Its `output` may not be
-  the transcript path (ADR-020 §6). ADR-007 removed a `judge:` block on the
+  `model`, `base_url`, `budget`, `output`, an optional `fact_check`, and an
+  optional **`transcript`** naming what it reads (ADR-020 §7; defaults to the
+  run's `output:`) — read by `judge`, validated but never acted on by `debate`.
+  Its `output` may equal neither its own `transcript` nor the run's `output`
+  (ADR-020 §6). ADR-007 removed a `judge:` block on the
   grounds that nothing read it; this one is read.
 - `teams/*.yaml` — durable persona files (`id`, `name`, `voice`, `stance`,
   `corpus`, `values`), **hand-authored for now** (see ADR-006 — no

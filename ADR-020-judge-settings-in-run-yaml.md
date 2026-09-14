@@ -7,6 +7,9 @@ details), ADR-013 (§2 `--budget`), ADR-015 (§3 the fact-check flag), ADR-005
 (the transcript's `run` snapshot)
 **Amends:** ADR-007 §1 — its consequence dropping `judge:` from the schema, and
 its "flags for `judge`" rule
+**Amended 2026-09-14:** §7 adds `judge.transcript`, naming the input the block
+had left implicit, and resolves this ADR's own open question about judging
+another run's transcript.
 **Resolves:** the file-versus-flags asymmetry between the two commands
 
 ## Context — the asymmetry was argued from a smaller command
@@ -135,6 +138,39 @@ destroying, on the second run, the input it had just read. Nothing about the
 two-`output:` shape makes that mistake obvious to the person writing the file.
 It is a validation error, naming both keys.
 
+### 7. `judge.transcript` names the input (added 2026-09-14)
+
+As first written, the block said where its **output** went and never named its
+**input**: `judge run.yaml` read the run's own `output:`, and a comment had to
+explain that the judge's input was the key called `output`. Needing a comment to
+explain a data flow is the defect, not the comment.
+
+```yaml
+output: transcript.json      # debate writes here
+
+judge:
+  transcript: transcript.json   # optional: judge reads here
+  output: scores.json           # judge writes here
+```
+
+`transcript:` is **optional** and defaults to the run's `output:`, so every
+`judge:` block written before this amendment keeps working. Naming it also
+settles this ADR's open question — judging an *earlier* run's transcript with
+today's settings is now a path, not a workaround:
+
+```yaml
+judge:
+  transcript: archive/2026-09-01.json
+  output: scores-rejudged.json
+```
+
+The collision check in §6 widens with it. `judge.output` must differ from both
+its own input **and** the run's `output:` — otherwise `transcript: old.json`
+with `output: transcript.json` would clobber the debate's transcript from the
+other direction. The error names whichever key the reader actually wrote:
+blaming `judge.transcript` for a collision with a default they never typed
+would send them to a line that is not in their file.
+
 ## Why
 
 - **The friction argument reversed as the command grew.** ADR-007 weighed one
@@ -169,7 +205,6 @@ It is a validation error, naming both keys.
 - Whether `judge:` should accept a `model` per *dimension* later (a cheap model
   for clarity, an expensive one for `argument_quality`) is untouched here and
   would be its own ADR.
-- Whether a `judge:` block should be allowed to name a transcript other than
-  the run's own `output:` — judging last week's transcript with this week's
-  settings — is not decided here. Today `judge run.yaml` always reads
-  `output:`; anything else takes the transcript-plus-flags form.
+- ~~Whether a `judge:` block should be allowed to name a transcript other than
+  the run's own `output:`~~ — **resolved 2026-09-14 by §7**: `judge.transcript`
+  names it, and defaults to `output:` when omitted.

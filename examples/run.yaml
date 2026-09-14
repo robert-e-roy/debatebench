@@ -69,14 +69,19 @@ output: transcript.json
 #
 # `debate` validates this block but never acts on it — the two passes stay two.
 judge:
+  # What judge reads. Optional — omit it and judge uses the `output:` above,
+  # which is the transcript this run produces. Name it to judge an earlier
+  # run's transcript with today's settings.
+  transcript: transcript.json
   # Ideally neither debater, so the judge isn't grading its own writing.
   model: qwen3:8b
   base_url: http://127.0.0.1:11434/v1
   # Applied to the scoring call, and again to the fact-check call on its own.
   # Needs more room than a speech does: it reads the whole transcript.
   budget: 6000
-  # Must NOT be the transcript path above, or the score file would rotate the
-  # transcript away and write over it. That is a validation error.
+  # Where judge writes. Must differ from `transcript:` above AND from the run's
+  # own `output:`, or the score file would rotate the transcript away and write
+  # over it. Either collision is a validation error.
   output: scores.json
   # Audit each claim against what the transcript recorded (never against the
   # model's own knowledge). Defaults to true; `--no-fact-check` overrides it.

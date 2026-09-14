@@ -25,7 +25,7 @@ LENGTHS = ("short", "medium", "long")  # a phase entry's :suffix (ADR-016 §1)
 
 _RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output", "judge"}
 _FORMAT_KEYS = {"phases"}
-_JUDGE_KEYS = {"model", "base_url", "budget", "output", "fact_check"}
+_JUDGE_KEYS = {"transcript", "model", "base_url", "budget", "output", "fact_check"}
 _SIDE_KEYS = {"team", "side", "model", "base_url", "budget", "prep_budget"}
 _TEAM_KEYS = {"id", "name", "voice", "stance", "values", "corpus"}
 
@@ -84,6 +84,7 @@ class Side:
 class JudgeConfig:
     """run.yaml's optional judge: block (ADR-020 §1). Flags override every field."""
 
+    transcript: Path  # what judge reads; defaults to the run's own output: (ADR-020 §7)
     model: str
     base_url: str
     budget: int
@@ -205,15 +206,26 @@ def _judge(run_path: Path, data: dict[str, Any], transcript: Path) -> JudgeConfi
         )
     _check_keys(run_path, block, _JUDGE_KEYS, "judge")
 
+    # Named explicitly, or the run's own transcript. Stating it beats a comment
+    # explaining that judge's input is the key called output: (ADR-020 §7).
+    named = _opt_str(run_path, block, "transcript", "judge.transcript")
+    reads = _resolve(run_path, named) if named is not None else transcript
+
     output = _resolve(run_path, _str(run_path, block, "output", "judge.output"))
-    if output == transcript:
-        raise _fail(
-            run_path,
-            f"judge.output and output are the same file ({output}); judge would rotate "
-            "the transcript away and write the score file over it (ADR-020 §6). Give the "
-            "score file its own path, such as scores.json",
-        )
+    # Name the key the reader actually wrote: blaming judge.transcript for a
+    # collision with a default they never typed sends them to the wrong line.
+    collisions = [(reads, "judge.transcript")] if named is not None else []
+    collisions.append((transcript, "output"))
+    for other, key in collisions:
+        if output == other:
+            raise _fail(
+                run_path,
+                f"judge.output and {key} are the same file ({output}); judge would rotate "
+                "the transcript away and write the score file over it (ADR-020 §6). Give "
+                "the score file its own path, such as scores.json",
+            )
     return JudgeConfig(
+        transcript=reads,
         model=_str(run_path, block, "model", "judge.model"),
         base_url=_base_url(run_path, block, "judge.base_url"),
         budget=_int(run_path, block, "budget", "judge.budget", minimum=1),
