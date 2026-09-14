@@ -90,10 +90,22 @@ judge  run.yaml
 > **Where `examples/` lives.** The wheel installs the package only, so a
 > `pip install` gives you no `examples/` directory — paste the config above
 > instead. The ready-made `examples/run.yaml` and its team files are in the
-> source tree and in the sdist, not in the wheel.
+> source tree and in the sdist, not in the wheel. If you have them,
+> [`examples/README.md`](examples/README.md) walks through running them, turning
+> prep on, and what each error means; every key in those files is commented.
 
-`debate` takes exactly one argument — the path to a `run.yaml` — and no flags.
-Every setting, including where the transcript goes, lives in that file.
+`debate` takes the path to a `run.yaml`. Every setting, including where the
+transcript goes, lives in that file — and `--model` / `--budget` override it for
+a single run, so an A/B needs no second config:
+
+```bash
+debate run.yaml --model phi4-mini:latest            # both sides
+debate run.yaml --pro-model qwen3:8b --con-model phi4-mini:latest
+```
+
+The override changes the config before the run, so the transcript records the
+model that actually spoke. There is no `--output` and no `--seed`: see ADR-021
+§6 for why each is deliberate.
 
 `judge` takes either the same `run.yaml`, reading its optional `judge:` block
 and taking the transcript from `output:`, or a transcript plus flags. The two

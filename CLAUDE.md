@@ -32,7 +32,9 @@ code. See ADR-002 for full scope.
   `supported` narrows to "uncontested" — a prompt rule with no code
   enforcement), `ADR-020` (judge settings live in an optional `judge:` block in
   `run.yaml`; `judge` takes a run.yaml or a transcript; flags override —
-  amending ADR-007 §1) — accepted; together they are the spec.
+  amending ADR-007 §1), `ADR-021` (`debate` gains `--model`/`--budget` and
+  `--pro-*`/`--con-*` overrides; nothing else, and Hard Rule 7 stands) —
+  accepted; together they are the spec.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
@@ -251,8 +253,14 @@ names come from a fixed list, and paths resolve from `run.yaml`'s directory.
 Load YAML only through the package's strict loader, never plain `safe_load`
 (ADR-008 lists the YAML 1.1 coercions it blocks).
 
-`debate` takes exactly one argument, the path to a `run.yaml`. No other flags
-— see ADR-007. `judge` takes **either** that same `run.yaml`, reading its
+`debate` takes the path to a `run.yaml`, plus ADR-021's override flags:
+`--model` and `--budget` set both sides, `--pro-model`/`--con-model`/
+`--pro-budget`/`--con-budget` set one. Giving both forms of one setting is an
+error — there is no precedence rule. **Nothing else is overridable**: no
+`--output` (Hard Rule 7 names its absence), no `--seed` (omit `seed:` and one is
+generated and recorded), no `--base_url`, `--topic` or `--phases` (those make it
+a different debate). An override changes the loaded config before the run, so
+ADR-005's snapshot records what actually spoke. `judge` takes **either** that same `run.yaml`, reading its
 `judge:` block and taking the transcript from `output:`, **or** a transcript
 path plus `--model`, `--base-url`, `--budget` and `--output`, with
 `--fact-check` / `--no-fact-check` (default on). The two are told apart by

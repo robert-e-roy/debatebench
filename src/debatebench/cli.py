@@ -1,9 +1,13 @@
-"""The ``debate`` command: one argument, the path to a run.yaml (ADR-007).
+"""The ``debate`` command: a run.yaml, plus ADR-021's override flags.
 
 It runs every configured phase, then writes the transcript as JSON to the
 `output:` path, rotating any file already there to `<output>.1` (ADR-005).
 Nothing but that JSON goes to the file; everything the command says goes to
 stderr (Hard Rule 7).
+
+`--model` and `--budget` override the file for one run, so an A/B needs no
+second config (ADR-021). They change the loaded config before anything runs,
+which is what keeps the transcript's snapshot a record of what actually spoke.
 """
 
 from __future__ import annotations
@@ -12,29 +16,51 @@ import argparse
 import asyncio
 import sys
 from collections.abc import Sequence
+from dataclasses import replace
+from typing import Any
 
 from .backend import BackendError
-from .config import ConfigError, RunConfig, load_run
+from .config import ConfigError, RunConfig, Side, load_run
 from .events import DebateEvent, EventBus, EventType, Listener
 from .openai_compat import OpenAICompatibleBackend, open_client
 from .orchestrator import DebateError, Transcript, run_debate
 from .transcript import write_transcript
 
 
-def main(argv: Sequence[str] | None = None) -> int:
+def _parser() -> argparse.ArgumentParser:
+    """One definition of the flags, so tests pin the names the CLI really uses."""
     parser = argparse.ArgumentParser(
         prog="debate",
         description="Run a structured debate. Every setting, including the output path, "
-        "comes from the run.yaml file.",
+        "comes from the run.yaml file; --model and --budget override it for one run.",
     )
     parser.add_argument("run_yaml", metavar="run.yaml", help="the run's config file")
-    args = parser.parse_args(argv)
+    # ADR-021: model and budget only. Nothing else is overridable, on purpose —
+    # see its §6 for why output, seed, base_url and topic are not.
+    parser.add_argument("--model", help="override both sides' model for this run")
+    parser.add_argument("--budget", type=int, help="override both sides' per-phase cap")
+    parser.add_argument("--pro-model", help="override only the pro side's model")
+    parser.add_argument("--con-model", help="override only the con side's model")
+    parser.add_argument("--pro-budget", type=int, help="override only the pro side's cap")
+    parser.add_argument("--con-budget", type=int, help="override only the con side's cap")
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
 
     try:
         config = load_run(args.run_yaml)
     except ConfigError as e:
         _log(f"config error: {e}")
         return 1
+    try:
+        config, overrides = _overridden(config, args)
+    except _OverrideError as e:
+        _log(str(e))
+        return 1
+    for line in overrides:
+        _log(line)
     if config.seed_generated:
         _log(f"run.yaml sets no seed; generated seed {config.seed}")
     # Checked before the debate, so a missing directory can't waste a whole run.
@@ -59,6 +85,68 @@ def main(argv: Sequence[str] | None = None) -> int:
         _log(f"moved the previous transcript to {backup.name}")
     _log(f"wrote {len(transcript.turns)} turns over {len(config.phases)} phases to {config.output}")
     return 0
+
+
+class _OverrideError(Exception):
+    """An override flag that can't be used as given (ADR-021)."""
+
+
+def _overridden(
+    config: RunConfig, args: argparse.Namespace
+) -> tuple[RunConfig, tuple[str, ...]]:
+    """Apply ADR-021's override flags, before anything runs.
+
+    Overriding the *config* rather than the backend call is what keeps ADR-005's
+    snapshot honest: the transcript records the model that actually spoke, never
+    the one the file happened to name.
+    """
+    one_side = {
+        "model": {"pro": args.pro_model, "con": args.con_model},
+        "budget": {"pro": args.pro_budget, "con": args.con_budget},
+    }
+    both = {"model": args.model, "budget": args.budget}
+
+    # ADR-021 §4: no precedence rule, because any would discard something asked for.
+    for setting, shared in both.items():
+        if shared is None:
+            continue
+        clashing = [f"--{s}-{setting}" for s, v in one_side[setting].items() if v is not None]
+        if clashing:
+            raise _OverrideError(
+                f"--{setting} sets both sides and {' and '.join(clashing)} sets one; "
+                f"they conflict (ADR-021 §4). Drop one: --{setting} alone for a symmetric "
+                f"change, or --pro-{setting}/--con-{setting} alone for an asymmetric one"
+            )
+
+    changed: list[str] = []
+    sides: list[Side] = []
+    for side in config.sides:
+        values: dict[str, Any] = {}
+        for setting in ("model", "budget"):
+            picked = one_side[setting][side.side]
+            flag = f"--{side.side}-{setting}" if picked is not None else f"--{setting}"
+            new = picked if picked is not None else both[setting]
+            if new is None:
+                continue
+            _validate_override(setting, new, flag)
+            was = getattr(side, setting)
+            if new == was:
+                continue
+            values[setting] = new
+            changed.append(
+                f"{flag}: side {side.index} ({side.side}) {setting} {was!r} -> {new!r}"
+            )
+        sides.append(replace(side, **values) if values else side)
+
+    return replace(config, sides=(sides[0], sides[1])), tuple(changed)
+
+
+def _validate_override(setting: str, value: Any, flag: str) -> None:
+    """ADR-021 §5: a flag faces the check its file key does, named for the flag."""
+    if setting == "budget" and value < 1:
+        raise _OverrideError(f"{flag} must be an integer of at least 1, got {value}")
+    if setting == "model" and not value.strip():
+        raise _OverrideError(f"{flag} must be a non-empty model name")
 
 
 async def _run(config: RunConfig, events: EventBus) -> Transcript:

@@ -1,51 +1,84 @@
-# A runnable run.yaml for one Ollama server (ADR-018's recommended backend).
+# One debate, end to end. See README.md in this directory for prerequisites,
+# prep setup, and what the errors mean.
 #
-# Deliberately has no `prep` phase: prep needs retrieval pools that already
-# exist on disk, and nothing downloads them, so a prep run would fail on a
-# clean machine. See the README's "Prep" section to enable it.
+#   ollama serve                 # in another terminal, if it isn't running
+#   debate examples/run.yaml     # -> examples/transcript.json
+#   judge  examples/run.yaml     # -> examples/scores.json
 #
-#   ollama serve            # in another terminal, if it isn't already running
-#   debate examples/run.yaml
-#
-# Both sides share one server here, which is fine but serialized: Ollama runs
-# one slot by default (-np 1), so the second request queues. That is a setting
-# rather than a property of the server — see BACKEND-PROBE-RESULTS.md.
+# Paths below resolve from THIS FILE's directory, not from where you run the
+# command. Move this file and the team: paths move with it.
+
+# The motion. `pro` argues for it, `con` against it. Everything the debaters
+# are told about the subject comes from this one line.
 topic: "A federal carbon tax would do more good than harm."
 
 format:
-  # `name:length` sets the response length (ADR-016): short=2, medium=5,
-  # long=10 sentences. No space after the colon.
+  # The debate, in order, and the only thing that decides what runs. There are
+  # no prep:/rounds: switches — to debate more rounds, list more phases.
+  #
+  # Available: prep, opening, rebuttal, retort, conclusion. All but prep may
+  # repeat; prep may appear once and must be first.
+  #
+  # `name:length` sets the target speech length: short=2, medium=5, long=10
+  # sentences, applied to BOTH sides. NO SPACE after the colon — `rebuttal: long`
+  # is a YAML mapping, not the string `rebuttal:long`, and is rejected with a
+  # hint saying exactly that.
+  #
+  # A bare name (no suffix) sends no length instruction at all. That is not a
+  # default of "medium" — it is silence, and the model decides for itself.
   phases: [opening:medium, rebuttal:medium, conclusion:short]
 
+# Exactly two entries. One must be side: pro, the other side: con.
+#
+# `model:` and `budget:` below can be overridden for a single run without
+# editing this file — `debate examples/run.yaml --model phi4-mini:latest`, or
+# `--con-model` for one side. The transcript records what actually ran.
+#
+# The leading "-" is YAML for "list item" — teams: is a list, so each entry
+# starts with one. The `team:` key inside it is the path to that side's
+# identity file.
 teams:
-  - team: teams/advocate.yaml
-    side: pro
-    model: qwen3:8b
+  - team: teams/advocate.yaml      # identity: who is speaking (durable, reusable)
+    side: pro                      # argues FOR the motion above
+    model: qwen3:8b                # Ollama's own name, NOT a Hugging Face repo id
     base_url: http://127.0.0.1:11434/v1
+    # A hard cap, in completion tokens, applied to EVERY non-prep phase. The
+    # orchestrator enforces it; it is not left to the server. Too low and every
+    # speech ends mid-sentence — the log says "hit budget" when that happens.
     budget: 2000
 
   - team: teams/skeptic.yaml
-    side: con
-    model: qwen3:8b
-    base_url: http://127.0.0.1:11434/v1
+    side: con                      # argues AGAINST the motion
+    model: qwen3:8b                # the two sides may differ: different models,
+    base_url: http://127.0.0.1:11434/v1   # different servers, different budgets
     budget: 2000
 
-# Recorded in the transcript. Omit it and one is generated and recorded, never
-# silently guessed.
+# Recorded in the transcript, so a run can be repeated exactly. Omit it and one
+# is generated and recorded — never silently guessed and hidden.
 seed: 42
 
-# Required. `debate` writes here and nowhere else (Hard Rule 7); any file
-# already here is rotated to transcript.json.1.
+# Required, and `debate` writes here and nowhere else. Any file already at this
+# path is rotated to transcript.json.1 rather than overwritten.
 output: transcript.json
 
-# Optional (ADR-020). With this block, `judge examples/run.yaml` needs no flags
-# and finds the transcript at output: above. Flags still override it, so
-# `judge examples/run.yaml --model phi4-mini:latest` swaps the judge alone.
+# Optional. With this block, `judge examples/run.yaml` needs no flags and takes
+# the transcript from output: above. Without it, judge still works the long way:
+#
+#   judge transcript.json --model qwen3:8b \
+#     --base-url http://127.0.0.1:11434/v1 --budget 6000 --output scores.json
+#
 # `debate` validates this block but never acts on it — the two passes stay two.
 judge:
+  # Ideally neither debater, so the judge isn't grading its own writing.
   model: qwen3:8b
   base_url: http://127.0.0.1:11434/v1
+  # Applied to the scoring call, and again to the fact-check call on its own.
+  # Needs more room than a speech does: it reads the whole transcript.
   budget: 6000
-  # Must not be the transcript path above, or the score file would overwrite it.
+  # Must NOT be the transcript path above, or the score file would rotate the
+  # transcript away and write over it. That is a validation error.
   output: scores.json
+  # Audit each claim against what the transcript recorded (never against the
+  # model's own knowledge). Defaults to true; `--no-fact-check` overrides it.
+  # With no prep phase, every claim comes back not_checkable — see README.md.
   fact_check: true
