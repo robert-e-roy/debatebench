@@ -218,10 +218,29 @@ what every unsuffixed run gets.
   The same budget therefore buys a reasoning model far less argument than a
   non-reasoning one, which confounds the very model comparison this tool exists
   to make (see item 9).
+- **Also observed 2026-09-14, `gemma4:12b` through Ollama** — a second model on
+  a second backend, and the failure is worse there. Ollama reports thinking in
+  `reasoning`, the same as `mlx_lm.server`, but returns `content` as `""`
+  rather than null when the budget runs out mid-thought. A judge scoring call
+  at `budget: 6000` came back with an empty answer and 1,563 characters of
+  thinking; the same transcript scored fine at 16,000. Until 2026-09-14 the
+  adapter's all-reasoning-no-answer guard only caught a *missing* content, so
+  the empty string fell through and `judge` reported "the reply holds no JSON
+  object … raise --budget" — advice that would have bought more thinking. The
+  guard now catches both shapes.
+- **Turning thinking off is measured on Ollama, and the field is not the one
+  this list assumed.** `reasoning_effort: "none"` works: the same prompt went
+  from 99 completion tokens with 318 characters of thinking to **6 tokens and
+  zero thinking**, same answer. `chat_template_kwargs: {"enable_thinking":
+  false}` — the form that works on `mlx_lm.server` — is **ignored** by Ollama,
+  and so is `think: false`. So the switch is per-backend, not one field.
 - **Options:**
-  - a per-team switch that turns thinking off, which means passing
-    `chat_template_kwargs` through a request shape that has no room for it
-    (ADR-009);
+  - a per-team switch that turns thinking off. The blocker is not that the
+    field is exotic — `reasoning_effort` is a standard OpenAI parameter — but
+    that `GenerationRequest` (ADR-009) has no field for it *and* the right
+    field differs by backend (`reasoning_effort` on Ollama,
+    `chat_template_kwargs` on `mlx_lm.server`), so the seam has to carry
+    something backend-shaped or the adapter has to translate;
   - count only answer tokens against `budget`, with a separate reasoning
     allowance — which is what Hard Rule 5's "(token/reasoning)" anticipates;
   - leave it to whoever writes the `run.yaml` to set larger budgets for reasoning

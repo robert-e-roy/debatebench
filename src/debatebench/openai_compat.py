@@ -100,14 +100,22 @@ def _parse(payload: Any, latency_ms: int, url: str) -> GenerationResult:
     choice = choices[0]
     message = choice.get("message")
     text = message.get("content") if isinstance(message, dict) else None
+    reasoning = message.get("reasoning") if isinstance(message, dict) else None
+    # A reasoning model can spend a whole budget thinking and never answer. Both
+    # mlx_lm.server (B3) and Ollama report the thinking separately, as `reasoning` —
+    # but Ollama returns content as "" rather than null when the budget runs out
+    # mid-thought (measured 2026-09-14, gemma4:12b), so an empty string has to be
+    # caught here too. It used to fall through, and the caller was told only that the
+    # reply was empty, or — in judge — to raise a budget that more thinking would eat.
+    if isinstance(reasoning, str) and reasoning.strip() and not (isinstance(text, str) and text.strip()):
+        raise BackendError(
+            f"{url}: the reply is all reasoning and no answer — {len(reasoning)} characters of "
+            "thinking and nothing in content, so the budget ran out before the model started "
+            "answering. Raising the budget only helps if it clears the whole thinking length; "
+            "turning thinking off is the surer fix (Ollama honours reasoning_effort: none, "
+            "measured — chat_template_kwargs and think:false do not)."
+        )
     if not isinstance(text, str):
-        # A reasoning model can spend a whole budget thinking and never answer.
-        # mlx_lm.server reports the thinking separately, as `reasoning`.
-        if isinstance(message, dict) and message.get("reasoning"):
-            raise BackendError(
-                f"{url}: the reply is all reasoning and no answer — the budget was spent "
-                "thinking. Raise the budget, or turn the model's thinking off."
-            )
         raise malformed("choices[0].message.content is not a string")
     finish_reason = choice.get("finish_reason")
     if not isinstance(finish_reason, str):

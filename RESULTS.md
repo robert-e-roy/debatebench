@@ -160,6 +160,12 @@ server was killed and memory recovered within a second.
   question B0 actually asked, whether it co-resides with a second model under
   normal workload.
 
+  **What it has actually done, later the same day:** run a full four-phase,
+  eight-turn debate on both sides at `budget: 2000`, and score that transcript
+  as judge at `budget: 16000`. It is a reasoning model, and 6,000 was not
+  enough for the scoring call — see OPEN-QUESTIONS 13. Still no memory or
+  throughput figure.
+
 ## What a follow-up run would add
 
 - **The same probe with heavy apps closed**, keeping the same cut-offs. That

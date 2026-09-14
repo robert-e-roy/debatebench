@@ -116,6 +116,13 @@ FAILURES = [
         "choices": [{"message": {"role": "assistant", "reasoning": "Let me think…"}, "finish_reason": "length"}],
         "usage": {"prompt_tokens": 10, "completion_tokens": 32}}),
      "all reasoning and no answer"),
+    # Ollama's shape for the same failure: content is "" rather than absent, which
+    # used to slip past the check above (measured 2026-09-14, gemma4:12b).
+    ("reasoning with empty content", lambda r: httpx.Response(200, json={
+        "choices": [{"message": {"role": "assistant", "content": "", "reasoning": "Still thinking…"},
+                     "finish_reason": "length"}],
+        "usage": {"prompt_tokens": 10, "completion_tokens": 6000}}),
+     "all reasoning and no answer"),
     ("not JSON", lambda r: httpx.Response(200, text="<html>"), "reply is not JSON"),
     # AFM's context overflow, as ADR-003 measured it: HTTP 500 with the reason only in the message.
     ("context overflow", lambda r: httpx.Response(500, json={"error": {
