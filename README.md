@@ -26,12 +26,18 @@ follow the link above.
 
 ## Status
 
-Working and used, but pre-1.0 and not yet published to an index. Install from a
-checkout:
+Pre-1.0. Published to **TestPyPI** only — not to the real PyPI:
 
 ```bash
-pip install .
+pip install --index-url https://test.pypi.org/simple/ \
+            --extra-index-url https://pypi.org/simple/ \
+            debatebench
 ```
+
+The second index is not optional: TestPyPI does not mirror `httpx` or PyYAML,
+so without it the dependencies fail to resolve.
+
+Or from a checkout: `pip install .`
 
 Built and gated so far: config and validation, the backend seam, the phase loop,
 transcript writing, prep retrieval, judge scoring, and the fact-check pass.
@@ -48,17 +54,42 @@ ollama pull qwen3:8b
 ollama serve                      # if it isn't already running
 ```
 
-Then:
+Then save this as `run.yaml`, alongside a `teams/` directory holding the two
+team files shown under [Team files](#team-files):
+
+```yaml
+topic: "A federal carbon tax would do more good than harm."
+format:
+  phases: [opening:medium, rebuttal:medium, conclusion:short]
+teams:
+  - team: teams/advocate.yaml
+    side: pro
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+  - team: teams/skeptic.yaml
+    side: con
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+seed: 42
+output: transcript.json
+```
 
 ```bash
-debate examples/run.yaml
+debate run.yaml
 
-judge examples/transcript.json \
+judge transcript.json \
   --model qwen3:8b \
   --base-url http://127.0.0.1:11434/v1 \
   --budget 6000 \
-  --output examples/scores.json
+  --output scores.json
 ```
+
+> **Where `examples/` lives.** The wheel installs the package only, so a
+> `pip install` gives you no `examples/` directory — paste the config above
+> instead. The ready-made `examples/run.yaml` and its team files are in the
+> source tree and in the sdist, not in the wheel.
 
 `debate` takes exactly one argument — the path to a `run.yaml` — and no flags.
 Every setting, including where the transcript goes, lives in that file. `judge`
@@ -114,7 +145,10 @@ what it expected.
 
 ### Team files
 
-Durable identity, referenced by path from `run.yaml`:
+Durable identity, referenced by path from `run.yaml`. The Quickstart's
+`run.yaml` points at two of them, so create both.
+
+`teams/advocate.yaml`:
 
 ```yaml
 id: carbon-tax-advocate
@@ -122,8 +156,22 @@ name: "Climate Policy Advocate"
 voice: "direct, urgency-driven, cites institutional consensus"
 stance: progressive
 values: [collective-action, precaution, equity]
-corpus: my-corpus.jsonl      # optional, see Prep
 ```
+
+`teams/skeptic.yaml`:
+
+```yaml
+id: free-market-skeptic
+name: "Free-Market Conservative"
+voice: "measured, cost-focused, cites economic evidence"
+stance: conservative
+values: [limited-government, cost-benefit, individual-liberty]
+```
+
+One optional key is omitted above because the Quickstart does not use it:
+`corpus: my-corpus.jsonl` points a team at its own private retrieval pool, and
+only matters when `prep` is in `phases` — see [Prep](#prep). Naming a corpus
+file that does not exist will fail the run.
 
 A team file never carries `model` or `budget`. Those are properties of a run,
 not of a persona, and putting them here is rejected.

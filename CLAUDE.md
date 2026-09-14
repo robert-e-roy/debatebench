@@ -98,9 +98,24 @@ code. See ADR-002 for full scope.
   empty elsewhere, and a side citing its own passage by name in its opening.
   The README carries the ordering-passes/calibration-fails distinction and
   flags B6's gap **at the `--fact-check` flag itself**, since that flag is on
-  by default. **Nothing is published**: the name is kept by decision (open
-  question 5), and `debatebench` was still unclaimed on both PyPI and TestPyPI
-  on 2026-09-14.
+  by default. **Published to TestPyPI on 2026-09-14**, version `0.1.0.dev0`
+  (wheel + sdist): <https://test.pypi.org/project/debatebench/>. Verified by
+  installing *from the index* into a fresh venv — `pip install debatebench`
+  with `--index-url` pointing at TestPyPI and `--extra-index-url` at real PyPI,
+  since TestPyPI does not mirror `httpx` or PyYAML — and then running a full
+  debate and judge from that install, which is the gate clause that could not
+  be tested until the package was on an index. **It reproduced the source-tree
+  run's output exactly** (pro 100/100, con 91/100, winner `pro` on total, 15
+  claims): same seed, same config, same scores across a packaging boundary,
+  which is the first end-to-end determinism evidence this project has that
+  spans build and publish rather than just two local runs. **Not published to real
+  PyPI**, where the name was still unclaimed (404) on 2026-09-14; that step
+  needs its own decision. The sdist deliberately ships the whole internal
+  record — every ADR, this file, `BUILD-GUIDE`, `OPEN-QUESTIONS`,
+  `JUDGE-VALIDATION`, both probe write-ups — decided knowingly, on the grounds
+  that the ADRs *are* the spec. It was scanned for personal data first: no home
+  paths, no hostname, no private addresses; the only email is the package
+  author field.
 - `OPEN-QUESTIONS.md` — every undecided design question, with the build session
   each one blocks. Check it before starting a session, and don't pick a default
   for anything listed there.

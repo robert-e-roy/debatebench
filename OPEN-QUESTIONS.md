@@ -68,8 +68,12 @@ already settled in ADR-013 §4.
   README.** The two are different kinds of thing — that one is a benchmark
   *dataset* of British Parliamentary transcripts with official adjudication
   scores; this is a *tool* that generates and scores debates — so the collision
-  is of names, not of function. The PyPI name was re-checked and is **still
-  unclaimed: 404 on both PyPI and TestPyPI on 2026-09-14**. The README opens
+  is of names, not of function. The name was re-checked and was unclaimed on
+  both indexes on 2026-09-14; **`debatebench` 0.1.0.dev0 was then published to
+  TestPyPI that same day** (<https://test.pypi.org/project/debatebench/>), so
+  the name is now taken there. **Real PyPI is still unclaimed (404) and
+  publishing there is a separate decision**, not implied by this one. The
+  README opens
   with a "Not the DebateBench benchmark" section linking the arXiv paper, so
   anyone arriving for the benchmark is redirected in one line.
 - **Accepted cost, knowingly:** searching the name finds two projects. That was
