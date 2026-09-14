@@ -15,7 +15,7 @@ from collections.abc import Sequence
 
 from .backend import BackendError
 from .config import ConfigError, RunConfig, load_run
-from .events import DebateEvent, EventBus, EventType
+from .events import DebateEvent, EventBus, EventType, Listener
 from .openai_compat import OpenAICompatibleBackend, open_client
 from .orchestrator import DebateError, Transcript, run_debate
 from .transcript import write_transcript
@@ -43,7 +43,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
 
     events = EventBus()
-    events.subscribe(log_event)
+    events.subscribe(make_log_event(tuple(side.side for side in config.sides)))
     try:
         transcript = asyncio.run(_run(config, events))
     except (DebateError, BackendError) as e:
@@ -67,21 +67,31 @@ async def _run(config: RunConfig, events: EventBus) -> Transcript:
         return await run_debate(config, backends, events)
 
 
-def log_event(event: DebateEvent) -> None:
-    """The CLI's own view of a run, through the same seam a dashboard would use."""
-    if event.type is EventType.PHASE_STARTED:
-        _log(f"phase {event.phase_index}: {event.phase}")
-    elif event.type is EventType.TURN_COMPLETED and event.turn is not None:
-        turn = event.turn
-        # B2 only reports a reply that reached its budget; ADR-010 keeps it a valid turn.
-        capped = " (hit budget)" if turn.hit_budget else ""
-        _log(
-            f"  side {turn.side_index}, spoke {'first' if turn.order == 0 else 'second'}: "
-            f"{turn.usage.completion_tokens} of {turn.budget} completion tokens{capped}, "
-            f"{turn.usage.prompt_tokens} prompt tokens, {turn.latency_ms} ms"
-        )
-        for line in turn.text.strip().splitlines():
-            _log(f"    | {line}")
+def make_log_event(labels: tuple[str, ...]) -> Listener:
+    """The CLI's own view of a run, through the same seam a dashboard would use.
+
+    ``labels`` is each side's ``pro``/``con`` from run.yaml (ADR-007 §7). A bare
+    index makes the reader hold the mapping in their head for the whole run, so a
+    turn names its side the way ``judge`` already does: ``side 0 (pro)``.
+    """
+
+    def log_event(event: DebateEvent) -> None:
+        if event.type is EventType.PHASE_STARTED:
+            _log(f"phase {event.phase_index}: {event.phase}")
+        elif event.type is EventType.TURN_COMPLETED and event.turn is not None:
+            turn = event.turn
+            # B2 only reports a reply that reached its budget; ADR-010 keeps it a valid turn.
+            capped = " (hit budget)" if turn.hit_budget else ""
+            _log(
+                f"  side {turn.side_index} ({labels[turn.side_index]}), "
+                f"spoke {'first' if turn.order == 0 else 'second'}: "
+                f"{turn.usage.completion_tokens} of {turn.budget} completion tokens{capped}, "
+                f"{turn.usage.prompt_tokens} prompt tokens, {turn.latency_ms} ms"
+            )
+            for line in turn.text.strip().splitlines():
+                _log(f"    | {line}")
+
+    return log_event
 
 
 def _log(message: str) -> None:

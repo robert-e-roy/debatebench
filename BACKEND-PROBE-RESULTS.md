@@ -246,6 +246,38 @@ against B0's 4.8 GiB. **None of them runs two requests in parallel** — the
 difference is only whether the second is queued or refused, and `vllm-mlx` is
 the one that refuses.
 
+**Amended 2026-09-14: for Ollama that sentence describes a setting, not the
+server.** Ollama's row was measured against whatever slot count it chose for
+itself, and it was never asked what that count was. It is `-np 1`: the app's
+`llama-server` is launched with a single slot, and `OLLAMA_NUM_PARALLEL` was
+unset. So "Ollama does not run two requests in parallel" is true of the machine
+as configured and says nothing about Ollama.
+
+Re-measured on the app server, `phi4-mini`, 120 completion tokens per call,
+one warm-up call discarded: two single calls at 2.24 s and 2.22 s, two
+simultaneous calls finishing at 2.22 s and 4.44 s for a 4.44 s wall —
+**1.99×, serialized**, with 120 tokens returned by every call. The original row
+reproduces exactly, and now names its cause.
+
+**What raising the slot count does is still unmeasured, and is recorded here as
+unmeasured.** Launching a second `ollama serve` with `OLLAMA_NUM_PARALLEL=4`
+does reach `llama-server` — its argv carries `-np 4` against the app's `-np 1`,
+so the setting takes effect. But that server answered every generation with
+`"model": ""`, `"content": ""`, `created: -62135596800` and zero tokens: its
+blob store is incomplete (`failed to refresh model list cache … no such file or
+directory`). A ratio computed from those replies came out at 1.08× and would
+have been published as "parallel". **It is two empty responses racing, which is
+the same mistake as the `vllm-mlx` 503 below** — a fast answer that was never
+a generation. No parallel-throughput number is claimed here.
+
+Testing it properly means `OLLAMA_NUM_PARALLEL=4` on the *app's* server, which
+is a restart of the app, and a model whose weights are actually present. Until
+that is run, treat the serialization as a property of this machine's default
+and not a reason to prefer or reject Ollama. ADR-018 chose Ollama partly
+because it queues a second request where `vllm-mlx` refuses one; that
+comparison is unaffected, since it is about what happens when the slots are
+full either way.
+
 **B1 is reported as not comparable, deliberately.** Launch to first
 `/v1/models` answer was 5 s, and the first *generation* 1.1 s — but that means
 the weights were already in the OS file cache after a day of loading them, not
@@ -371,7 +403,33 @@ memory was 12–13% at the end of this session with `vllm-mlx` still holding
    a fact-check audits *facts* beats the instruction. Two prompt attempts have
    not shifted it. That is a classification problem, not a format one, and it
    is the only thing between B6 and its gate.
-6. **`vllm-mlx` leaves thinking inside `content`, even with
+6. **A5 never tested the request this tool actually sends, and the gap is now
+   closed.** The row reads "seed 42 **+ temperature 0**, twice → identical" —
+   but `GenerationRequest` (ADR-009) carries only `messages`,
+   `max_completion_tokens` and `seed`. **`debatebench` never sends
+   `temperature` at all**, so A5 measured a shape the adapter does not produce,
+   and "seeded runs are reproducible" was an inference rather than a
+   measurement.
+
+   **Measured directly on Ollama 0.34.0 / `qwen3:8b`, 2026-09-14:** two
+   identical seeded calls with **no** `temperature` field returned
+   byte-identical text (sha `7f08cbca…`, 472 chars, twice). The control, seed
+   plus `temperature: 0`, was also self-identical (sha `88468b7a…`, 571 chars,
+   twice) and — as expected — differs from the no-temperature output, since the
+   sampling parameter differs. **Seed alone pins output here**; no
+   `temperature` field is needed for reproducibility on this backend.
+
+   This closes a question that came up while chasing B6's gate, where an audit
+   returning 11, 18 and 20 claims from identical input looked like unpinned
+   sampling. It was not: three consecutive audits later reproduced each other
+   exactly. Worth noting how the measurement nearly went wrong too — the first
+   call in each group returned empty because it was **queued behind a
+   concurrent judge run and timed out waiting**. That is Part B's B6 result
+   ("none of them runs two requests in parallel"; Ollama queues rather than
+   refusing) biting the instrument rather than the subject. Run one thing at a
+   time against one server, or both the timing and the payload are suspect.
+
+7. **`vllm-mlx` leaves thinking inside `content`, even with
    `--reasoning-parser qwen3`.** The reply carries only a `content` key — no
    `reasoning` or `reasoning_content` — and it opens with `<think>`.
    `mlx_lm.server` separates it into its own field (OPEN-QUESTIONS 13). Two
