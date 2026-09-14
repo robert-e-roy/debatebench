@@ -268,7 +268,7 @@ recorded to check against — and a prep-less transcript degrades to all
 `not_checkable` by design (ADR-015 §2), so those runs never tested this gate
 at all.
 
-The remaining gap is the cross-side check, **and it is not a wiring fault.**
+The gap was the cross-side check, **and it was not a wiring fault.**
 The 2026-09-14 run had a contradiction available — `am-3` (pro: recycling
 "turns a regressive tax into a progressive transfer") against `am-4` (con:
 regressive "before any rebate arrives … reimbursed last") — and claim 14,
@@ -279,6 +279,40 @@ transcript plus every evidence id from both sides, `render()` attributes each
 passage to the side that retrieved it, and the prompt says verbatim "read
 every listed passage from BOTH sides … catching that is the point of this
 audit".
+
+**What it actually was: a definition, not a delivery problem.** ADR-015 §2
+defined `supported` and `contradicted` by the same test and gave no
+precedence, so where both sides retrieved passages on one point — which on a
+contested motion is most points — `supported` was always a defensible
+answer and the gate was structurally unreachable. **ADR-019** makes a
+contradiction outrank a backing passage and narrows `supported` to
+"uncontested".
+
+**Status 2026-09-14 (later) — clause (2) met and reproducible; clause (3) is
+now the only gap.** First B6 runs to leave artifacts, in `probe/b6/`: seven
+runs, one saved prep transcript, same seed, `--budget 6000`, `qwen3:8b` on
+Ollama. Six return an identical ledger — 20 claims, 15 `supported`, 3
+`contradicted`, 2 `unsupported`, hashing the same once `judged_at` is
+stripped — with all three contradictions **cross-side**, including the con's
+own `am-4` claim contradicted by the pro's `am-3`. The seventh is run 1,
+which returned 11 claims and cited the speaker's own `am-4` as `supported`;
+it looks like a pre-ADR-019 control but is not one — `judging.py` was saved
+at 10:41:06 and that run started at 10:41:54. It was the first judge call
+after the model loaded, and is recorded as a cold-server sample.
+
+Clause (3) never fires: zero `not_checkable` across all seven. **The opinions
+are listed**, so ADR-015's "Filter nothing out" instruction is working; they
+land one verdict over, in `unsupported` — the value judgement "the CON's
+focus on leakage overlooks climate urgency" and the prediction "rural
+renewable energy investment can offset fossil fuel reliance". The prompt
+separates the two verdicts by a question it never tells the model to ask
+first: is this a factual claim at all? That is the next thing to test, and it
+is testable by wording.
+
+**Withdrawn:** the claim that ADR-019 "traded clause (3) for clause (2)". The
+run that produced a `not_checkable` used a different transcript and its score
+file was not saved, so there is no before/after on one input and no trade was
+measured.
 
 One further observation from the same ledger, unresolved: claim 10 attributes
 the PRO's Brindlewick claim to the **CON**, because the CON restated it in

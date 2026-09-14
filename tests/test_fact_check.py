@@ -114,6 +114,21 @@ def test_the_prompt_lists_the_ids_it_may_cite(run_dir: Path, prepared_sources):
     assert "Never treat your own knowledge as proof" in system
 
 
+def test_the_prompt_states_that_contradiction_wins(run_dir: Path, prepared_sources):
+    # ADR-019 §1. This asserts what we *send*, never what a model returns: §3 of
+    # that ADR is explicit that precedence cannot be enforced in code, since
+    # deciding whether a passage backs or refutes a claim is entailment and
+    # ADR-008 fixes the runtime at httpx + PyYAML. What is testable is that the
+    # instruction is still in the prompt, so it can't be dropped by accident.
+    _, transcript, _ = prep_debate(run_dir)
+    system = build_fact_check_request(transcript, 4000).messages[0].content
+
+    assert "CONTRADICTION WINS" in system
+    assert "even when another passage backs it" in system
+    # supported must carry its narrowed meaning, or the rule is only half stated.
+    assert "no recorded passage" in system and "contradicts it" in system
+
+
 # --- a transcript with nothing recorded (ADR-015 §2) -------------------------
 
 

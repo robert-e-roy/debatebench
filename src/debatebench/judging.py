@@ -498,13 +498,21 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
         "knowledge as proof that a claim is true or false; use it only to tell a "
         "factual claim from an opinion.",
         "",
-        "Before settling on unsupported, read every listed passage from BOTH sides. A "
+        "Before settling on any verdict, read every listed passage from BOTH sides. A "
         "claim one side makes is often contradicted by a passage the other side "
         "retrieved, and catching that is the point of this audit.",
         "",
-        "- supported: a recorded passage backs the claim. Cite its id.",
+        "CONTRADICTION WINS (ADR-019). If any passage contradicts the claim, the "
+        "verdict is contradicted — even when another passage backs it, and even when "
+        "the backing passage is the speaker's own. A claim is only supported when "
+        "nothing in the record contradicts it. On a contested motion both sides "
+        "usually retrieved passages on the same point, so check for a contradicting "
+        "one before you answer supported.",
+        "",
+        "- supported: a recorded passage backs the claim AND no recorded passage "
+        "contradicts it. Cite the backing id.",
         "- contradicted: a recorded passage contradicts it, including one the "
-        "opponent retrieved. Cite its id.",
+        "opponent retrieved. Cite the contradicting id, not the backing one.",
         "- unsupported: it is a factual claim, but nothing recorded bears on it "
         "either way. Cite nothing.",
         "- not_checkable: an opinion, a prediction or a value judgement rather than a "

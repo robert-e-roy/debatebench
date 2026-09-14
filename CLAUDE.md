@@ -27,8 +27,10 @@ code. See ADR-002 for full scope.
   `ADR-016` (per-phase length as a `name:length` suffix; supersedes ADR-011's
   per-team field), `ADR-017` (judge CLI details: `--base-url` required, the
   hit-ledger vocabulary, reading the model's reply), `ADR-018` (Ollama for
-  real-model runs; send both budget fields, superseding ADR-003 rule 2) —
-  accepted; together they are the spec.
+  real-model runs; send both budget fields, superseding ADR-003 rule 2),
+  `ADR-019` (in the fact-check, a contradiction outranks a backing passage;
+  `supported` narrows to "uncontested" — a prompt rule with no code
+  enforcement) — accepted; together they are the spec.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
@@ -65,15 +67,30 @@ code. See ADR-002 for full scope.
   opinion and classified it correctly on the first attempt. The variable was
   never the prompt's firmness — it was whether anything had been recorded to
   check against, and a prep-less transcript degrades to all `not_checkable` by
-  design (ADR-015 §2), so those runs never tested the gate at all. What remains
-  is the cross-side check, **and it is not a wiring fault**: the run had a
-  contradiction available (`am-3` against `am-4`) and claim 14 was exactly its
-  shape, yet `build_fact_check_request` sends the whole transcript plus every
-  evidence id from both sides, `render()` attributes each passage to the side
-  that retrieved it, and the prompt says verbatim "read every listed passage
-  from BOTH sides". The malformed-JSON problem that *did* vary was fixed
-  separately by having the audit cite a turn number instead of transcribing
-  coordinates. See `BUILD-GUIDE.md` B6 for the full ledger. **Open question 6 is answered for
+  design (ADR-015 §2), so those runs never tested the gate at all. The cross-side check was
+  **not a wiring fault** — the run had a contradiction available (`am-3`
+  against `am-4`), `build_fact_check_request` sends the whole transcript plus
+  every evidence id from both sides, and the prompt says verbatim "read every
+  listed passage from BOTH sides". The cause was a definition: ADR-015 §2 gave
+  `supported` and `contradicted` the same test with no precedence, so on a
+  two-sided corpus `supported` was always defensible. **ADR-019 fixes that and
+  clause (2) now fires reproducibly** (2026-09-14, artifacts in `probe/b6/`):
+  six consecutive runs on one saved prep transcript return 20 claims — 15
+  `supported`, 3 `contradicted`, 2 `unsupported` — with ledgers that hash
+  identically once `judged_at` is removed, and all three contradictions
+  cross-side, including the con's own `am-4` claim contradicted by the pro's
+  `am-3`. **Clause (3) is now the only one missing.** Zero `not_checkable` in
+  any run, but the opinions *are* listed, so it is not a filtering failure: a
+  value judgement ("the CON's focus on leakage overlooks climate urgency") and
+  a prediction are each landing in `unsupported`, one verdict over. The prompt
+  splits those two by a question — is this a factual claim at all? — that it
+  never tells the model to ask first. **An earlier claim here that ADR-019
+  "traded clause (3) for clause (2)" is withdrawn**: the run that produced a
+  `not_checkable` used a different transcript and its score file was not
+  saved, so no before/after on one input exists and no trade was measured.
+  The malformed-JSON problem that *did* vary was fixed separately by having
+  the audit cite a turn number instead of transcribing coordinates. See
+  `BUILD-GUIDE.md` B6 and `probe/b6/README.md` for the full ledger. **Open question 6 is answered for
   `qwen3:8b`** (2026-09-14, `JUDGE-VALIDATION.md`): over the full 631 speeches
   of the paper's own dataset it scored **Tau-C +0.547** against the human mean —
   135% of the measured 0.405 human ceiling, clearing the ≥0.38 threshold fixed
