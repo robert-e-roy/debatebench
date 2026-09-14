@@ -84,16 +84,21 @@ already settled in ADR-013 §4.
     human ratings (`debate_speeches`, excluding its 81 control speeches;
     Rank-30k);
   - or fold that into B5's exit gate.
-- **Subset run complete 2026-09-13 — see `JUDGE-VALIDATION.md`.** `qwen3:8b`
-  scored **Tau-C +0.513** against the human mean over a 117-speech stratified
-  subset (117/117 parsed, no failures), clearing the ≥0.38 threshold that was
-  fixed before any judge ran, and sitting at 127% of the measured human ceiling
-  of 0.405. **But only its *ordering* passes.** It scores human-written speeches
-  almost exactly as humans do (−0.06) and machine-generated ones one to two
-  points low (Speech-GPT2 −1.94), and Tau-C is blind to that because it measures
-  rank alone. So an absolute `argument_quality` score from this judge is not
-  trustworthy, while *comparing* two sides' scores — which is what ADR-013 §3
-  actually does to pick a winner — is supported. The full 631 has not been run.
+- **ANSWERED 2026-09-14 for `qwen3:8b`, on the full 631 — see
+  `JUDGE-VALIDATION.md`.** Tau-C **+0.547** against the human mean (631/631
+  parsed, zero failures), clearing the ≥0.38 threshold fixed before any judge
+  ran and sitting at 135% of the measured 0.405 human ceiling. The 117-speech
+  subset corroborates at +0.513.
+- **But only its *ordering* passes, and that bounds what may be claimed.** All
+  three human-authored sources land within 0.18 of human ratings; every
+  machine-generated source is 0.95–1.52 low. Tau-C measures rank alone and is
+  blind to that. So *comparing* two sides' scores is supported — which is what
+  ADR-013 §3 does to pick a winner — while an absolute `argument_quality` number
+  is not, and `debatebench` judges machine-generated turns, which is exactly
+  where calibration is worst.
+- **Still unvalidated, and B7's README must say so:** the winner logic itself,
+  the steelman tiebreak, `rebuttal_effectiveness`, and the fact-check pass.
+  Other candidate judges are unmeasured; only `qwen3:8b` has been run.
 - **Method established from the paper first, per ADR-002.**
   The paper ADR-002 told us to read first (*Debatable Intelligence*, arXiv
   2506.05062) settles the statistic (Kendall's Tau-C against the per-speech mean

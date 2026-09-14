@@ -1,11 +1,69 @@
 # Judge Validation — method, data, and the decisions it still needs
 
-**Status:** subset run complete 2026-09-13. **`qwen3:8b` clears the threshold on
-ordering, and fails badly on calibration.** Full 631 not yet run. This is
-OPEN-QUESTIONS item 6, which blocks B7 and blocks trusting any score from B5
-onward.
+**Status:** **complete 2026-09-14, full 631 speeches.** `qwen3:8b` clears the
+threshold on *ordering* and fails on *calibration*. This is OPEN-QUESTIONS item
+6, which blocks B7 and blocks trusting any score from B5 onward.
 
-## Result — stratified subset, 117 speeches, `qwen3:8b` via Ollama
+## Result — full dataset, 631 speeches, `qwen3:8b` via Ollama
+
+**631/631 scored. Zero parse failures, zero errors.** 3 h 27 m.
+
+| aggregator | Tau-C | human ceiling | |
+|---|---|---|---|
+| raw mean | **+0.547** | 0.405 | 135% of ceiling — **CREDIBLE** |
+| rounded mean | **+0.401** | 0.316 | 127% of ceiling |
+
+Both clear the ≥0.38 threshold fixed before any judge ran.
+
+**The subset corroborates rather than being revised.** It gave +0.513 / +0.376
+on 117 speeches; the full set gives +0.547 / +0.401. A material disagreement
+would have been grounds to distrust one of the two runs, not to prefer the
+better number.
+
+**Calibration is where it fails, and at full n the split is sharper than the
+subset showed.** Mean judge 2.85 against human 3.61, a −0.76 bias that lands
+almost entirely on machine-generated speeches:
+
+| source | n | judge | human | diff |
+|---|---|---|---|---|
+| Arg-Human1 | 23 | 3.78 | 3.79 | **−0.01** |
+| Human expert | 152 | 4.10 | 4.19 | **−0.10** |
+| Arg-Human2 | 76 | 3.49 | 3.67 | **−0.18** |
+| Arg-Search | 76 | 2.17 | 3.12 | −0.95 |
+| Project Debater | 76 | 3.05 | 4.03 | −0.98 |
+| Summit | 76 | 1.93 | 2.96 | −1.03 |
+| Arg-GPT2 | 76 | 1.95 | 3.40 | −1.46 |
+| Speech-GPT2 | 76 | 1.70 | 3.22 | −1.52 |
+
+**All three human-authored sources fall within 0.18 of human ratings; every
+machine-generated source is 0.95 to 1.52 low.** The judge agrees with humans
+about human writing and is far harsher than humans about machine writing.
+
+This also vindicates marking the subset's `Arg-Human1` cell unquotable: at n=4
+it read **+0.35**, and at n=23 it is **−0.01**. The direction flipped, and had
+it been quoted it would have muddied the very split the full run makes clean.
+
+**Tau-C measures ordering only, so it is blind to all of the above.** It rewards
+exactly what this judge does well.
+
+### What this licenses, and what it does not
+
+- **Supported:** comparing two sides' scores against each other, which is what
+  ADR-013 §3 does to pick a winner. Rank is what was validated.
+- **Not supported:** reading an absolute `argument_quality` number as a quality
+  measure, or comparing scores across debates — the bias depends on what is
+  being judged.
+- **Untouched:** the winner logic itself, the steelman tiebreak,
+  `rebuttal_effectiveness`, and the fact-check pass. B7's README must say so
+  rather than claim "the judge was validated".
+
+**A caveat that matters for this tool specifically.** `debatebench` judges
+*machine-generated* debate turns, and machine-generated speech is precisely
+where this judge is least calibrated. Ordering still holds, which is what the
+winner depends on — but nobody should read a 17/30 from it as "this argument was
+mediocre".
+
+## Corroborating run — stratified subset, 117 speeches
 
 117/117 scored, **zero parse failures, zero errors**, 36.5 minutes.
 
