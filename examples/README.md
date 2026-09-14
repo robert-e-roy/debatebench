@@ -186,6 +186,8 @@ in a note rather than pretending.
 | `connection refused` | The server named in `base_url` isn't running. |
 | `model … not found` | For Ollama, `model:` is Ollama's own name (`qwen3:8b`), not a Hugging Face repo id. Check `ollama list`. |
 | `hit budget` on every turn | `budget:` is a hard completion-token cap. Speeches are being cut mid-sentence; raise it. |
+| `asks for length 'huge'` | A `:length` suffix is `short`, `medium` or `long` only. Omit it and you get `medium`. |
+| `Remove the space after the colon` | `rebuttal: long` is a YAML mapping. The schema wants the string `rebuttal:long`. |
 | `judge.output and output are the same file` | The score file would overwrite the transcript. Give it its own path. |
 | `has no judge: block` | You ran `judge` against a `run.yaml` without one. Add it, or name a transcript and pass the four flags. |
 

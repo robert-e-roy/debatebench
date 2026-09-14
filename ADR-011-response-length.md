@@ -49,9 +49,16 @@ finishing is visible in the transcript regardless of why.
 
 ### 4. Optional, with today's behavior as the fallback
 
-If `length` is omitted, no length instruction is added to the prompt —
-exactly the behavior item 12 already described as the current default
-(budget-only cap, no stated target).
+**Superseded by ADR-022** (2026-09-14): an omitted length now means `medium`,
+not "no instruction". The argument below — that the fallback should be
+pre-length behaviour so adding the feature changed nothing — held only while
+length was the new thing beside an existing default. It is now the mechanism,
+and "no instruction" had become a fourth state hiding in the absence of a
+value. Kept for the record:
+
+> If `length` is omitted, no length instruction is added to the prompt —
+> exactly the behavior item 12 already described as the current default
+> (budget-only cap, no stated target).
 
 ### 5. No time-based option
 

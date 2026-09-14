@@ -22,6 +22,7 @@ from .yaml_loader import load_yaml
 PHASES = ("prep", "opening", "rebuttal", "retort", "conclusion")
 MOTION_SIDES = ("pro", "con")  # for and against the motion (ADR-007 §7)
 LENGTHS = ("short", "medium", "long")  # a phase entry's :suffix (ADR-016 §1)
+DEFAULT_LENGTH = "medium"  # what a bare non-prep entry asks for (ADR-022 §1)
 
 _RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output", "judge"}
 _FORMAT_KEYS = {"phases"}
@@ -97,7 +98,9 @@ class RunConfig:
     path: Path
     topic: str
     phases: tuple[str, ...]  # bare names; a transcript records these (ADR-016 §6)
-    lengths: tuple[str | None, ...]  # each phase's :suffix, or None (ADR-016 §1)
+    # Each phase's length: its :suffix, or medium where none was written (ADR-022 §1).
+    # None only for prep, which takes no length at all (ADR-016 §4).
+    lengths: tuple[str | None, ...]
     sides: tuple[Side, Side]
     sources: tuple[str, ...]  # as written; resolving them is B4's (ADR-007 §6)
     seed: int
@@ -244,7 +247,11 @@ def _opt_bool(path: Path, data: dict[str, Any], key: str, where: str, *, default
 
 
 def _phases(path: Path, data: dict[str, Any]) -> tuple[tuple[str, ...], tuple[str | None, ...]]:
-    """The phase list as bare names, plus each entry's length suffix (ADR-016 §5)."""
+    """The phase list as bare names, plus each entry's resolved length (ADR-016 §5).
+
+    Resolved, not as typed: a bare entry comes back as ``medium`` (ADR-022 §3),
+    so nothing downstream has to know a default exists.
+    """
     if "format" not in data:
         raise _fail(path, "format is required (it holds format.phases)")
     fmt = data["format"]
@@ -298,7 +305,9 @@ def _phases(path: Path, data: dict[str, Any]) -> tuple[tuple[str, ...], tuple[st
                 "(ADR-016 §4)",
             )
         names.append(name)
-        lengths.append(length if colon else None)
+        # ADR-022 §1: a bare entry asks for medium — except prep, which ADR-016 §4
+        # keeps lengthless, so it resolves to None and its turn records none.
+        lengths.append(length if colon else (None if name == "prep" else DEFAULT_LENGTH))
 
     if names.count("prep") > 1:
         raise _fail(path, "format.phases: 'prep' can appear only once")

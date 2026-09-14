@@ -188,7 +188,7 @@ answers the rebuttal aimed at your case, while `rebuttal` attacks the
 opponent's; steelmanning happens inside each rebuttal, so there's no separate
 steelman phase.
 
-### 12. Response length in human terms — RESOLVED by ADR-011, revised by ADR-016
+### 12. Response length in human terms — RESOLVED by ADR-011, revised by ADR-016 and ADR-022
 
 Labels only, no time-based option: `short`=2, `medium`=5, `long`=10
 sentences, fixed constants for v1 (ADR-011). Attached **per phase** as a
@@ -197,7 +197,11 @@ way real formats set length by speech type (ADR-016, superseding ADR-011's
 per-team field). It states a target in the prompt; `budget` stays the
 unchanged hard cap; no cross-field validation; a mismatch surfaces via
 `hit_budget`. `prep` takes no suffix. Recorded per turn in the transcript
-(`schema_version` 2).
+(`schema_version` 2). **ADR-022** made the suffix optional in form only: a
+bare entry asks for `medium`, resolved at load, so there is no longer a way to
+run a phase with no length instruction and no non-prep turn without a recorded
+length. Whether 2/5/10 are the right counts is still untested, and 5 is now
+what every unsuffixed run gets.
 
 ### 13. Reasoning models spend the budget on thinking
 

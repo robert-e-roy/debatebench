@@ -24,8 +24,9 @@ format:
   # is a YAML mapping, not the string `rebuttal:long`, and is rejected with a
   # hint saying exactly that.
   #
-  # A bare name (no suffix) sends no length instruction at all. That is not a
-  # default of "medium" — it is silence, and the model decides for itself.
+  # A bare name (no suffix) asks for medium, so `opening` and `opening:medium`
+  # are the same run. Only `prep` gets no length instruction — it is bounded by
+  # prep_budget alone, and `prep:short` is an error.
   phases: [opening:medium, rebuttal:medium, conclusion:short]
 
 # Exactly two entries. One must be side: pro, the other side: con.

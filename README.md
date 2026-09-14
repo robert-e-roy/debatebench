@@ -161,7 +161,7 @@ output: transcript.json
 | Key | |
 |---|---|
 | `topic` | The motion. Required. |
-| `format.phases` | The whole debate, in order. **The only** thing that decides what runs — there are no separate `prep`/`rounds` flags. Repeat a name to repeat a phase. |
+| `format.phases` | The whole debate, in order. **The only** thing that decides what runs — there are no separate `prep`/`rounds` flags. Repeat a name to repeat a phase. A `:length` suffix is optional and defaults to `medium`. |
 | `teams` | Exactly two. One must be `side: pro`, the other `side: con`. |
 | `model`, `base_url` | Per team, both required. `base_url` has no default. The two sides may point at different servers. |
 | `budget` | Per-phase cap in completion tokens, enforced by the orchestrator. |
@@ -171,7 +171,10 @@ output: transcript.json
 | `output` | Required. The transcript path, resolved relative to the `run.yaml`. |
 
 Response length is a suffix on the phase, `name:length` — `short` (2 sentences),
-`medium` (5), `long` (10). No space after the colon. `prep` takes no suffix.
+`medium` (5), `long` (10). No space after the colon. **A phase with no suffix
+asks for `medium`**, so `opening` and `opening:medium` are the same run. `prep`
+takes no suffix and gets no length instruction — it is bounded by `prep_budget`
+alone.
 
 Validation is strict: unknown keys, duplicate keys, an unknown phase name, or
 two teams on the same side are all errors, and each one names what it found and

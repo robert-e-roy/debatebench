@@ -71,7 +71,8 @@ to finished B1): a phase entry with a bad suffix (`rebuttal:huge`), a
 YAML parsed as a mapping (`rebuttal: long`, space after the colon) — the last
 must fail with a hint naming the space, not a generic type error. A valid
 suffixed list (`opening:short, rebuttal:long`) must load with the lengths
-attached. Backend Protocol produces a real
+attached. **Added by ADR-022** (retro-edit): a bare entry must load as
+`medium`, and a bare `prep` must still load as no length at all. Backend Protocol produces a real
 response from AFM.
 
 ---
@@ -95,6 +96,10 @@ through every configured phase and produces an in-memory transcript object.
 target sentence count when its entry carried a `:length` suffix (ADR-011 §2's
 2/5/10), the same instruction to both sides; bare entries say nothing about
 length. The turn records `length` only when a suffix was present.
+**Amended by ADR-022** (retro-edit): the last two sentences no longer hold —
+a bare entry resolves to `medium` at load, so every non-prep prompt states a
+target and every non-prep turn records one. The prompt builder is unchanged by
+that ADR; it never learns a default exists.
 Keep per-phase budgets small enough that every AFM request — instructions,
 whatever context the prompt carries, and the reply — stays under AFM's
 ~4,096-token limit. A request over it fails with HTTP 500 (measured; see

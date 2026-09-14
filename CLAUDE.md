@@ -33,8 +33,10 @@ code. See ADR-002 for full scope.
   enforcement), `ADR-020` (judge settings live in an optional `judge:` block in
   `run.yaml`; `judge` takes a run.yaml or a transcript; flags override —
   amending ADR-007 §1), `ADR-021` (`debate` gains `--model`/`--budget` and
-  `--pro-*`/`--con-*` overrides; nothing else, and Hard Rule 7 stands) —
-  accepted; together they are the spec.
+  `--pro-*`/`--con-*` overrides; nothing else, and Hard Rule 7 stands),
+  `ADR-022` (a phase entry with no `:length` suffix asks for `medium`, resolved
+  at load; supersedes ADR-011 §4 and ADR-016 §3, narrows ADR-016 §6, no
+  `schema_version` bump) — accepted; together they are the spec.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
@@ -229,7 +231,10 @@ Two file types — see ADR-002 and ADR-007 for full schema and rationale:
 - `run.yaml` — one per run: topic, `format.phases` (the only source of truth
   for whether `prep` runs — no separate `prep`/`rounds` flags; each entry may
   be `name:length`, e.g. `rebuttal:long`, applying to both sides — ADR-016;
-  `prep` takes no suffix; no space after the colon), per-team
+  `prep` takes no suffix; no space after the colon; **a bare entry asks for
+  `medium`** and is resolved to it at load, so `opening` and `opening:medium`
+  are the same run and every non-prep turn records a length — ADR-022),
+  per-team
   **`side` (`pro` or `con`, required, one of each — ADR-007 §7)**, `model`,
   **`base_url` (required, no default — see ADR-007)**, `budget`
   (per-phase cap, completion tokens), `prep_budget` (required iff `"prep"`

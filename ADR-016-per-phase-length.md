@@ -10,6 +10,9 @@ per side, not per phase"). ADR-011 §2 (the labels and their sentence counts),
 §3 (target-in-prompt, `budget` stays the cap, no cross-field validation), §4
 (omitted means no length instruction) and §5 (no time-based option) all
 stand unchanged.
+**Amended by ADR-022** (2026-09-14): §3 is superseded — a bare entry asks for
+`medium` — and §6's "present only when the phase carried a suffix" narrows to
+prep alone. §1, §2, §4, §5 and §7 stand.
 
 ## Decision
 
@@ -42,8 +45,12 @@ wanted later, that's a new ADR, not a second field alongside this one.
 
 ### 3. Omitted suffix means no length instruction
 
-A bare name (`opening`) gets no length target in its prompt, exactly ADR-011
-§4's fallback. Mixed lists are fine: some phases with a suffix, some without.
+**Superseded by ADR-022 §1** (2026-09-14): a bare name asks for `medium`, so
+`opening` and `opening:medium` are the same run. Mixed lists are still fine —
+that part of this section stands. Kept for the record:
+
+> A bare name (`opening`) gets no length target in its prompt, exactly ADR-011
+> §4's fallback. Mixed lists are fine: some phases with a suffix, some without.
 
 ### 4. `prep` never takes a suffix
 
@@ -74,6 +81,10 @@ For each entry in `format.phases`:
   `"long"`, **present only when the phase carried a suffix** — absent
   otherwise, never `null`, following ADR-014 §6's absent-not-empty rule for
   `evidence`. Prep turns never have it.
+  **Narrowed by ADR-022 §4**: since every non-prep phase now resolves to a
+  length, the field is present on every non-prep turn. Prep is the only place
+  it is absent, and it is still never `null`. No `schema_version` bump — the
+  shape is unchanged, only which values occur (ADR-022 §5).
 - ADR-011's consequence that `run.sides` would gain a `length` field per
   side is withdrawn with the field.
 - This is a shape change to the document, and B3 has already written
@@ -116,4 +127,5 @@ combination nobody asked for.
 ## Open questions this doesn't resolve
 
 - Whether 2/5/10 are the right counts — unchanged from ADR-011, untested.
+  ADR-022 raises the stakes on 5: it is now what every unsuffixed run gets.
 - Per-side length asymmetry — explicitly out, see §2.

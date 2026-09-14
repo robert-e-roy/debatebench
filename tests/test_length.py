@@ -1,5 +1,8 @@
 """ADR-016: length as a `phase:length` suffix — validation, prompt, transcript.
 
+ADR-022 changed what a bare entry means: it asks for `medium` now, not for
+nothing. The tests that pinned the old fallback are the ones that flipped.
+
 Retro-fits to finished B1 and B2, per the BUILD-GUIDE's amended exit gates.
 """
 
@@ -9,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from debatebench.config import ConfigError, load_run
+from debatebench.config import DEFAULT_LENGTH, ConfigError, load_run
 from debatebench.orchestrator import run_debate
 from debatebench.prompts import LENGTH_SENTENCES
 from debatebench.transcript import load_transcript, write_transcript
@@ -39,13 +42,25 @@ def test_a_suffixed_list_loads_with_its_lengths(run_dir: Path):
     assert config.lengths == ("short", "long")
 
 
-def test_a_bare_list_asks_for_no_length(run_dir: Path):
-    assert configure(run_dir, ("opening", "rebuttal")).lengths == (None, None)
+def test_a_bare_list_asks_for_the_default(run_dir: Path):
+    # ADR-022 §1: a bare entry is not "no instruction", it is medium.
+    assert configure(run_dir, ("opening", "rebuttal")).lengths == ("medium", "medium")
+
+
+def test_naming_the_default_changes_nothing(run_dir: Path):
+    bare = configure(run_dir, ("opening", "rebuttal")).lengths
+    assert bare == configure(run_dir, ("opening:medium", "rebuttal:medium")).lengths
 
 
 def test_a_mixed_list_is_allowed(run_dir: Path):
-    config = configure(run_dir, ("opening:medium", "rebuttal"))
-    assert config.lengths == ("medium", None)
+    config = configure(run_dir, ("opening:short", "rebuttal"))
+    assert config.lengths == ("short", DEFAULT_LENGTH)
+
+
+def test_prep_is_left_out_of_the_default(run_dir: Path, prepared_sources):
+    # ADR-022 §2: the default stops at prep, which ADR-016 §4 keeps lengthless.
+    config = configure(run_dir, ("prep", "opening"))
+    assert config.lengths == (None, "medium")
 
 
 def test_the_same_phase_can_repeat_with_different_lengths(run_dir: Path):
@@ -100,10 +115,12 @@ def test_both_sides_get_the_same_target(run_dir: Path):
     assert all(expected in backend.requests[0].messages[1].content for backend in backends)
 
 
-def test_a_bare_phase_says_nothing_about_length(run_dir: Path):
+def test_a_bare_phase_states_the_default_target(run_dir: Path):
+    # Before ADR-022 this prompt carried no length sentence at all.
     _, _, backends = debate_with(run_dir, ("opening",))
 
-    assert "sentences" not in backends[0].requests[0].messages[1].content
+    asked = backends[0].requests[0].messages[1].content
+    assert f"about {LENGTH_SENTENCES[DEFAULT_LENGTH]} sentences" in asked
 
 
 def test_each_phase_carries_its_own_target(run_dir: Path):
@@ -121,7 +138,7 @@ def test_a_turn_records_the_length_it_was_asked_for(run_dir: Path):
     _, transcript, _ = debate_with(run_dir, ("opening:long", "rebuttal"))
 
     assert transcript.turn(0, 0).length == "long"
-    assert transcript.turn(1, 0).length is None  # the bare phase asked for nothing
+    assert transcript.turn(1, 0).length == "medium"  # resolved before the run (ADR-022 §3)
 
 
 def test_a_prep_turn_never_carries_a_length(run_dir: Path, prepared_sources):
@@ -131,25 +148,39 @@ def test_a_prep_turn_never_carries_a_length(run_dir: Path, prepared_sources):
     assert transcript.turn(1, 0).length == "short"
 
 
-def test_the_written_turn_carries_length_only_where_it_applies(run_dir: Path):
-    config, transcript, _ = debate_with(run_dir, ("opening:medium", "rebuttal"))
+def test_every_written_debate_turn_names_its_length(run_dir: Path):
+    # ADR-022 §4: the file says what was asked for, so a later change of default
+    # cannot re-interpret it. Schema version is untouched — §5.
+    config, transcript, _ = debate_with(run_dir, ("opening:short", "rebuttal"))
     write_transcript(transcript, config.output)
     document = json.loads(config.output.read_text(encoding="utf-8"))
 
     assert document["schema_version"] == 2
     assert document["run"]["phases"] == ["opening", "rebuttal"]  # bare names, still
-    opening = next(t for t in document["turns"] if t["phase"] == "opening")
-    rebuttal = next(t for t in document["turns"] if t["phase"] == "rebuttal")
-    assert opening["length"] == "medium"
-    assert "length" not in rebuttal  # absent, never null (ADR-016 §6)
+    written = {t["phase"]: t.get("length") for t in document["turns"]}
+    assert written == {"opening": "short", "rebuttal": "medium"}
+
+
+def test_a_written_prep_turn_has_no_length_key(run_dir: Path, prepared_sources):
+    # The one place the field is still absent rather than null (ADR-016 §6).
+    config, transcript, _ = prep_debate(run_dir, ("prep", "opening"))
+    write_transcript(transcript, config.output)
+    document = json.loads(config.output.read_text(encoding="utf-8"))
+
+    prep = next(t for t in document["turns"] if t["phase"] == "prep")
+    assert "length" not in prep
 
 
 def test_a_version_1_transcript_still_loads(run_dir: Path):
     # Migrating a v1 file forward is a no-op: it simply has no length fields.
+    # A real v1 predates the field entirely, so the fixture strips it as well as
+    # the version — otherwise it is a v2 document wearing a v1 number.
     config, transcript, _ = debate_with(run_dir, ("opening",))
     write_transcript(transcript, config.output)
     document = json.loads(config.output.read_text(encoding="utf-8"))
     document["schema_version"] = 1
+    for turn in document["turns"]:
+        turn.pop("length", None)
     config.output.write_text(json.dumps(document), encoding="utf-8")
 
     reread = load_transcript(config.output)
