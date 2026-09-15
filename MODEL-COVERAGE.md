@@ -17,10 +17,17 @@ Compiled 2026-09-15 from `RESULTS.md` (B0), `BACKEND-PROBE-RESULTS.md`,
 | medium | **qwen3:8b** | 8B, reasoning | 5.2 GB | ✅ extensively | ✅ **validated for ordering** | the workhorse |
 | medium | **gemma4:12b** | 12B, reasoning | 7.6 GB | ✅ 5 debates | ⚠️ works, slow, hungry | newest, least characterised |
 | large | **Mistral-Small-24B-4bit** | 24B | ~13 GB | ❌ **never ran** | ❌ never ran | aborted at load |
+| large | **deepseek-r1:32b** | 32B | 19 GB | ❌ never ran | ❌ **never ran** | loads, then exhausts swap |
 
-**The large class has never been tested.** Not judged and found wanting —
-*never run at all*. Everything this project knows about debate quality comes from
+**The large class has never produced a token.** Two models attempted, both
+defeated by memory before inference: Mistral-Small-24B aborted at load in B0, and
+`deepseek-r1:32b` loaded at a 131,072-token context, reported 55 GB resident,
+drove the machine to 0.1 GiB free with swap nearly exhausted, and had its probe
+killed by the OS. Everything this project knows about debate quality comes from
 models between roughly 3B and 12B.
+
+**Neither is ruled out.** Both failures are about *fitting*, and both have an
+untried lever: a quiet machine for the 24B, a smaller context for the 32B.
 
 ## What each size class actually does here
 
@@ -73,7 +80,42 @@ control. What is measured about it:
 **What the class tells you:** it works, it is affordable, and one model in it has
 a validated ordering. Everything else about judge quality is still open.
 
-### Large (24B+) — a blank row, and B0 says why
+### Large (24B+) — two attempts, zero tokens
+
+#### `deepseek-r1:32b` — measured 2026-09-15, and it does not fit
+
+Pulled at 19 GB and loaded through Ollama. It never answered a single prompt:
+the probe process was **killed by the OS for low memory** before its first call
+returned. What `ollama ps` reported while it was resident:
+
+```
+NAME               SIZE     PROCESSOR          CONTEXT
+deepseek-r1:32b    55 GB    54%/46% CPU/GPU    131072
+```
+
+Machine state at that moment: **0.1 GiB free** and **14.6 GB of 15.3 GB swap
+used**. Unloading it returned 21.7 GiB of free memory immediately.
+
+**The 55 GB is mostly context, not weights.** The weights are 19 GB; Ollama
+loaded the model at its default **131,072-token** context, and the KV cache for
+that on a 32B model accounts for the rest. The `54%/46% CPU/GPU` split is the
+symptom: it did not fit in unified memory, so half of it ran on CPU.
+
+**This is not "a 32B model cannot run here" — it is "this model at a 128K
+context cannot".** `debatebench`'s judge needs a context that holds one
+transcript and one reply, which is tens of thousands of tokens, not 131,072.
+Retrying with `OLLAMA_CONTEXT_LENGTH` or a Modelfile `PARAMETER num_ctx` set to
+something like 16384 is the obvious next attempt and has not been made.
+
+**Operational note, learned the expensive way:** check `ollama ps` for `SIZE`
+and `CONTEXT` after loading a large model and before committing to a run. The
+disk size tells you nothing about the resident size, and the gap here was 19 GB
+against 55 GB. A model that loads can still take the machine into swap
+exhaustion and get an unrelated process killed.
+
+#### `Mistral-Small-24B-4bit` — B0's blank row
+
+
 
 `mlx-community/Mistral-Small-24B-Instruct-2501-4bit` is the only large model
 attempted. **It never produced a token.** B0 loaded it, watched weights go from
