@@ -205,10 +205,34 @@ long prompt is prefilled in a different batching order and diverges in the
 low bits. Ollama does report `prompt_tokens_details.cached_tokens`, and it was
 observed going 0 → 25 between a cold and a warm call during the gemma4 probe.
 
-**This is a post-hoc pattern with a perfect fit, not a tested prediction.** The
-test that would settle it: `ollama stop qwen3:8b`, one draw (predict A), then a
-second immediately (predict B). Those are **not** gate draws and must not be
-counted toward any N.
+**The prediction was made, then tested, and it holds.** Recorded in `cde093f`
+before the run: stop the model, draw once (predict A), draw again immediately
+(predict B). Run 2026-09-14 22:10–22:23, artifacts `statetest-cold.json` and
+`statetest-warm.json` — **not gate draws, and not to be counted toward any N.**
+
+| draw | `ollama ps` before | predicted | got | |
+|---|---|---|---|---|
+| cold | *(empty — model unloaded)* | `455775e5835cd5ec` | `455775e5835cd5ec` | **hit** |
+| warm | `qwen3:8b, 11 GB, 100% GPU` | `be6197db7ac41208` | `be6197db7ac41208` | **hit** |
+
+Both to the byte. Seventeen runs on this transcript now, still exactly two
+outputs, and the state that selects between them is settled: **whether the model
+was already resident when the call arrived.** Not sampling, not temperature, not
+server warmth in any vaguer sense — Ollama's own `ps` was empty before the first
+and populated before the second.
+
+Practical consequences:
+
+- **Judging is reproducible if, and only if, load state is held constant.** The
+  useful rule for anyone re-running a comparison: touch the model first, or stop
+  it first, but do the same thing every time.
+- **A cold audit is the weaker one here** — it finds 11 claims and zero
+  contradictions where the warm audit finds 20 and three. Whatever the mechanism
+  costs, it costs recall.
+- **`OPEN-QUESTIONS` 14 is answerable now.** A malformed reply reproduces within
+  a state and does not survive a state change, so "re-run after stopping the
+  model" is a repair that needs no code and no seed change. Whether that should
+  be *automated* is still the open decision.
 
 **It also compromises the N=5 protocol as written.** Five consecutive draws are
 not five independent samples — they are one cold draw and four warm ones, and
