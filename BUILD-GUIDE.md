@@ -272,6 +272,34 @@ threshold was fixed before any judge ran.
   produced them — the rule `probe/b6/README.md` now states, and the one whose
   absence cost a day of wrong diagnosis.
 
+**Amended the same day, after the five draws measured the thing N was guarding
+against.** The audit is not noisy. Seventeen runs on one transcript produced
+exactly **two** outputs, byte-identical within each group, and a pre-registered
+test confirmed what selects between them: whether the model was already
+resident when the call arrived. Cold gives one ledger, warm gives the other,
+every time.
+
+So five draws in an uncontrolled state is not a sample of five — the condition-A
+run was one cold draw and four identical warm ones. N was sized for variance
+that does not exist; the real axis is **state**, and it has two values.
+
+- **Two draws per state — cold, cold, warm, warm.** Four in total. The second
+  draw in each state exists only to confirm the state is still deterministic;
+  it earns its cost by testing the assumption the protocol now rests on rather
+  than assuming it.
+- **State is set explicitly**, not inherited: `ollama stop <model>` before each
+  cold draw, and a warm draw taken immediately after another call.
+- **Pass:** one ledger of the four carries all three clauses at once — in
+  either state.
+- **No fifth draw**, and the anti-shopping rule is now structural rather than a
+  promise: the output space is enumerable, so further draws are provably
+  identical to ones already taken.
+- **If a same-state pair ever disagrees**, a third variable exists, this
+  amendment is void, and the sampling protocol above comes back until the new
+  variable is identified.
+
+Every ledger is kept either way, with its state recorded beside it.
+
 **What a pass licenses, and what it does not.** That the configuration *can*
 produce all three findings together — not that it does so reliably. The five
 ledgers record the rate; any claim about reliability has to cite it. This is

@@ -252,7 +252,23 @@ what every unsuffixed run gets.
 
 ---
 
-### 14. A transcript the judge can't parse is permanently unjudgeable
+### 14. A transcript the judge can't parse is permanently unjudgeable — PREMISE DISPROVED 2026-09-14
+
+**The word "permanently" is wrong, and the four options below were written
+against it.** The premise was that ADR-017 §6 reuses the transcript's seed, so a
+malformed reply reproduces byte-for-byte forever. Measured since: the judge's
+reply is deterministic **within a model load state and not across one**
+(`probe/b6/README.md`, seventeen runs, two outputs, a pre-registered cold/warm
+test that hit both predictions to the byte). Stopping the model and re-running
+changes the reply, needs no code, no seed change, and none of the four options.
+
+What stays open is narrower and worth keeping: whether that repair should be
+*automated*, and if so whether the tool may retry at all — ADR-017 §4 refuses a
+retry loop and permits only lossless deterministic repairs, which an
+unload-and-retry is not. Read the options below as answering "should the tool
+handle this itself", not "is this recoverable at all".
+
+
 
 **Blocks:** nothing yet; it bit `examples/run-prep.yaml` on 2026-09-14 and will
 bite any run whose scoring reply happens to be malformed.

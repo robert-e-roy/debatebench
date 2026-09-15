@@ -83,17 +83,36 @@ code. See ADR-002 for full scope.
   listed passage from BOTH sides". The cause was a definition: ADR-015 §2 gave
   `supported` and `contradicted` the same test with no precedence, so on a
   two-sided corpus `supported` was always defensible. **ADR-019 fixes that and
-  clause (2) now fires reproducibly** (2026-09-14, artifacts in `probe/b6/`):
-  six consecutive runs on one saved prep transcript return 20 claims — 15
-  `supported`, 3 `contradicted`, 2 `unsupported` — with ledgers that hash
-  identically once `judged_at` is removed, and all three contradictions
-  cross-side, including the con's own `am-4` claim contradicted by the pro's
-  `am-3`. **Clause (3) is now the only one missing.** Zero `not_checkable` in
-  any run, but the opinions *are* listed, so it is not a filtering failure: a
-  value judgement ("the CON's focus on leakage overlooks climate urgency") and
-  a prediction are each landing in `unsupported`, one verdict over. The prompt
-  splits those two by a question — is this a factual claim at all? — that it
-  never tells the model to ask first. **An earlier claim here that ADR-019
+  clause (2) fires in every warm run** (2026-09-14, artifacts in `probe/b6/`):
+  20 claims — 15 `supported`, 3 `contradicted`, 2 `unsupported` — all three
+  contradictions cross-side, including the con's own `am-4` claim contradicted
+  by the pro's `am-3`.
+  **"Reproducibly" needed a condition that was not known when it was written.**
+  Seventeen runs on that one saved transcript have produced exactly **two**
+  outputs, byte-identical within each group, and a pre-registered test
+  (`probe/b6/statetest-{cold,warm}.json`) confirmed what selects between them:
+  whether the model was already resident when the call arrived. Warm gives the
+  20-claim ledger every time; **cold gives 11 claims and zero
+  `contradicted`** — a cold judge silently under-reports. So the audit is
+  deterministic *within* a load state and not across one, ADR-017 §6's
+  reproducible re-judging holds under that condition, and any comparison must
+  hold the state constant. A claim on this line that the audit was "not
+  reproducible" was itself wrong and is withdrawn; it rested on misreading a
+  `ps` line for a vision model's runner as this one's.
+  **Clause (3) is the only one missing, and it has never fired** — zero
+  `not_checkable` in all seventeen runs, in both states. Not a filtering
+  failure: the opinions *are* listed, and land in `unsupported`, one verdict
+  over. The prompt splits those two by a question — is this a factual claim at
+  all? — that it never told the model to ask first, and listed `not_checkable`
+  last, after an `unsupported` whose definition already presupposes the answer.
+  **ADR-024 decides that checkability gates the other three verdicts**;
+  its §3 reorders the list and is deliberately being measured on its own.
+  **The gate FAILED at condition A** under the N=5 standard fixed before the
+  runs (`probe/b6/baseline-a-d1..d5.json`): clause (1) 5/5, clause (2) 4/5 (the
+  one miss is the cold draw), clause (3) 0/5. That result also retired the
+  standard — five draws in an uncontrolled state is one cold draw and four
+  identical warm ones, so B6's protocol is now two draws per state, cold and
+  warm, which enumerates the space instead of sampling it. **An earlier claim here that ADR-019
   "traded clause (3) for clause (2)" is withdrawn**: the run that produced a
   `not_checkable` used a different transcript and its score file was not
   saved, so no before/after on one input exists and no trade was measured.

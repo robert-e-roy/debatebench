@@ -149,6 +149,21 @@ pre-ADR-019 ledger on this same transcript is saved here as
 But with draw-to-draw variance this large, one run either side is not a
 before/after, and the withdrawal below stands for a second reason.
 
+## Comparing condition A with condition B
+
+They were run under different protocols — A took five draws in an uncontrolled
+state, B takes two per state — and that difference is **not** a reason to treat
+them as incomparable. Within-state determinism collapses both to the same two
+observations:
+
+| | cold | warm |
+|---|---|---|
+| condition A | `baseline-a-d1.json` | `baseline-a-d2…d5.json` (identical) |
+| condition B | `condition-b-cold-*.json` | `condition-b-warm-*.json` |
+
+So compare cold against cold and warm against warm, one ledger each. The
+differing N is an artefact of when each ran, not of what each measured.
+
 ## Condition A baseline, N=5 — the gate FAILS, and the variance has a shape
 
 Run 2026-09-14 21:26–21:59 under the standard fixed earlier that day, on

@@ -514,14 +514,20 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
         "usually retrieved passages on the same point, so check for a contradicting "
         "one before you answer supported.",
         "",
+        # ADR-024 §3: not_checkable is listed FIRST because checkability gates the
+        # other three. Read in the old order, a model met "unsupported: it IS a
+        # factual claim…" before anything asked whether it was one, and every
+        # opinion landed there. Reorder only — see the ADR for what is held back.
+        "- not_checkable: an opinion, a prediction or a value judgement rather than a "
+        "factual claim. Decide this one first: if the assertion is not a factual claim "
+        "at all, it is not_checkable and the three verdicts below do not apply. "
+        "Cite nothing.",
         "- supported: a recorded passage backs the claim AND no recorded passage "
         "contradicts it. Cite the backing id.",
         "- contradicted: a recorded passage contradicts it, including one the "
         "opponent retrieved. Cite the contradicting id, not the backing one.",
         "- unsupported: it is a factual claim, but nothing recorded bears on it "
         "either way. Cite nothing.",
-        "- not_checkable: an opinion, a prediction or a value judgement rather than a "
-        "factual claim. Cite nothing.",
         "",
         available,
         "",
