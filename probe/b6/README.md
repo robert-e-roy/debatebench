@@ -252,6 +252,29 @@ states. No `not_checkable` has ever been produced on this transcript by
 Reading 2 is cheaper and strictly diagnostic: it changes no code and can only
 narrow the question. It should come first.
 
+## The second-model diagnostic has not run — four draws, four timeouts
+
+Attempted 2026-09-15 10:09–11:15. `gemma4:12b` against the gate transcript at
+`--budget 20000`, baseline prompt, four draws across both load states. **All
+four failed with `ReadTimeout` and no artifact was written.** About 66 minutes
+of machine time for one finding, which was not the one being sought: the read
+timeout was hardcoded at 600 seconds and a 12B reasoning model at that budget
+does not finish inside it. That is now a setting (ADR-025), found by the run it
+blocked.
+
+The question it was meant to answer is **still open**: clause (3) has never
+fired in 25 runs, all `qwen3:8b`, and nothing yet separates "the instruction is
+still wrong" from "this model will not produce this verdict". A rerun needs
+`--timeout` well above the default and should be costed honestly first — one
+successful draw answers the question, so a single warm draw is the right shape,
+not four.
+
+**A process note, because it cost more than the run did.** Two further jobs were
+chained behind this one by polling for its final artifact. That file was never
+written, so both waited indefinitely and had to be killed. **Never gate a queued
+job on a file a failed job would not produce.** Sequence the work in one script,
+or poll for something that exists either way.
+
 ## Comparing condition A with condition B
 
 They were run under different protocols — A took five draws in an uncontrolled
