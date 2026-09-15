@@ -16,6 +16,10 @@ block and `judge` accepts either that file or a transcript, with flags
 overriding. §1's "flags for `judge`" was argued when the command had one flag;
 it has four. Its separate reason for dropping `judge:` — that nothing read it
 — still stands, and is why ADR-020 only adds a block that *is* read.
+**Amended 2026-09-14** (via ADR-022): a `format.phases` entry with **no**
+`:length` suffix is not "no length instruction" — it resolves to `medium` when
+the file loads. `opening` and `opening:medium` are the same run; `prep` still
+takes no length at all.
 **Depends on:** ADR-002 ("Config", "CLI shape"), ADR-003 (token-budget enforcement
 findings), `debate-formats-research.md`
 **Resolves:** OPEN-QUESTIONS.md items 3, 8, 10 (schema-level slice), 11
@@ -152,7 +156,9 @@ Writing B1's validation turned up details §1–§5 didn't settle:
 - **Unknown keys are an error:** in `run.yaml`, its `format:` and `teams:`
   entries, and team files. Otherwise a typo such as `seeed: 42` is ignored and
   the run quietly generates a seed. The keys this ADR removed (`format.prep`,
-  `format.rounds`, `judge:`) get errors that say what replaced them.
+  `format.rounds`, `judge:`) get errors that say what replaced them. **`judge:`
+  is no longer among them** — ADR-020 gave it a meaning and a reader, so it is a
+  valid optional key with its own validated sub-schema.
 - **Duplicate keys are an error.** YAML parsers silently keep the last value, so
   `budget: 100` followed by `budget: 2000` is the same class of mistake as an
   unknown key.

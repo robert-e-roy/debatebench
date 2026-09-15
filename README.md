@@ -316,13 +316,23 @@ transcript actually records — both sides' evidence and turns — never against
 model's own knowledge of the world. Verdicts are `supported`, `contradicted`,
 `unsupported`, and `not_checkable`.
 
-> **Known gap.** This pass has not met its exit gate. Across four runs on two
-> backends, the audit never classifies an opinion as `not_checkable` — it skips
-> non-factual statements instead of listing them, despite being told to filter
-> nothing out. Claims it *does* list have been accurate, including one caught
+> **Known gap.** This pass has not met its exit gate. Over seventeen runs on one
+> saved transcript, no ledger has ever carried a `not_checkable` verdict.
+> **An earlier version of this note said the audit "skips non-factual
+> statements". That was wrong.** The opinions are listed; they land in
+> `unsupported`, one verdict over, because the prompt never told the model to
+> ask "is this a factual claim at all?" before asking whether the record backs
+> it. ADR-024 makes that the first question; the fix is being measured, not
+> assumed. Claims the audit *does* list have been accurate, including ones
 > contradicting the opponent's own recorded evidence. Treat the ledger as
-> incomplete rather than wrong, and use `--no-fact-check` to skip the second
-> call entirely.
+> incomplete rather than wrong, and `--no-fact-check` skips the second call.
+
+> **Judge with the model already loaded.** On Ollama the audit is deterministic
+> *within* a model load state and not across one: the first call after the model
+> is loaded returns a materially thinner ledger than calls that follow it — 11
+> claims and zero `contradicted` against 20 and three, on the same transcript
+> and seed. A cold judge under-reports. Touch the model first, or hold the state
+> constant across any comparison you intend to read.
 
 ## Backends
 

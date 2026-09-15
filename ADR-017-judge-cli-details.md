@@ -128,6 +128,17 @@ transcript with the same model and budget is reproducible for any server that
 honours a seed. A judging run is not a new experiment with its own seed — it is
 a measurement of an existing one.
 
+**Amended 2026-09-14 — "reproducible" needs a condition this section did not
+know about.** Measured on Ollama with `qwen3:8b`: seventeen re-judgements of one
+transcript produced exactly two outputs, byte-identical within each group, and a
+pre-registered test confirmed the selector is **whether the model was already
+resident when the call arrived**. The seed pins the reply *within* a load state
+and does not survive one. The decision above stands — sending the recorded seed
+is still right, and re-judging is still a measurement rather than a new
+experiment — but a caller comparing two judgements must hold the load state
+constant, and a cold call returns the thinner ledger. Evidence in
+`probe/b6/README.md`.
+
 ### 7. The score file rotates, exactly as a transcript does
 
 Whatever sits at `--output` is moved to `<output>.1` before the new file takes

@@ -53,9 +53,9 @@ exactly what this judge does well.
 - **Not supported:** reading an absolute `argument_quality` number as a quality
   measure, or comparing scores across debates — the bias depends on what is
   being judged.
-- **Untouched:** the winner logic itself, the steelman tiebreak,
-  `rebuttal_effectiveness`, and the fact-check pass. B7's README must say so
-  rather than claim "the judge was validated".
+- **Untouched:** the winner logic itself, the steelman tiebreak, the coin-toss
+  tiebreak added by ADR-023, `rebuttal_effectiveness`, and the fact-check pass.
+  B7's README must say so rather than claim "the judge was validated".
 
 **A caveat that matters for this tool specifically.** `debatebench` judges
 *machine-generated* debate turns, and machine-generated speech is precisely

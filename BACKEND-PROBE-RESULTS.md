@@ -422,7 +422,20 @@ memory was 12–13% at the end of this session with `vllm-mlx` still holding
    This closes a question that came up while chasing B6's gate, where an audit
    returning 11, 18 and 20 claims from identical input looked like unpinned
    sampling. It was not: three consecutive audits later reproduced each other
-   exactly. Worth noting how the measurement nearly went wrong too — the first
+   exactly.
+
+   **The measurement above stands; that last inference does not, and is
+   corrected here (2026-09-14).** "Three consecutive audits reproduced each
+   other" is true and does not explain the 11-versus-20 spread, because
+   consecutive audits share a condition the spread turns on. Seventeen runs of
+   one audit later produced exactly **two** outputs, byte-identical within each
+   group, and a pre-registered test settled the selector: **whether the model
+   was already resident when the call arrived.** Cold gives 11 claims, warm
+   gives 20. So the seed does pin the reply — within a load state, and not
+   across one — and a 472-character reply was too short a probe to show it.
+   The lesson is the one this page already records about the vllm-mlx 503:
+   consecutive samples agreeing is not evidence that nothing varies, only that
+   nothing varied between them. See `probe/b6/README.md`. Worth noting how the measurement nearly went wrong too — the first
    call in each group returned empty because it was **queued behind a
    concurrent judge run and timed out waiting**. That is Part B's B6 result
    ("none of them runs two requests in parallel"; Ollama queues rather than

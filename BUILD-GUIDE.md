@@ -213,15 +213,17 @@ explicit tiebreaker.
 
 **Exit gate:** three transcripts, not one: a deliberately lopsided one (clear
 winner by total), a genuinely close one (exercises the steelman tiebreak,
-including an actual `"draw"` result if totals and steelman both tie), and one
-with no `prep` in its phase list (exercises `prep_grounded: false`). Confirm
-each score breakdown explains *why*, not just *that*, a side won or the
-result was
-a draw — the diagnostic value is the point. **This exit gate tests that the
-mechanism works, not that the judge's scores are trustworthy** — item 6
-(correlating against human ratings) is separate and still fully open; B7
-stays blocked on it regardless of B5 passing this gate.
-a draw.
+including a total-and-steelman tie), and one with no `prep` in its phase list
+(exercises `prep_grounded: false`). Confirm each score breakdown explains *why*,
+not just *that*, a side won — the diagnostic value is the point. **This exit
+gate tests that the mechanism works, not that the judge's scores are
+trustworthy** — item 6 (correlating against human ratings) is separate and still
+fully open; B7 stays blocked on it regardless of B5 passing this gate.
+
+**Amended 2026-09-14** (via ADR-023): this gate said the tie case must produce
+`"draw"`. Nothing produces a draw now — a tie after the steelman tiebreak is
+resolved by a coin toss and recorded as `winner_reason: "coin_toss"`. The gate
+still wants the tie case exercised; it is the reason that reads differently.
 
 ---
 

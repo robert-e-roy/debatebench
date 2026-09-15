@@ -16,6 +16,11 @@ these. **Amended 2026-09-12** (via ADR-016): each turn gains an optional
 carried a suffix, never on prep turns; `run.phases` stays bare names. This is
 a shape change and v1 files already exist, so **`schema_version` is now 2**;
 migrating a v1 transcript forward adds nothing.
+**Amended 2026-09-14** (via ADR-022): "present only when the phase carried a
+suffix" narrows to prep alone. A bare entry now resolves to `medium` at load,
+so **every non-prep turn carries a `length`** and prep is the only place the
+field is absent. No further `schema_version` bump — the key, its type and the
+absent-not-null rule are unchanged; only which values occur (ADR-022 §5).
 **Depends on:** ADR-001 (never key by side alone; output file only), ADR-002 (two commands, hard invariant), ADR-003 (token usage reporting), ADR-007 (`run.yaml` schema; `output:` path)
 
 ## Decision

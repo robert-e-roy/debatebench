@@ -6,6 +6,10 @@
 (MiniCheck) before committing to a custom prompt; recorded why none becomes
 a dependency and what methodology gets adopted anyway. No decision changed;
 see "Prior art considered" below.
+**Amended:** 2026-09-14 (via ADR-019) — `contradicted` outranks `supported`,
+which narrows `supported` to "backed and uncontested". See §2's list.
+**Amended:** 2026-09-14 (via ADR-024) — §2's extraction clause is struck and
+its four verdicts become a two-step decision, checkability first. See §2.
 **Depends on:** ADR-002 ("CLI shape", "Fact-checking is separate from judging",
 "Hardware" B0 findings, "Language split"), ADR-007 (`judge` flags),
 ADR-013 (judge call structure, `prep_grounded`, score-file format),
@@ -49,6 +53,25 @@ verdict:
 - **`unsupported`** — nothing recorded bears on it either way.
 - **`not_checkable`** — an opinion, prediction, or value claim, not a
   factual one.
+
+**Amended 2026-09-14 by ADR-024, in two places.**
+
+*The extraction clause above is struck.* "extracts the factual claims it makes
+(not opinions or value statements)" told the pass to drop the very things
+`not_checkable` is for, which made that verdict unreachable outside the
+prep-less degradation path below. The next paragraph settles which half was
+meant — the model's knowledge is used "only to classify a claim as factual or
+not", which presupposes non-factual claims arrive — and the shipped prompt has
+always said "Filter nothing out". **The audit lists every assertion and
+pre-filters none.**
+
+*The four verdicts are not siblings.* They are decided in two steps:
+**(1)** is this checkable against a record at all? If not — an opinion, a
+prediction, a value judgement — `not_checkable`, cite nothing, stop.
+**(2)** only then: `contradicted` (ADR-019's precedence), else `supported`,
+else `unsupported`. Read as a flat list in the order above, a model meets
+`unsupported`'s "nothing recorded bears on it" before anything asks whether the
+claim is factual, and every opinion lands there. See ADR-024.
 
 This differs from `prep_grounded` in two ways, which is why both exist:
 `prep_grounded` is a *graded dimension* (0–25) about how well a side's own
