@@ -10,15 +10,28 @@ Compiled 2026-09-15 from `RESULTS.md` (B0), `BACKEND-PROBE-RESULTS.md`,
 
 ## The ladder, and the honest summary
 
-| class | model | params | on disk | debater | judge | verdict |
-|---|---|---|---|---|---|---|
-| small | **AFM** via `fm serve` | ~3B on-device | n/a (system process) | ✅ B1–B4 gates | ❌ **cannot** | plumbing only |
-| small | **phi4-mini** | ~3.8B | 2.5 GB | ✅ probe | ⚠️ scores, audit breaks | weakest tested |
-| medium | **qwen3:8b** | 8B, reasoning | 5.2 GB | ✅ extensively | ✅ **validated for ordering** | the workhorse |
-| medium | **gemma4:12b** | 12B, reasoning | 7.6 GB | ✅ 5 debates | ⚠️ works, slow, hungry | newest, least characterised |
-| large | **Mistral-Small-24B-4bit** | 24B | ~13 GB | ❌ **never ran** | ❌ never ran | aborted at load |
-| large | **deepseek-r1:32b** @128K | 32B | 19 GB | ❌ never ran | ❌ never ran | 55 GB resident, OOM |
-| large | **deepseek-r1:32b-16k** | 32B | 19 GB | untried | ⚠️ **runs, 7.4 tok/s** | fits at 23 GB, thinking can't be disabled |
+**Generation is a dimension, not a detail.** It was added on 2026-09-15 after
+`qwen3:4b` and `qwen3.5:4b` — same parameter count, same prompt — produced
+*opposite* fact-check behaviour, and after the newer generation needed roughly
+**five times the budget** to answer at all. Anything pinned to a model is pinned
+to its generation: **`JUDGE-VALIDATION`'s Tau-C +0.547 is a result about
+`qwen3:8b` specifically** and does not transfer to `qwen3.5` or `qwen3.6`, which
+would each need their own 631-speech run.
+
+| class | model | gen | params | on disk | debater | judge | verdict |
+|---|---|---|---|---|---|---|---|
+| small | **AFM** via `fm serve` | — | ~3B on-device | n/a | ✅ B1–B4 gates | ❌ **cannot** | plumbing only; ~4,096-token ceiling |
+| small | **qwen3:0.6b** | 3 | 0.6B | 522 MB | untried | ❌ 1 claim | below the floor |
+| small | **qwen3:1.7b** | 3 | 1.7B | 1.4 GB | untried | ❌ 1 claim | below the floor |
+| small | **phi4-mini** | — | ~3.8B | 2.5 GB | ✅ probe | ⚠️ scores, audit breaks | weakest usable |
+| small | **qwen3:4b** | 3 | 4B | 2.5 GB | untried | ✅ clauses (1)+(3) | cheapest working judge |
+| small | **qwen3.5:4b** | **3.5** | 4B | 3.4 GB | untried | ✅ clauses (1)+(2) | needs ~5× the budget |
+| medium | **qwen3:8b** | 3 | 8B | 5.2 GB | ✅ extensively | ✅ **validated for ordering** | the workhorse; state-sensitive |
+| medium | **gemma4:12b** | — | 12B | 7.6 GB | ✅ 5 debates | ⚠️ works, slow, hungry | judged the mirror runs |
+| medium | **qwen3:14b** | 3 | 14B | 9.3 GB | untried | ✅ clauses (1)+(3) | state-**in**sensitive |
+| large | **qwen3:32b-16k** | 3 | 32B | 20 GB | ❌ never | ❌ **unparseable ×2** | fits at 24 GB, 100% GPU |
+| large | **Mistral-Small-24B-4bit** | — | 24B | ~13 GB | ❌ **never ran** | ❌ never ran | aborted at load (B0) |
+| large | **deepseek-r1:32b** | — | 32B | *removed* | ❌ never | ❌ never | 7.4 tok/s; thinking not disableable |
 
 **The large class has produced exactly two tokens' worth of evidence, and it
 arrived today.** `deepseek-r1:32b` at Ollama's default 131,072-token context
@@ -200,10 +213,30 @@ Written down so they can be checked rather than assumed later:
 | **AFM** via `fm serve` | the system model | ~4,096-token session ceiling |
 | **LM Studio** | **none** | named in ADR-002 as a target; never run against |
 
+## What the ladder established, 2026-09-15
+
+Seven judges on one transcript, same prompt, load state held constant:
+
+- **There is a floor.** `qwen3:0.6b` and `qwen3:1.7b` return a single claim.
+  They cannot perform this task.
+- **The cheapest working judge is 4B**, not 8B. `qwen3:4b` produces a full
+  ledger with correct opinion classification.
+- **Capability here is not monotonic in size.** 4b finds opinions, 8b does not,
+  14b does. That rules out "too small to tell an opinion from a fact".
+- **No judge has produced all three B6 clauses.** Every working model returns
+  exactly two, and *which* two varies by model and generation.
+- **Context defaults are a live hazard.** Ollama gave `qwen3:4b` a
+  262,144-token context (43 GB resident, CPU spill) and `deepseek-r1:32b` a
+  131,072 one (55 GB, OOM kill). Cap `num_ctx` before running anything large.
+
 ## The gaps, in the order they matter
 
-1. **No large model has ever run.** Every quality finding is 3B–12B.
-2. **Only one model's judging is validated**, and only for ordering.
-3. **LM Studio is claimed as supported and has never been tested.**
-4. **`gemma4:12b` has judged four debates and been characterised in none** — no
+1. **No model produces all three fact-check clauses.** This is now B6's whole
+   problem, and it is a model property rather than a prompt one.
+2. **Only one model's judging is validated**, only for ordering, and **only for
+   that generation**.
+3. **No large model has produced a usable ledger.** `qwen3:32b` fits and runs
+   but returned unparseable JSON twice, cold and warm.
+4. **LM Studio is claimed as supported and has never been tested.**
+5. **`gemma4:12b` has judged five debates and been characterised in none** — no
    Tau-C, no B6 gate run, no position-bias baseline of its own.

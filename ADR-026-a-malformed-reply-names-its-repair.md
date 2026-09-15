@@ -62,6 +62,19 @@ This is CLAUDE.md's "a failure must carry what's needed to fix it" applied to a
 repair that was measured after the message was written. It is not a retry: the
 operator decides, the run still fails, and the failure is still counted.
 
+**Amended 2026-09-15, the same day, by the first test on another model.** The
+advice says "often" and that word is load-bearing: **the repair is
+model-dependent.** It was measured on `qwen3:8b`, where cold and warm replies
+differ byte-for-byte. On `qwen3:32b-16k` a malformed reply reproduced *identically
+cold and warm* — same fault, same character offset — so stopping the model
+changed nothing. `qwen3:14b` sits between: 12 claims cold against 13 warm, with
+the same clauses either way.
+
+The message stands as written, because an operator with no better option should
+still try the cheap thing first. But it promises a tendency, not a fix, and
+anything built on it must treat a second identical failure as the expected case
+rather than a surprise. See `probe/b6/README.md`.
+
 ### 3. `response_format` is the preventive candidate, and it is gated on a measurement
 
 Option 4 is the only one that prevents rather than repairs, and its own note

@@ -337,6 +337,63 @@ B6 asks for all three in one ledger. **Every model tested gets exactly two, and
 which two depends on the model rather than on the prompt.** Three prompt
 conditions were reverted chasing a defect that moves with the judge.
 
+## Generation is a bigger lever than size — qwen3:4b against qwen3.5:4b
+
+Same parameter count, same prompt, same transcript, same load state. Only the
+model generation differs.
+
+| judge | budget | claims | supported | contradicted | `not_checkable` | clauses |
+|---|---|---|---|---|---|---|
+| `qwen3:4b` | 6,000 | 10 | 8 | **0** | **2** | (1) + (3) |
+| `qwen3.5:4b` | 32,000 | 14 | 9 | **4** | **0** | (1) + **(2)** |
+
+**They get opposite pairs.** One generation finds the opinions and no
+contradictions; the next finds four cross-side contradictions — all verified
+cross-side, side 0's claims against `am-4` and side 1's against `am-3` — and no
+opinions. At the same size.
+
+**The budgets differ because they had to.** `qwen3.5:4b` failed at 6,000 with
+**23,149 characters of thinking and no answer at all**. At identical parameter
+counts the newer generation needed roughly five times the budget to answer the
+same prompt. That asymmetry is recorded rather than normalised away: it is
+OPEN-QUESTIONS 13 (budget counts thinking) landing on the newest generation, and
+it means a budget tuned for one generation silently starves the next.
+
+## The full clause table, every judge tested
+
+| judge | (1) supported | (2) contradicted | (3) `not_checkable` |
+|---|---|---|---|
+| `qwen3:0.6b` | degenerate — 1 claim | — | — |
+| `qwen3:1.7b` | degenerate — 1 claim | — | — |
+| `qwen3:4b` | ✅ | ❌ | ✅ 2 |
+| `qwen3.5:4b` | ✅ | ✅ 4 | ❌ |
+| `qwen3:8b` warm | ✅ | ✅ 3 | ❌ |
+| `qwen3:8b` cold | ✅ | ❌ | ❌ |
+| `qwen3:14b` both states | ✅ | ❌ | ✅ 4 |
+| `qwen3:32b-16k` | **unparseable, twice** | — | — |
+| `gemma4:12b` | not run on this transcript | — | — |
+
+**Nothing has produced all three.** Seven judges across two generations and five
+sizes, and every one that works at all returns exactly two clauses. The gate asks
+for three in one ledger.
+
+## ADR-026's repair advice failed on a model it was not measured on
+
+`qwen3:32b-16k` returned malformed JSON — `Expecting ',' delimiter: line 19
+column 38 (char 1038)`. The error told the operator what ADR-026 §2 says: stop
+the model and judge again, because the reply is deterministic only while the
+model stays loaded.
+
+**It was tried, and it failed identically.** The first run was warm; the retry
+stopped the model, slept, and ran cold. Both produced the same fault at the same
+character offset, `char 1038`.
+
+So the load-state repair is **model-dependent, not general**. It was measured on
+`qwen3:8b`, where cold and warm give byte-different replies. `qwen3:14b` is
+nearly state-insensitive (12 claims cold, 13 warm, identical clauses) and
+`qwen3:32b` appears fully state-insensitive on this input. ADR-026 §2's wording
+is corrected accordingly — the advice is worth giving, and it is not a guarantee.
+
 ## The second-model diagnostic has not run — four draws, four timeouts
 
 Attempted 2026-09-15 10:09–11:15. `gemma4:12b` against the gate transcript at

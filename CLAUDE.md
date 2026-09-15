@@ -134,15 +134,27 @@ code. See ADR-002 for full scope.
   zero `not_checkable`, and the warm ledger collapsed from 20 claims to 5.
   **Clause (3) has now never fired in 25 runs**, across three prompt variants
   and both load states, all on `qwen3:8b`.
-  A pattern worth more than either result: **both prompt edits helped the cold
-  state and hurt the warm one**, so a variant judged on one state misleads about
-  the other, and warm — every call after the first — is what users get. Two
-  readings are left, and the cheap one comes first: **judge the same transcript
-  with a second model** (`gemma4:12b`, installed, needs a budget well above
-  6000) to separate "the prompt is wrong" from "this model will not produce the
-  verdict". Only if that fails does the structural fix — a `factual` boolean in
-  the claim schema, ADR-024 §2 as schema rather than prose — become worth its
-  ADR and `schema_version` decision.
+  **That second reading is now confirmed, and it settles the question**
+  (2026-09-15, `probe/b6/README.md`, seven judges on the gate transcript with
+  load state held constant). **Clause (3) fires on `qwen3:4b` and `qwen3:14b`,
+  on the exact two assertions `qwen3:8b` mis-files as `unsupported`.** So the
+  prompt was never broken, and three reverted prompt conditions were tuning
+  wording against a defect that moves with the judge. It is also **not a size
+  threshold**: 4b does it, 8b does not, 14b does.
+  **The obstacle has inverted.** No judge tested produces all three clauses —
+  every working one returns exactly two, and which two varies by model *and by
+  generation*: `qwen3:8b` warm and `qwen3.5:4b` get (1)+(2); `qwen3:4b` and
+  `qwen3:14b` get (1)+(3); `qwen3:0.6b` and `1.7b` return one claim and cannot
+  do the task; `qwen3:32b-16k` returned unparseable JSON twice, cold and warm.
+  **Generation moves this more than size does**: `qwen3:4b` and `qwen3.5:4b`,
+  identical parameter counts, return *opposite* clause pairs — and the newer
+  one needed **five times the budget**, failing at 6000 with 23,149 characters
+  of thinking and no answer. See `MODEL-COVERAGE.md`, which now carries
+  generation as a column and the warning that **`JUDGE-VALIDATION`'s Tau-C
+  result is pinned to `qwen3:8b` and does not transfer across generations**.
+  The structural fix — a `factual` boolean in the claim schema, ADR-024 §2 as
+  schema rather than prose — is now the live option, because no prompt wording
+  can make one model do what another does.
   **The gate FAILED at condition A** under the N=5 standard fixed before the
   runs (`probe/b6/baseline-a-d1..d5.json`): clause (1) 5/5, clause (2) 4/5 (the
   one miss is the cold draw), clause (3) 0/5. That result also retired the
