@@ -1,0 +1,191 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T21:14:08Z",
+  "judge_model": "qwen3:4b",
+  "judge_budget": 6000,
+  "fact_check_enabled": true,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 27,
+          "max": 30,
+          "justification": "Strong logical flow connecting market efficiency to real-world results with clear evidence chain."
+        },
+        "evidence_grounding": {
+          "score": 24,
+          "max": 25,
+          "justification": "All claims directly reference prep passages: planning certainty (am-2), revenue recycling (am-3), Brindlewick example (am-1), economic efficiency (ds-1).",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "Effectively engaged with CON's core critique of Brindlewick's scalability without oversimplifying."
+        },
+        "rebuttal_effectiveness": {
+          "score": 14,
+          "max": 15,
+          "justification": "Directly addressed CON's concerns about scalability and regressive impact with tailored solutions.",
+          "hit_ledger": [
+            {
+              "point": "real-world effectiveness",
+              "status": "rebutted"
+            },
+            {
+              "point": "regressive burden",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 9,
+          "max": 10,
+          "justification": "Well-structured arguments with concrete examples (e.g., Brindlewick) enhance followability."
+        }
+      },
+      "total": 92
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 23,
+          "max": 30,
+          "justification": "Solid counterpoints on leakage and regressivity but slightly less cohesive in addressing scalability."
+        },
+        "evidence_grounding": {
+          "score": 23,
+          "max": 25,
+          "justification": "All claims trace to prep passages: leakage (am-6), regressivity (am-4), rural inequity (am-7), offshoring (am-5), exemptions (ds-2).",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 16,
+          "max": 20,
+          "justification": "Acknowledged PRO's revenue recycling mechanism but could have better engaged with scaling challenges."
+        },
+        "rebuttal_effectiveness": {
+          "score": 13,
+          "max": 15,
+          "justification": "Clear responses to PRO's equity and scalability claims but missed nuance in rural adaptation.",
+          "hit_ledger": [
+            {
+              "point": "leakage concerns",
+              "status": "conceded"
+            },
+            {
+              "point": "rural inequities",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 8,
+          "max": 10,
+          "justification": "Technical language on border adjustments and leakage reduces accessibility for broader audiences."
+        }
+      },
+      "total": 83
+    }
+  ],
+  "winner": "pro",
+  "winner_reason": "total",
+  "fact_check": {
+    "checked_against": "recorded_evidence",
+    "claims": [
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "A federal carbon tax can slash household emissions by 14% in two years",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-1"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "Revenue recycling as a flat dividend turns a regressive tax into a progressive transfer",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-3"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "A carbon tax provides firms with predictable price signals that spur innovation and long-term planning",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-2"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "A carbon tax is regressive before any rebate arrives",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-4"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "Border adjustments for carbon leakage are unworkable at scale",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-6"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "Rural drivers have no substitute for essential trips to work",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-7"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "The Ferncastle smelter example demonstrates that emissions shift across borders when a carbon tax is implemented",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-5"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "Every enacted carbon tax includes exemptions for the largest emitters",
+        "verdict": "supported",
+        "evidence_ids": [
+          "ds-2"
+        ]
+      },
+      {
+        "phase_index": 2,
+        "side_index": 1,
+        "claim": "Brindlewick's results are exceptional and not scalable for national implementation",
+        "verdict": "not_checkable",
+        "evidence_ids": []
+      },
+      {
+        "phase_index": 2,
+        "side_index": 0,
+        "claim": "A carbon tax can incentivize rural renewable energy investment",
+        "verdict": "not_checkable",
+        "evidence_ids": []
+      }
+    ]
+  }
+}

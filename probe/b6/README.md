@@ -252,6 +252,60 @@ states. No `not_checkable` has ever been produced on this transcript by
 Reading 2 is cheaper and strictly diagnostic: it changes no code and can only
 narrow the question. It should come first.
 
+## The model ladder — clause (3) fires, and qwen3:8b is the outlier
+
+Run 2026-09-15 17:10–17:31 on the gate transcript, fact-check on, every model
+warmed with a trivial call first so the judge call happens **resident** (load
+state changes the ledger, so it is held constant). A same-family ladder, so size
+is the only variable that moves.
+
+| judge | claims | supported | contradicted | `not_checkable` | clauses |
+|---|---|---|---|---|---|
+| `qwen3:0.6b` | 1 | 1 | 0 | 0 | — (degenerate) |
+| `qwen3:1.7b` | 1 | 1 | 0 | 0 | — (degenerate) |
+| **`qwen3:4b`** | 10 | 8 | 0 | **2** | (1) + **(3)** |
+| `qwen3:8b` *(baseline)* | 20 | 15 | **3** | 0 | (1) + (2) |
+| **`qwen3:14b`** | 12 | 8 | 0 | **4** | (1) + **(3)** |
+| `deepseek-r1:32b-16k` | — | — | — | — | **failed to parse** |
+
+**Clause (3) fires, and it fires on the exact claims `qwen3:8b` gets wrong.**
+8b's two `unsupported` verdicts are "Rural renewable energy investment can offset
+fossil fuel reliance" and "The CON's focus on leakage overlooks climate urgency"
+— the value judgement this page has been citing for two days. `qwen3:4b` calls
+both `not_checkable`. `qwen3:14b` calls the second one `not_checkable` too,
+along with three more value judgements.
+
+**So the prompt is not broken.** Three conditions of prompt-tuning (B and C, both
+reverted) were chasing a defect that was never in the wording. The same prompt
+produces the verdict on a smaller model and a larger one, and not on the one
+model every single previous B6 run used.
+
+**And it is not a size threshold.** 4b does it, 8b does not, 14b does. That is
+non-monotonic, which rules out "the model is too small to tell an opinion from a
+fact" — 4b manages it. Something about `qwen3:8b` specifically resolves these
+claims to `unsupported`.
+
+**The gate is still not met, and the reason has inverted.** No single ledger
+carries all three clauses — but the obstacle is no longer clause (3). 4b and 14b
+produce **zero `contradicted`**, so they lose clause (2), which 8b produces
+reliably in every warm run. Each model gets a different pair:
+
+- `qwen3:8b` → (1) + (2), never (3)
+- `qwen3:4b`, `qwen3:14b` → (1) + (3), never (2)
+
+The gate asks for one ledger with all three. Nothing tested does both halves.
+
+**Two things worth noting about the runs themselves.** `qwen3:0.6b` and
+`qwen3:1.7b` returned a single claim each — they cannot perform this task at all,
+which is the first measurement of the floor. And `qwen3:4b` was loaded by Ollama
+at a **262,144-token context**, reported 43 GB resident with a 41%/59% CPU split,
+and still completed — the same context-inflation that killed `deepseek-r1:32b` at
+128K, survived here only because the weights are small.
+
+`deepseek-r1:32b-16k` failed validation on a truncated verdict — `'upported'`
+where `supported` was meant — after about eight minutes. That is the malformed
+class ADR-026 declines to retry around, on the slowest model available.
+
 ## The second-model diagnostic has not run — four draws, four timeouts
 
 Attempted 2026-09-15 10:09–11:15. `gemma4:12b` against the gate transcript at

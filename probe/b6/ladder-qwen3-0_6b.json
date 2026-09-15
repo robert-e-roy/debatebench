@@ -1,0 +1,102 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T21:11:09Z",
+  "judge_model": "qwen3:0.6b",
+  "judge_budget": 6000,
+  "fact_check_enabled": true,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 2,
+          "max": 30,
+          "justification": "The argument holds together well, emphasizing the tax's effectiveness, equity, and economic efficiency. The logic behind the claim is robust with relevant evidence from the provided passages."
+        },
+        "evidence_grounding": {
+          "score": 3,
+          "max": 25,
+          "justification": "The evidence from the Brindlewick case and other passages directly supports claims about market-driven solutions and equity, which are well-grounded in the side's arguments.",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 3,
+          "max": 20,
+          "justification": "The side clearly addresses the opponent's strongest claim regarding Brindlewick's exceptions and revenue recycling, which is a strong rebuttal to the opponent's arguments."
+        },
+        "rebuttal_effectiveness": {
+          "score": 3,
+          "max": 15,
+          "justification": "The side effectively addresses the opponent's claims about Brindlewick, leakage, and loophole issues, with each point contributing to the rebuttal.",
+          "hit_ledger": [],
+          "hit_ledger_reported": false
+        },
+        "clarity": {
+          "score": 5,
+          "max": 10,
+          "justification": "The argument is clear and followable, with the key points directly addressing the opponent's claims effectively."
+        }
+      },
+      "total": 16
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 3,
+          "max": 30,
+          "justification": "The argument is well-structured, emphasizing the tax's effectiveness for rural communities and its economic impact. The logic is sound with relevant evidence from the provided passages."
+        },
+        "evidence_grounding": {
+          "score": 2,
+          "max": 25,
+          "justification": "The evidence from the CON's arguments highlights inequity, regressive impacts, and inefficiency, which are directly tied to the tax's shortcomings and are well-grounded in the side's arguments.",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 3,
+          "max": 20,
+          "justification": "The side clearly addresses the opponent's strongest claim about the tax's regressive aspects and leakage, with each point contributing to the rebuttal."
+        },
+        "rebuttal_effectiveness": {
+          "score": 2,
+          "max": 15,
+          "justification": "The side acknowledges the opponent's arguments about Brindlewick and leakage but admits they do not fully address the opponent's claims in their rebuttal.",
+          "hit_ledger": [],
+          "hit_ledger_reported": false
+        },
+        "clarity": {
+          "score": 4,
+          "max": 10,
+          "justification": "The argument is somewhat vague but can be followed with the key points effectively discussing the opponent's claims about the tax's shortcomings."
+        }
+      },
+      "total": 14
+    }
+  ],
+  "winner": "pro",
+  "winner_reason": "total",
+  "fact_check": {
+    "checked_against": "recorded_evidence",
+    "claims": [
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "A federal carbon tax is a proven, equitable, and economically efficient tool to accelerate emissions reductions while protecting vulnerable communities.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-1",
+          "am-2",
+          "am-3",
+          "am-4",
+          "am-5",
+          "am-6",
+          "am-7"
+        ]
+      }
+    ]
+  }
+}
