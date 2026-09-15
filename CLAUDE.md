@@ -105,8 +105,15 @@ code. See ADR-002 for full scope.
   over. The prompt splits those two by a question — is this a factual claim at
   all? — that it never told the model to ask first, and listed `not_checkable`
   last, after an `unsupported` whose definition already presupposes the answer.
-  **ADR-024 decides that checkability gates the other three verdicts**;
-  its §3 reorders the list and is deliberately being measured on its own.
+  **ADR-024 decides that checkability gates the other three verdicts.** Its §1
+  and §2 stand; **its §3 — that the prompt's verdict *order* was the cause — was
+  measured on its own and is falsified.** Condition B (four draws, both states,
+  `probe/b6/condition-b-*.json`) produced zero `not_checkable` and **lost all
+  three cross-side `contradicted` verdicts in the warm state**, the regression
+  ADR-024 §5 named in advance. The reorder is reverted; the artifacts stay. Both
+  ledgers also shrank, which suggests leading with the checkability question
+  makes the audit list *less* rather than classify more finely — so how to
+  express §2 is now the open part, not whether it is right.
   **The gate FAILED at condition A** under the N=5 standard fixed before the
   runs (`probe/b6/baseline-a-d1..d5.json`): clause (1) 5/5, clause (2) 4/5 (the
   one miss is the cold draw), clause (3) 0/5. That result also retired the

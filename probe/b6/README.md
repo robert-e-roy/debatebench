@@ -149,6 +149,55 @@ pre-ADR-019 ledger on this same transcript is saved here as
 But with draw-to-draw variance this large, one run either side is not a
 before/after, and the withdrawal below stands for a second reason.
 
+## Condition B — ADR-024's reorder, measured and REVERTED
+
+Run 2026-09-14 22:28–22:47 under the amended protocol: two draws per load state
+against the same transcript. The only change from condition A was moving
+`not_checkable` to the top of the prompt's verdict list with one sentence saying
+to decide it first.
+
+| state | draws | claims | supported | contradicted | unsupported | not_checkable | hash |
+|---|---|---|---|---|---|---|---|
+| cold | 2 | 9 | 8 | 1 | 0 | 0 | `6fe57f30f1cc6a38` |
+| warm | 2 | 16 | 15 | 0 | 1 | 0 | `6640c71bd6c58b79` |
+
+**The protocol's self-test passes.** Both cold draws are byte-identical and both
+warm draws are byte-identical, so within-state determinism holds under a changed
+prompt too, and the amendment that replaced N=5 stands.
+
+**The change fails, and costs more than it returns.** Against condition A:
+
+| | A cold | B cold | A warm | B warm |
+|---|---|---|---|---|
+| claims | 11 | 9 | 20 | 16 |
+| `contradicted` | 0 | **1** | **3** | **0** |
+| `not_checkable` | 0 | 0 | 0 | 0 |
+
+- **Clause (3) still never fires.** Zero `not_checkable` in all four draws, which
+  is what the change existed to produce. ADR-024 §3's hypothesis — that the list
+  order was doing the damage — is **falsified**.
+- **Clause (2) is lost in the warm state**, 3 cross-side contradictions to none.
+  ADR-024 §5 names that trade a regression in advance, and here it was paid for
+  nothing.
+- Cold gains one contradiction, but cold is the weaker state to begin with and
+  one clause does not offset the other.
+
+So the prompt is reverted to the baseline order. The artifacts stay.
+
+**A comparison that looked available and is not.** Diffing the two ledgers
+claim-by-claim suggests 19 of A's 20 claims were "dropped". That reading is
+wrong: the audit re-worded nearly every claim between conditions, so string
+matching finds no counterpart for claims that are plainly the same assertion.
+**Only the verdict counts compare reliably here.** Anything claim-level needs a
+matching rule that survives rewording, and no such rule exists yet.
+
+**What it suggests for the next attempt.** Both ledgers shrank — 11→9 cold and
+20→16 warm. Leading with "if this is not a factual claim, stop" appears to make
+the audit list *less*, not classify more finely, which runs against the
+"Filter nothing out" instruction sitting above it. Whatever is tried next should
+be phrased to protect listing, and ADR-024 §3's reserve option should not be
+assumed to escape this.
+
 ## Comparing condition A with condition B
 
 They were run under different protocols — A took five draws in an uncontrolled

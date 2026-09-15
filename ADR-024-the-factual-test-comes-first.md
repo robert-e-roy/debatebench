@@ -81,6 +81,20 @@ as an explicit instruction above the list. Shipping both at once would make a
 success uninterpretable — the reorder has never been run alone, and pairing it
 with a second edit would forfeit the one clean reading available.
 
+**Measured 2026-09-14, and the reorder is reverted.** Condition B, four draws
+across both load states (`probe/b6/condition-b-*.json`): **zero
+`not_checkable`** — the change produced none of what it existed for — and the
+warm state lost all three cross-side `contradicted` verdicts, the regression §5
+named in advance. Both ledgers also shrank. The order hypothesis is falsified,
+and separating the two edits is what makes that statement possible.
+
+§1 and §2 are unaffected: they are decisions about what the ledger holds and in
+what order the questions are asked, and nothing measured bears on whether they
+are right. What is now open is how to *express* them, given evidence that
+leading with the checkability question makes the audit list less rather than
+classify better. The reserve option above should not be assumed to escape
+that — see `probe/b6/README.md`.
+
 ### 4. No code enforcement
 
 Like ADR-019, this is a rule the prompt states and the model may disobey.
