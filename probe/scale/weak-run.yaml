@@ -1,0 +1,31 @@
+# Same topic, model, budget and phase list as examples/run.yaml, so the scores
+# are directly comparable to the 85-100 band already on record. The ONLY
+# difference is that the con side is `weak-debater.yaml`.
+topic: "A federal carbon tax would do more good than harm."
+
+format:
+  phases: [opening:medium, rebuttal:medium, conclusion:short]
+
+teams:
+  - team: ../../examples/teams/social-democrat.yaml
+    side: pro
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+  - team: weak-debater.yaml
+    side: con
+    model: qwen3:8b
+    base_url: http://127.0.0.1:11434/v1
+    budget: 2000
+
+seed: 101
+output: weak-transcript.json
+
+judge:
+  model: qwen3:8b
+  base_url: http://127.0.0.1:11434/v1
+  budget: 6000
+  output: weak-scores.json
+  # No prep in this run, so every claim would be not_checkable by design
+  # (ADR-015 §2). The question here is the scoring rubric, not the ledger.
+  fact_check: false
