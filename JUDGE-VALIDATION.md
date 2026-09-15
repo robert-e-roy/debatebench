@@ -339,6 +339,43 @@ badly on purpose — and see whether the rubric can reach the bottom half at all
 That is one debate and one judge call, and it is the cheapest test of whether
 these scores carry information below 85.
 
+### Settled 2026-09-15 — the rubric discriminates, and the inference above was wrong
+
+`probe/scale/` ran exactly that: a "Talk Radio Caller" whose *voice* argues from
+one anecdote about a cousin, restates a slogan instead of answering, and
+substitutes rhetorical questions for reasons, against `social-democrat.yaml` on
+the same motion, model, budget and phases as `examples/run.yaml`.
+
+| | argument_quality | evidence_grounding | steelman_fidelity | rebuttal_effectiveness | clarity | total |
+|---|---|---|---|---|---|---|
+| pro (Social Democrat) | 25/30 | 22/25 | 18/20 | **15/15** | 9/10 | **89** |
+| con (Talk Radio Caller) | 15/30 | **8/25** | 12/20 | **5/15** | 5/10 | **45** |
+
+**45 of 100 — forty points below anything previously recorded.** The scale is not
+compressed; it discriminates, and it does so per dimension in the places the
+persona was built to fail. `evidence_grounding` falls to 8 of 25 for a speaker
+who cites only a cousin, and `rebuttal_effectiveness` to 5 of 15 for one told
+never to engage with what the other side said. Those are the two dimensions the
+weakness was written into, and they are the two that collapsed.
+
+**So the finding above needs splitting.** The *observation* stands: every score
+recorded before this fell in 85–100 and 52% of dimensions came back maxed. The
+*inference* — that the number might not carry information below 85 — is
+**falsified**. The band was narrow because every debate in it was competent, not
+because the rubric could not go lower.
+
+What survives, and is now better supported: an 85–100 cluster among *competent*
+debaters means the rubric has poor resolution *at the top*, which is exactly
+where the 100/100 draw sits. A judge that can tell 89 from 45 but not 100 from
+100 is discriminating coarsely rather than not at all, and ADR-023's coin toss
+is still resolving a ceiling rather than a dead heat.
+
+**A second result, unplanned.** This judge call first failed with malformed JSON
+and succeeded on a plain re-run, no seed change and no code change — the
+behaviour OPEN-QUESTIONS 14 was corrected to predict. Two of six judge calls in
+this batch returned unparseable JSON, so that failure rate is worth its own
+line: it is not rare.
+
 ## Decisions
 
 1. **Acceptance threshold — proposed, anchored on the table above.** Against the

@@ -1,0 +1,104 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T16:22:47Z",
+  "judge_model": "qwen3:8b",
+  "judge_budget": 6000,
+  "fact_check_enabled": false,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 25,
+          "max": 30,
+          "justification": "The PRO presents a coherent, evidence-based case linking carbon taxes to emissions reduction, social equity, and public investment. Sweden and BC examples are logically tied to revenue recycling and systemic change."
+        },
+        "evidence_grounding": {
+          "score": 22,
+          "max": 25,
+          "justification": "Specific examples (Sweden’s 27% emissions cut) and revenue allocation strategies are plausible, though no empirical data is provided for claims about social solidarity.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "Acknowledge the CON’s focus on job losses and middle-class burden, then explains how revenue recycling can mitigate these risks, showing fidelity to the strongest counterargument."
+        },
+        "rebuttal_effectiveness": {
+          "score": 15,
+          "max": 15,
+          "justification": "Effectively addresses the CON’s points about job loss and bureaucracy by citing Sweden/BC examples and revenue recycling, while countering the 'taxing the middle class' narrative with equity-focused arguments.",
+          "hit_ledger": [
+            {
+              "point": "job loss due to tax",
+              "status": "rebutted"
+            },
+            {
+              "point": "middle class taxed",
+              "status": "rebutted"
+            },
+            {
+              "point": "bureaucracy issues",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 9,
+          "max": 10,
+          "justification": "Well-structured, with clear linkage between carbon taxes, revenue use, and social outcomes. However, some terms like 'revenue-neutral adjustments' may require more explanation."
+        }
+      },
+      "total": 89
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 15,
+          "max": 30,
+          "justification": "The CON focuses on anecdotal narratives about job loss and middle-class burden, lacking structured logic or counterarguments to the PRO’s evidence-based claims."
+        },
+        "evidence_grounding": {
+          "score": 8,
+          "max": 25,
+          "justification": "Relies on a single anecdote (cousin’s factory) and vague assertions about bureaucracy, with no specific data or examples to support claims about government inefficiency.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 12,
+          "max": 20,
+          "justification": "Attempts to steelman the PRO’s arguments by citing Sweden/BC but fails to engage with the evidence in a structured way, instead relying on emotional counter-narratives."
+        },
+        "rebuttal_effectiveness": {
+          "score": 5,
+          "max": 15,
+          "justification": "Fails to address the PRO’s evidence about Sweden/BC. Instead, focuses on personal stories, leaving the PRO’s systemic arguments unchallenged.",
+          "hit_ledger": [
+            {
+              "point": "Sweden/BC success",
+              "status": "open"
+            },
+            {
+              "point": "revenue recycling",
+              "status": "dodged"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 5,
+          "max": 10,
+          "justification": "Lacks clarity in argumentation, relying on emotionally charged anecdotes without logical structure or rebuttals to the opposing side’s claims."
+        }
+      },
+      "total": 45
+    }
+  ],
+  "winner": "pro",
+  "winner_reason": "total"
+}

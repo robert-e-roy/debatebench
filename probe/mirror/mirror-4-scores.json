@@ -1,0 +1,100 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T16:00:47Z",
+  "judge_model": "gemma4:12b",
+  "judge_budget": 10000,
+  "fact_check_enabled": false,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 27,
+          "max": 30,
+          "justification": "The PRO side builds a strong case for infrastructure as an enabler of economic growth, effectively pivoting the debate from simple job counts to broader systemic benefits."
+        },
+        "evidence_grounding": {
+          "score": 20,
+          "max": 25,
+          "justification": "The arguments regarding the multiplier effect and the stability of tax bases are logically sound and consistent within the economic framework presented.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "The PRO side clearly acknowledged and engaged with the core concerns of 'opportunity cost' and 'low employment' before offering counter-perspectives."
+        },
+        "rebuttal_effectiveness": {
+          "score": 13,
+          "max": 15,
+          "justification": "They effectively reframed the 'low employment' criticism into a discussion on indirect economic growth and the necessity of modern infrastructure.",
+          "hit_ledger": [
+            {
+              "point": "opportunity cost/scarcity",
+              "status": "rebutted"
+            },
+            {
+              "point": "low employment",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 9,
+          "max": 10,
+          "justification": "The argument is extremely clear, logically structured, and easy to follow throughout."
+        }
+      },
+      "total": 87
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "The CON side excels by highlighting the certain, immediate costs of resource consumption versus the speculative, indirect benefits of the digital economy."
+        },
+        "evidence_grounding": {
+          "score": 21,
+          "max": 25,
+          "justification": "The distinction between private data storage and public utility infrastructure is a sharp, plausible point that grounds their opposition in practical land-use concerns.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "The CON side did an excellent job of adopting the 'railroad' analogy and immediately dismantling it with a high-quality counter-comparison."
+        },
+        "rebuttal_effectiveness": {
+          "score": 14,
+          "max": 15,
+          "justification": "The CON side successfully neutralized the PRO's strongest point (infrastructure) by narrowing the definition of what constitutes 'essential' infrastructure for a community.",
+          "hit_ledger": [
+            {
+              "point": "infrastructure/railroad",
+              "status": "rebutted"
+            },
+            {
+              "point": "economic multiplier",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The case is articulated with high precision and professional clarity."
+        }
+      },
+      "total": 92
+    }
+  ],
+  "winner": "con",
+  "winner_reason": "total"
+}

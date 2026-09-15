@@ -1,0 +1,163 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "started_at": "2026-09-15T16:16:03Z",
+  "finished_at": "2026-09-15T16:17:52Z",
+  "run": {
+    "topic": "A federal carbon tax would do more good than harm.",
+    "seed": 101,
+    "budget_tolerance": 16,
+    "phases": [
+      "opening",
+      "rebuttal",
+      "conclusion"
+    ],
+    "sides": [
+      {
+        "index": 0,
+        "team_file": "../../examples/teams/social-democrat.yaml",
+        "team": {
+          "id": "social-democrat",
+          "name": "Social Democrat",
+          "voice": "policy-detailed and comparative, reaches for programme design and international precedent rather than principle",
+          "stance": "social-democratic",
+          "values": [
+            "universal-provision",
+            "solidarity",
+            "public-investment"
+          ],
+          "corpus": "social-democrat-corpus.jsonl"
+        },
+        "side": "pro",
+        "model": "qwen3:8b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      },
+      {
+        "index": 1,
+        "team_file": "weak-debater.yaml",
+        "team": {
+          "id": "weak-debater",
+          "name": "Talk Radio Caller",
+          "voice": "rambling and repetitive, argues almost entirely from one personal anecdote about a cousin, restates the same slogan instead of answering objections, asks rhetorical questions in place of reasons, drifts onto unrelated grievances, and never engages with what the other side actually said",
+          "stance": "against-on-principle",
+          "values": [
+            "common-sense",
+            "gut-feeling"
+          ],
+          "corpus": null
+        },
+        "side": "con",
+        "model": "qwen3:8b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      }
+    ]
+  },
+  "turns": [
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 0,
+      "order": 0,
+      "text": "A federal carbon tax is a pragmatic, evidence-based tool to decarbonize economies while aligning with social democratic priorities of equity and public investment. Countries like Sweden and British Columbia have demonstrated that carbon pricing, paired with revenue-neutral adjustments, can reduce emissions without harming economic growth—Sweden’s 27% emissions cut since 1990 alongside robust welfare programs shows how this works. By channeling revenue into affordable public transit, renewable energy, and universal healthcare, a well-structured tax can both tackle climate change and strengthen social solidarity. Critics worry about regressive impacts, but progressive revenue recycling—like funding green jobs or expanding social safety nets—ensures the burden falls on those best able to bear it. Ultimately, a carbon tax is not just an environmental measure but a catalyst for building a more just, resilient economy.",
+      "usage": {
+        "prompt_tokens": 118,
+        "completion_tokens": 355
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 19152,
+      "started_at": "2026-09-15T16:16:03Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 1,
+      "order": 1,
+      "text": "You know, my cousin in Spokane lost his factory when the state put a carbon tax on the industry—suddenly, his paycheck was cut by 20% and the town’s unemployment rate spiked. Who really pays for this? The people who work the hardest, not the big corporations who just pass the cost on! You think a carbon tax is smart? It’s a tax on the middle class, plain and simple. Why target the working stiff when the real villains are the oil barons and their lobbyists? And don’t even get me started on how the government can’t manage a carbon tax without creating a bureaucracy that swallows every dollar. You want equity? Try giving the working class a real raise instead of taxing them into poverty!",
+      "usage": {
+        "prompt_tokens": 325,
+        "completion_tokens": 469
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 18559,
+      "started_at": "2026-09-15T16:16:22Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 0,
+      "text": "The PRO says Sweden and British Columbia showed carbon taxes work by cutting emissions and funding public goods—so what’s the problem? My cousin’s factory closed, unemployment spiked, and the middle class got taxed out of existence! You can point to stats all you want, but who’s really paying? The people who build the cars, power the grid, and clean the streets! And don’t think the government can’t mess it up—bureaucracy will eat every dollar. Why fund green jobs when we could just raise wages? You want equity? Tax the oil barons, not the working stiff!",
+      "usage": {
+        "prompt_tokens": 507,
+        "completion_tokens": 467
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 18323,
+      "started_at": "2026-09-15T16:16:41Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 1,
+      "text": "The CON’s strongest argument is that a carbon tax risks job losses and disproportionately burdens middle-class workers, as seen in their cousin’s case. However, Sweden and British Columbia demonstrate that targeted revenue recycling—such as funding retraining, green jobs, and public services—can mitigate these risks while creating new employment opportunities. The real harm lies not with workers but with polluters who externalize costs; taxing them ensures they pay for the damage they cause. Bureaucracy is a risk, but well-designed systems in successful models show it can be managed. Ultimately, a carbon tax is not a tax on the working class but a mechanism to shift responsibility to those who profit from pollution, fostering both environmental and social equity.",
+      "usage": {
+        "prompt_tokens": 608,
+        "completion_tokens": 405
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 17561,
+      "started_at": "2026-09-15T16:16:59Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "conclusion",
+      "side_index": 0,
+      "order": 0,
+      "text": "A federal carbon tax, when paired with progressive revenue recycling and targeted public investment, has demonstrably reduced emissions while strengthening social equity, as evidenced by Sweden and British Columbia’s success. By holding polluters accountable and funding green jobs, retraining, and public services, it mitigates harm to workers and ensures the burden falls on those who externalize environmental costs—aligning with social democratic priorities of justice and resilience.",
+      "usage": {
+        "prompt_tokens": 752,
+        "completion_tokens": 511
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 20092,
+      "started_at": "2026-09-15T16:17:17Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 2,
+      "phase": "conclusion",
+      "side_index": 1,
+      "order": 1,
+      "text": "You want to tax the people who keep the country running, not the ones who profit from burning the planet! My cousin’s story isn’t an outlier—it’s the real cost of this “pragmatic” plan, and the government’s promise to fix it? Yeah, right—bureaucracy’s just another way to make the middle class pay for the oil barons’ crimes!",
+      "usage": {
+        "prompt_tokens": 880,
+        "completion_tokens": 355
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 15063,
+      "started_at": "2026-09-15T16:17:37Z",
+      "length": "short"
+    }
+  ]
+}

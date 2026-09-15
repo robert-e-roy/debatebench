@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "started_at": "2026-09-15T15:38:38Z",
+  "finished_at": "2026-09-15T15:46:36Z",
+  "run": {
+    "topic": "Are DataCenters good for the community",
+    "seed": 377027683,
+    "budget_tolerance": 16,
+    "phases": [
+      "opening",
+      "rebuttal",
+      "rebuttal",
+      "conclusion"
+    ],
+    "sides": [
+      {
+        "index": 0,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "pro",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      },
+      {
+        "index": 1,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "con",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      }
+    ]
+  },
+  "turns": [
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 0,
+      "order": 0,
+      "text": "Data centers provide a substantial and stable tax base for local municipalities while driving economic revitalization through job creation and significant infrastructure investment. By establishing the essential digital architecture of the modern economy, these facilities create a measurable \"multiplier effect\" that enhances the competitiveness of surrounding businesses and the broader community.",
+      "usage": {
+        "prompt_tokens": 114,
+        "completion_tokens": 526
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 33326,
+      "started_at": "2026-09-15T15:38:38Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 1,
+      "order": 1,
+      "text": "While data centers may provide a taxable footprint, these gains are often offset by the significant externalities they impose on local infrastructure, specifically regarding overwhelming demand on the power grid and water resources. Furthermore, the high level of automation within these facilities means they offer very few local jobs, representing a poor use of land compared to traditional, labor-intensive industries that foster more diverse economic growth for the community.",
+      "usage": {
+        "prompt_tokens": 179,
+        "completion_tokens": 926
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 61145,
+      "started_at": "2026-09-15T15:39:11Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 0,
+      "text": "The pro-side correctly identifies that data centers provide a consistent tax base and serve as a critical component of the modern digital economy. However, from a cost-benefit perspective, these fiscal gains are often eclipsed by the massive, socialized costs of upgrading electricity grids and straining local water resources. Their claim of a \"multiplier effect\" ignores the reality that these highly automated facilities offer negligible local employment compared to traditional, labor-intensive industries. Furthermore, \"economic revitalization\" should be measured by broad community growth, not by facilitating a specialized infrastructure that serves global corporate interests while diverting essential resources from local residents. We must prioritize land use that fosters diverse, high-employment growth rather than trading long-term infrastructure security for a narrow, high-tech tax windfall.",
+      "usage": {
+        "prompt_tokens": 292,
+        "completion_tokens": 1060
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 60106,
+      "started_at": "2026-09-15T15:40:12Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 1,
+      "text": "The opposition rightly highlights the significant demands data centers place on local infrastructure, specifically regarding power and water consumption. However, these requirements serve as an catalyst for private-sector capital and investment, which often results in the modernization of local grids and resources more efficiently than public-sector funding could achieve alone. Their critique regarding low direct employment ignores the crucial \"infrastructure multiplier\"—the fact that a robust digital backbone is the fundamental prerequisite for local small businesses to compete and scale in a global market. Furthermore, their appeal to \"traditional industries\" assumes a static economy, whereas our goal should be to foster a modern, high-tech environment where local economies can thrive in the 21st century. We must choose the long-term economic resilience of a modernized infrastructure over a cautious retreat into outdated industrial models.",
+      "usage": {
+        "prompt_tokens": 459,
+        "completion_tokens": 938
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 54814,
+      "started_at": "2026-09-15T15:41:12Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 0,
+      "text": "The opposition’s strongest point is the concern regarding \"socialized costs,\" where the public bears the burden of upgrading utility infrastructure while the facilities themselves provide relatively few direct local jobs. However, viewing these infrastructure requirements as a net loss ignores the market-driven modernization of the grid that such high-demand hubs necessitate, which ultimately results in a more resilient and capable power base for all local industries. Furthermore, their preference for \"traditional\" industries relies on a static economic model that overlooks the \"digital commons\" these centers provide, which serves as a critical backbone for local small businesses to compete in a globalized economy. Their argument essentially advocates for the preservation of 20th-century industrial norms at the expense of the very infrastructure required for 21st-century prosperity. We must prioritize a forward-looking infrastructure that facilitates modern economic scale rather than clinging to a protectionist stance toward outdated, lower-growth industrial models.",
+      "usage": {
+        "prompt_tokens": 634,
+        "completion_tokens": 926
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 55362,
+      "started_at": "2026-09-15T15:42:07Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 1,
+      "text": "The Pro-side correctly argues that a robust digital infrastructure is essential for small businesses to compete in a globalized economy and that these facilities can catalyze necessary grid modernization. However, a strict cost-benefit analysis reveals that the primary beneficiaries of this infrastructure are often global corporations, while the local community bears the \"socialized\" costs of strained utility grids and depleted water resources. Their argument conflates technological necessity with community benefit, failing to account for the significant opportunity costs of diverting land and power away from labor-intensive industries that actually employ local residents. Furthermore, their vision of \"modernization\" ignores the fact that high-growth \"digital commons\" often provide minimal local employment compared to traditional manufacturing or agricultural roles. Ultimately, we must prioritize sustainable local economic growth over a high-tech infrastructure model that prioritizes global data flow over local human capital.",
+      "usage": {
+        "prompt_tokens": 836,
+        "completion_tokens": 1173
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 70910,
+      "started_at": "2026-09-15T15:43:03Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 1,
+      "order": 0,
+      "text": "The opposition's position wins because a rigorous cost-benefit analysis reveals that the \"socialized\" costs of upgrading and straining local power and water infrastructure outweigh the benefits of a specialized tax base. While the pro-side argues for a \"digital common,\" these facilities are highly automated and provide significantly fewer local employment opportunities compared to labor-intensive, community-focused industries. We must account for the substantial opportunity cost of diverting limited resources—both land and utility capacity—toward a global corporate infrastructure rather than toward local human capital. The \"multiplier effect\" touted by the pro-side remains largely abstract for the average resident, while the strain on public utilities presents a tangible, long-term cost to the community. Ultimately, we must prioritize sustainable, high-employment economic growth over a model that prioritizes global data flows at the expense of local resource security.",
+      "usage": {
+        "prompt_tokens": 1007,
+        "completion_tokens": 1322
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 82029,
+      "started_at": "2026-09-15T15:44:13Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 0,
+      "order": 1,
+      "text": "The Pro-side wins because it correctly identifies data centers as essential catalysts for long-term economic modernization rather than just isolated industrial sites. We successfully demonstrated that the infrastructure demands of these centers serve as a vital incentive for private-sector investment to modernize and fortify local power grids and resources. This modernization provides a superior, more resilient infrastructure that benefits all local entities, not just the facilities themselves. Furthermore, we highlighted the \"multiplier effect,\" where the provided digital backbone becomes a fundamental prerequisite for local small businesses to compete and scale in a globalized marketplace. Ultimately, our position favors a forward-looking, infrastructure-first strategy that builds the necessary foundation for 21st-century prosperity over a static, outdated economic model.",
+      "usage": {
+        "prompt_tokens": 1193,
+        "completion_tokens": 956
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 60866,
+      "started_at": "2026-09-15T15:45:35Z",
+      "length": "medium"
+    }
+  ]
+}

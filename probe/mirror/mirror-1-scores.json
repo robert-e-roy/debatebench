@@ -1,0 +1,104 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T15:26:53Z",
+  "judge_model": "gemma4:12b",
+  "judge_budget": 10000,
+  "fact_check_enabled": false,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 26,
+          "max": 30,
+          "justification": "The Pro side presents a coherent economic case centered on tax bases and the 'multiplier effect' of high-tech growth."
+        },
+        "evidence_grounding": {
+          "score": 20,
+          "max": 25,
+          "justification": "The arguments rely on plausible economic concepts, though they remain somewhat abstract compared to the specific resource-drain concerns of the opposition.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "The Pro side explicitly acknowledges and attempts to address the 'socialized' costs and 'transient' nature of the jobs."
+        },
+        "rebuttal_effectiveness": {
+          "score": 12,
+          "max": 15,
+          "justification": "The Pro side successfully pivoted the infrastructure cost argument into a narrative of modernization, though they struggled to fully address the 'ghost facility' point.",
+          "hit_ledger": [
+            {
+              "point": "socialized costs/privatized profits",
+              "status": "rebutted"
+            },
+            {
+              "point": "transient/low-wage jobs",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 9,
+          "max": 10,
+          "justification": "The case is easy to follow with clear, logical transitions between paragraphs."
+        }
+      },
+      "total": 85
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "The Con side offers a very strong critique of the externalities (water/power) and the fiscal risks of relying on multinational corporations."
+        },
+        "evidence_grounding": {
+          "score": 22,
+          "max": 25,
+          "justification": "The inclusion of 'ghost' facilities as a specific critique makes the case more grounded in real-world industry concerns.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "The Con side accurately identifies the core of the Pro's arguments (multipliers and opportunity costs) before systematically dismantling them."
+        },
+        "rebuttal_effectiveness": {
+          "score": 13,
+          "max": 15,
+          "justification": "The Con side was highly effective at deconstructing the Pro's 'multiplier' and 'opportunity cost' claims by identifying them as fiscal gambles or false dilemmas.",
+          "hit_ledger": [
+            {
+              "point": "tax revenue/employment",
+              "status": "rebutted"
+            },
+            {
+              "point": "multiplier effect",
+              "status": "rebutted"
+            },
+            {
+              "point": "opportunity cost/false dilemma",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The argument is extremely clear and follows a logical progression from resource reality to fiscal prudence."
+        }
+      },
+      "total": 91
+    }
+  ],
+  "winner": "con",
+  "winner_reason": "total"
+}

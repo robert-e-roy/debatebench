@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "started_at": "2026-09-15T15:16:12Z",
+  "finished_at": "2026-09-15T15:23:23Z",
+  "run": {
+    "topic": "Are DataCenters good for the community",
+    "seed": 584785143,
+    "budget_tolerance": 16,
+    "phases": [
+      "opening",
+      "rebuttal",
+      "rebuttal",
+      "conclusion"
+    ],
+    "sides": [
+      {
+        "index": 0,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "pro",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      },
+      {
+        "index": 1,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "con",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      }
+    ]
+  },
+  "turns": [
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 0,
+      "order": 0,
+      "text": "Data centers serve as vital catalysts for regional economic growth by generating significant tax revenue and creating stable employment in construction, security, and technical maintenance. As the indispensable backbone of the modern digital economy, these facilities host the infrastructure necessary for innovation, ultimately fostering local prosperity through private investment.",
+      "usage": {
+        "prompt_tokens": 114,
+        "completion_tokens": 571
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 38040,
+      "started_at": "2026-09-15T15:16:12Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 1,
+      "order": 1,
+      "text": "While data centers may generate some tax revenue, they often impose disproportionate costs on local infrastructure by consuming massive amounts of electricity and water. A rigorous cost-benefit analysis suggests that the strain on these essential public resources frequently outweighs the modest number of high-quality, permanent jobs created for the local community.",
+      "usage": {
+        "prompt_tokens": 178,
+        "completion_tokens": 619
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 34849,
+      "started_at": "2026-09-15T15:16:50Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 0,
+      "text": "The opposition correctly identifies that data centers can generate tax revenue and provide employment in the construction and security sectors. However, a granular analysis shows these jobs are often low-wage or transient, failing to provide the substantive, long-term career growth for a local workforce that would justify the infrastructure investment. Furthermore, while they claim these centers are \"catalysts for innovation,\" the vast majority of that innovation and intellectual growth benefits global corporations rather than the local community. Most importantly, the profit from this \"digital backbone\" is privatized by tech giants, while the massive costs—specifically the strain on public power grids and water supplies—are socialized and borne by local taxpayers. Ultimately, the promise of modest local tax gains does not outweigh the significant, long-term degradation of essential public resources.",
+      "usage": {
+        "prompt_tokens": 273,
+        "completion_tokens": 754
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 45717,
+      "started_at": "2026-09-15T15:17:25Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 1,
+      "text": "The opposition’s strongest point is that these facilities may \"socialize\" the costs of infrastructure—specifically electricity and water—while \"privatizing\" the profits for global corporations. However, this overlooks the fundamental economic principle that private investment creates a stable, predictable tax base that allows local governments to modernize and expand infrastructure at no cost to the taxpayer. Furthermore, the claim that these jobs are merely \"transient\" ignores the significant multiplier effect; a robust digital infrastructure attracts satellite businesses and high-tech ventures that create a diverse, local economic ecosystem. While we must remain vigilant about resource management, the assertion that these centers primarily benefit global entities ignores the fact that the capital remains in the community through state and local tax revenues. Ultimately, a \"zero-growth\" stance out of fear of resource demand ignores the reality that being part of the global digital economy is the most viable path to long-term regional prosperity.",
+      "usage": {
+        "prompt_tokens": 447,
+        "completion_tokens": 853
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 50288,
+      "started_at": "2026-09-15T15:18:11Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 0,
+      "text": "The opposition’s most compelling point is that the significant consumption of local resources, such as water and electricity, creates a measurable strain on public infrastructure that must be weighed against the local economic benefits. However, this perspective overlooks the critical opportunity cost: a community that rejects these centers risks being bypassed by the global digital economy, leading to a stagnant tax base and stagnating growth. Furthermore, the claim that the jobs are merely \"transient\" ignores the \"multiplier effect\" where a robust digital backbone creates a cluster effect, attracting high-growth startups and ancillary tech services that foster long-term, high-wage employment. The assertion that these costs are \"socialized\" ignores the reality that substantial private investment provides the capital necessary for municipalities to modernize and upgrade their infrastructure beyond its current capacity. Ultimately, a policy of caution in the face of technological progress leaves a community vulnerable, whereas welcoming these facilities provides the fiscal foundation for a modern, prosperous, and sustainable local economy.",
+      "usage": {
+        "prompt_tokens": 647,
+        "completion_tokens": 904
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 64330,
+      "started_at": "2026-09-15T15:19:01Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 1,
+      "text": "The proponent’s strongest argument is the \"multiplier effect,\" which suggests that serving as a digital hub will catalyze a high-tech ecosystem and provide the tax base necessary to modernize local infrastructure. However, this assumes a level of local economic integration that is often absent; many data centers are \"ghost\" facilities serves global traffic with minimal staffing, offering few high-wage opportunities for the local workforce. From a cost-benefit perspective, the claim that these centers provide \"capital for modernization\" is a fiscal gamble, as the massive strain on power grids and water supplies often necessitates public spending on infrastructure that far exceeds the modest, concentrated tax revenue they generate. Furthermore, the \"opportunity cost\" of avoiding these facilities is a false dilemma; a community can remain competitive by fostering diverse, locally-focused industries rather than subsidizing the resource consumption of multinational corporations. Ultimately, a responsible, limited-government approach recognizes that risk-heavy, speculative growth does not justify the certain degradation of essential public resources and the socialization of costs for private profit.",
+      "usage": {
+        "prompt_tokens": 857,
+        "completion_tokens": 1071
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 65371,
+      "started_at": "2026-09-15T15:20:06Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 1,
+      "order": 0,
+      "text": "The opposition’s position ultimately fails because it prioritizes the speculative growth of multinational corporations over the measurable, long-term interests of the local community. A rigorous cost-benefit analysis reveals that the \"socialized\" costs—specifically the massive strain on public water and electricity—far outweigh the \"privatized\" profits and modest tax revenues generated by these facilities. Furthermore, the promised economic boom is undermined by the reality that these \"ghost\" facilities offer few high-wage, permanent opportunities for the local workforce. The \"opportunity cost\" of rejecting these projects is a false dilemma, as it is more prudent for a community to protect its essential resources than to subsidize the infrastructure of global entities. Ultimately, a responsible, limited-government approach demands that we refuse to trade certain, tangible public assets for the speculative promise of an external digital boom.",
+      "usage": {
+        "prompt_tokens": 1065,
+        "completion_tokens": 829
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 51313,
+      "started_at": "2026-09-15T15:21:11Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 0,
+      "order": 1,
+      "text": "The Pro position wins because it correctly identifies data centers as a vital vehicle for private investment and the creation of a stable growth trajectory. While the opposition highlights the strain on resources, the Pro side correctly argues that the resulting tax revenue provides the necessary capital to modernize and upgrade infrastructure for the long term. Furthermore, the concept of the \"multiplier effect\" demonstrates that these facilities serve as a foundation for a broader, high-tech local ecosystem, attracting diverse businesses that provide high-wage opportunities. The opposition’s \"false dilemma\" fails to account for the severe economic risk of being bypassed by the global digital economy, which would lead to a stagnant, shrinking tax base. Ultimately, the Pro position offers a pragmatic, growth-oriented approach that secures a modern, prosperous, and sustainable fiscal future for the community.",
+      "usage": {
+        "prompt_tokens": 1249,
+        "completion_tokens": 1184
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 81034,
+      "started_at": "2026-09-15T15:22:02Z",
+      "length": "medium"
+    }
+  ]
+}

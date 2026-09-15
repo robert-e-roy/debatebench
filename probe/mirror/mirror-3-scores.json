@@ -1,0 +1,100 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T15:50:00Z",
+  "judge_model": "gemma4:12b",
+  "judge_budget": 10000,
+  "fact_check_enabled": false,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 27,
+          "max": 30,
+          "justification": "The argument is logically sound and presents a proactive vision of technology as a catalyst for modernization, though it leans slightly more on economic abstraction than direct community sentiment."
+        },
+        "evidence_grounding": {
+          "score": 20,
+          "max": 25,
+          "justification": "Utilizes plausible economic concepts like the 'multiplier effect' and 'digital commons' to ground the case in standard economic theory.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "Successfully identifies and engages with both core opponent arguments: infrastructure strain and low job creation."
+        },
+        "rebuttal_effectiveness": {
+          "score": 13,
+          "max": 15,
+          "justification": "Effectively reframes the cost of infrastructure as a private-sector-driven modernization and argues that the 'multiplier' is essential for small businesses.",
+          "hit_ledger": [
+            {
+              "point": "socialized infrastructure costs",
+              "status": "rebutted"
+            },
+            {
+              "point": "low local employment",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 9,
+          "max": 10,
+          "justification": "The case is easy to follow, using clear, distinct points in each turns."
+        }
+      },
+      "total": 88
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 29,
+          "max": 30,
+          "justification": "Stronger focus on the specific 'community' element of the prompt, effectively contrasting global corporate benefit against local resource costs."
+        },
+        "evidence_grounding": {
+          "score": 21,
+          "max": 25,
+          "justification": "Well-grounded in the practical realities of local governance, specifically the 'socialized' cost of utilities versus private profit.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "Accurately acknowledges the necessity of the digital backbone before dismantling the local benefit of that infrastructure."
+        },
+        "rebuttal_effectiveness": {
+          "score": 14,
+          "max": 15,
+          "justification": "Effectively highlights the opportunity cost and segments the distinction between systemic necessity and local benefit.",
+          "hit_ledger": [
+            {
+              "point": "digital backbone necessity",
+              "status": "rebutted"
+            },
+            {
+              "point": "infrastructure as catalyst",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "Extremely clear and direct in presenting the cost-benefit analysis for the community."
+        }
+      },
+      "total": 93
+    }
+  ],
+  "winner": "con",
+  "winner_reason": "total"
+}

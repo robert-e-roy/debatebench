@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "started_at": "2026-09-15T15:50:00Z",
+  "finished_at": "2026-09-15T15:57:47Z",
+  "run": {
+    "topic": "Are DataCenters good for the community",
+    "seed": 744711221,
+    "budget_tolerance": 16,
+    "phases": [
+      "opening",
+      "rebuttal",
+      "rebuttal",
+      "conclusion"
+    ],
+    "sides": [
+      {
+        "index": 0,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "pro",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      },
+      {
+        "index": 1,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "con",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      }
+    ]
+  },
+  "turns": [
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 0,
+      "order": 0,
+      "text": "Data centers provide a significant net benefit to the community by expanding the local tax base and creating high-demand employment in construction, security, and technical maintenance. By housing the essential infrastructure for the modern economy, these facilities drive regional growth while upholding the fundamental principles of private enterprise and property rights.",
+      "usage": {
+        "prompt_tokens": 114,
+        "completion_tokens": 817
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 56107,
+      "started_at": "2026-09-15T15:50:00Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 1,
+      "order": 1,
+      "text": "While data centers offer a modest tax base, they often do so by monopolizing critical infrastructure and resources, such as electricity and water, which can drive up costs for local residents and small businesses. Furthermore, they represent a poor cost-benefit trade-off, as these \"digital warehouses\" consume vast amounts of land and local resources while providing significantly fewer jobs than traditional manufacturing or retail centers.",
+      "usage": {
+        "prompt_tokens": 181,
+        "completion_tokens": 687
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 42917,
+      "started_at": "2026-09-15T15:50:56Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 0,
+      "text": "My opponent correctly notes that data centers can provide a consistent tax base and support the infrastructure required for the modern digital economy. However, these fiscal gains often mask a significant \"opportunity cost,\" where the massive consumption of land and electricity creates a net drag on local resources and drives up costs for residential and small-business neighbors. Furthermore, the claim of robust employment is misleading; while construction provides temporary work, the ongoing operation of these facilities is largely automated and provides far fewer high-quality, long-term jobs than traditional manufacturing or retail. By prioritizing these \"digital warehouses,\" the community risks sacrificing tangible land and resources for the benefit of remote corporations over their own local residents. Ultimately, we must decide if a modest tax windfall justifies a lower-employment model that consumes vital resources at the expense of local economic diversity.",
+      "usage": {
+        "prompt_tokens": 294,
+        "completion_tokens": 935
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 55164,
+      "started_at": "2026-09-15T15:51:39Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 1,
+      "text": "My opponent’s strongest point is the \"opportunity cost\" regarding land and resource consumption, arguing that these facilities use vital infrastructure while offering fewer direct, long-term jobs than traditional industries. However, labeling these facilities \"digital warehouses\" overlooks their role as essential infrastructure; they provide the backbone necessary for local businesses to scale and compete in a global marketplace. Furthermore, the critique of low employment fails to account for the significant economic multiplier effect, where robust digital infrastructure supports a wide ecosystem of indirect jobs and tech-enabled entrepreneurship. From a cost-benefit perspective, the reliable tax base provided by these facilities offers a more stable and predictable funding source for public services than many volatile retail or manufacturing models. Ultimately, the greatest risk to the community is not the consumption of local resources, but the economic stagnation that follows from failing to participate in the modern, data-driven economy.",
+      "usage": {
+        "prompt_tokens": 472,
+        "completion_tokens": 1153
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 83323,
+      "started_at": "2026-09-15T15:52:34Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 0,
+      "text": "My opponent correctly highlights the concern that large-scale infrastructure can place immediate pressure on local utility grids and land availability. However, viewing these facilities as \"warehouses\" fails to account for their role as essential modern infrastructure; much like railroads or power grids of previous eras, they provide the necessary backbone for local businesses to compete in a globalized marketplace. Furthermore, the claim of low employment ignores the significant economic multiplier effect, where stable digital infrastructure enables a broad ecosystem of secondary jobs and tech-enabled entrepreneurship. From a cost-benefit perspective, the risk of economic stagnation from being left out of the digital economy poses a far greater threat to a community than the managed integration of these facilities. Ultimately, prioritizing this infrastructure secures a stable, long-term tax base and ensures the community remains a viable participant in the modern economy.",
+      "usage": {
+        "prompt_tokens": 663,
+        "completion_tokens": 835
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 52273,
+      "started_at": "2026-09-15T15:53:57Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 1,
+      "text": "My opponent's strongest argument is that data centers constitute essential modern infrastructure—analogous to the railroads and power grids of the past—which provides a stable tax base and a multiplier effect for local businesses within the global digital economy. However, this comparison is a false equivalence; while power grids serve the immediate, tangible needs of the local population, data centers are private \"digital warehouses\" that prioritize the storage of distant corporate data over local utility. From a cost-benefit perspective, the speculative \"multiplier\" of a digital ecosystem rarely compensates for the certain opportunity cost of consuming vast amounts of land and electricity that could support higher-employment sectors like manufacturing or retail. Furthermore, the claim that these centers prevent \"economic stagnation\" ignores the risk of creating a land-use monoculture, where limited resources are diverted to a low-employment model at the expense of a diverse local economy. We must not allow the convenience of remote corporations to override the fundamental need for local infrastructure that fosters tangible, high-density employment for our residents.",
+      "usage": {
+        "prompt_tokens": 844,
+        "completion_tokens": 1114
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 69788,
+      "started_at": "2026-09-15T15:54:50Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 1,
+      "order": 0,
+      "text": "The opposition must prevail because the community should not sacrifice tangible, high-density employment for the sake of low-employment \"digital warehouses\" that serve remote corporate interests. While these facilities provide a stable tax base, they do so at a poor cost-benefit ratio by monopolizing critical resources like land and electricity. Furthermore, the comparison to essential infrastructure like power grids is a false equivalence, as data centers prioritize distant data storage over the immediate, local utility required by residents and small businesses. Prioritizing these facilities over traditional manufacturing or retail risks creating a land-use monoculture that drains local resources for speculative economic growth. Ultimately, we must protect the local economy from being sidelined in favor of a low-employment model that prioritizes the convenience of global corporations over the tangible prosperity of our own community.",
+      "usage": {
+        "prompt_tokens": 1051,
+        "completion_tokens": 759
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 48893,
+      "started_at": "2026-09-15T15:56:00Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 0,
+      "order": 1,
+      "text": "The opposition’s argument fails by viewing data centers as isolated \"warehouses\" instead of the essential infrastructure required for modern economic survival. Just as railroads and power grids revolutionized previous eras, these facilities provide the indispensable backbone for local businesses to scale and compete in a global marketplace. The significant multiplier effect of these hubs fosters a broader ecosystem for tech-enabled entrepreneurship, creating a diverse range of indirect local opportunities. Furthermore, the reliable and consistent tax base provided by these facilities offers a much more stable funding source for public services than the more volatile retail or manufacturing models. Ultimately, the greatest threat to the community is not the allocation of resources, but the economic stagnation that results from failing to adopt the fundamental infrastructure of the digital economy.",
+      "usage": {
+        "prompt_tokens": 1225,
+        "completion_tokens": 888
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 58758,
+      "started_at": "2026-09-15T15:56:48Z",
+      "length": "medium"
+    }
+  ]
+}
