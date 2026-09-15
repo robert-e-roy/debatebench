@@ -1,0 +1,92 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T18:36:38Z",
+  "judge_model": "gemma4:12b",
+  "judge_budget": 10000,
+  "fact_check_enabled": false,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 27,
+          "max": 30,
+          "justification": "The case is logically sound, focusing on the fiscal multiplier and the data center's role as essential modern infrastructure."
+        },
+        "evidence_grounding": {
+          "score": 19,
+          "max": 25,
+          "justification": "Relies on solid economic concepts like tax base expansion and fiscal stability, though it remains general in its description of 'technical' jobs.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "Accurately identified and addressed the opponent's core concerns regarding resource consumption and the lower ratio of local jobs."
+        },
+        "rebuttal_effectiveness": {
+          "score": 11,
+          "max": 15,
+          "justification": "Effectively countered the threat of rising infrastructure costs by arguing that tax revenue is specifically earmarked for those upgrades.",
+          "hit_ledger": [
+            {
+              "point": "low ratio of jobs to resource consumption",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 9,
+          "max": 10,
+          "justification": "The argument is very easy to follow and maintains a consistent logical thread throughout the debate."
+        }
+      },
+      "total": 84
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 29,
+          "max": 30,
+          "justification": "Highly logical; successfully differentiated between 'global' benefits and 'local' costs to narrow the scope of the opposition's best point."
+        },
+        "evidence_grounding": {
+          "score": 21,
+          "max": 25,
+          "justification": "Uses specific, potent economic concepts like 'pass-through costs' and 'opportunity costs' to bolster the case.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "Clearly acknowledged the tax-base argument before dismantling the assumption that such a base offsets the localized externalities."
+        },
+        "rebuttal_effectiveness": {
+          "score": 14,
+          "max": 15,
+          "justification": "Strong rebuttal that effectively dismantled the 'infrastructure payment' argument by pointing out the reality of utility scarcity requirements.",
+          "hit_ledger": [
+            {
+              "point": "increased tax base and job growth",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The arguments are presented with high clarity, making the distinction between global utility and local risk very easy to follow."
+        }
+      },
+      "total": 93
+    }
+  ],
+  "winner": "con",
+  "winner_reason": "total"
+}

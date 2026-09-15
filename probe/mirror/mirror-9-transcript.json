@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "started_at": "2026-09-15T18:10:36Z",
+  "finished_at": "2026-09-15T18:19:23Z",
+  "run": {
+    "topic": "Are DataCenters good for the community",
+    "seed": 242913766,
+    "budget_tolerance": 16,
+    "phases": [
+      "opening",
+      "rebuttal",
+      "rebuttal",
+      "conclusion"
+    ],
+    "sides": [
+      {
+        "index": 0,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "pro",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      },
+      {
+        "index": 1,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "con",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      }
+    ]
+  },
+  "turns": [
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 0,
+      "order": 0,
+      "text": "Data centers serve as vital engines of economic growth, generating significant tax revenue and high-skill employment opportunities while anchoring local economies in the global digital marketplace. By facilitating the infrastructure necessary for modern commerce, they catalyze private investment and provide a measurable net benefit for community prosperity.",
+      "usage": {
+        "prompt_tokens": 114,
+        "completion_tokens": 496
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 29247,
+      "started_at": "2026-09-15T18:10:36Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 1,
+      "order": 1,
+      "text": "While data centers provide some tax revenue, they represent a significant inefficiency in resource allocation, consuming vast amounts of electricity and water while offering a very low ratio of local employment compared to traditional industrial uses. These \"digital warehouses\" create a heavy opportunity cost for the community, monopolizing land and infrastructure for low-labor utility while displacing more diverse, high-employment businesses.",
+      "usage": {
+        "prompt_tokens": 176,
+        "completion_tokens": 917
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 56687,
+      "started_at": "2026-09-15T18:11:05Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 0,
+      "text": "Proponents correctly identify that data centers provide essential infrastructure for modern commerce and contribute to the local tax base. However, this tax revenue is often a modest \"subsidy\" for the massive consumption of finite public resources—specifically electricity and water—which creates a net cost for the community’s long-term sustainability. Furthermore, the promise of \"high-skill employment\" is often exaggerated; these roles are frequently remote or sparsely distributed, failing to provide the high-density, local job creation seen in traditional manufacturing or retail. By occupying vast tracts of land for \"digital warehouses,\" we are incurring a high opportunity cost by displacing more labor-intensive businesses that foster a diverse local economy. We must prioritize land-use policies that favor human-centric industries over infrastructure that serves global technology firms at the expense of local economic vitality.",
+      "usage": {
+        "prompt_tokens": 284,
+        "completion_tokens": 1004
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 61720,
+      "started_at": "2026-09-15T18:12:02Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 1,
+      "text": "Opponents correctly point out that data centers consume significant amounts of resources and may offer a lower density of immediate local jobs compared to traditional manufacturing. However, this \"cost\" perspective fails to account for the catastrophic opportunity cost of neglecting the digital infrastructure that local businesses now require to survive in a globalized marketplace. The concern regarding resource consumption ignores how these facilities drive private investment into modernizing our energy grids and utility infrastructure, which provides long-term stability for the entire community. Furthermore, the \"low-labor\" critique ignores the massive multiplier effect; these hubs enable the growth of secondary tech sectors and support a diverse, decentralized workforce that traditional \"high-density\" sites cannot provide. We should not penalize infrastructure that serves as the backbone of the modern economy simply because it does not mirror 20th-century industrial models.",
+      "usage": {
+        "prompt_tokens": 465,
+        "completion_tokens": 827
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 52934,
+      "started_at": "2026-09-15T18:13:04Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 0,
+      "text": "The opposition’s strongest argument is that data centers represent a high opportunity cost, as they consume significant volumes of land and utilities while offering lower local employment density compared to traditional manufacturing. However, this perspective fails to account for the \"toll road\" nature of digital infrastructure; without these facilities, the cost of local business obsolescence in a globalized market would be far more severe. Furthermore, their \"subsidy\" critique ignores that private investment in these centers accelerates the modernization of our energy and water grids, providing a massive long-term utility for the entire community. To prioritize 20th-century industrial models over 21st-century infrastructure is a form of economic protectionism that treats the symptoms of a changing economy rather than embracing its drivers. Ultimately, a free-market approach must prioritize the infrastructure that enables all other businesses to compete and thrive in the modern economy.",
+      "usage": {
+        "prompt_tokens": 647,
+        "completion_tokens": 1863
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 114258,
+      "started_at": "2026-09-15T18:13:57Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 1,
+      "text": "The opposition’s strongest point is that data centers function as a \"toll road\" for the modern economy, where their presence necessitates and drives the modernization of local energy and water infrastructure. However, we must distinguish between essential public utility infrastructure and private \"digital warehouses\" that consume disproportionate amounts of finite resources to serve the interests of global corporations rather than local residents. The \"modernization\" argument is a fallacy of scale; a community should not be expected to subsidize the profit margins of a global firm by sacrificing local land and water for a facility with a remarkably low ratio of local employment. Furthermore, labeling the preference for labor-intensive, high-density industries as \"protectionism\" ignores the measurable economic value of local, accessible jobs over the remote, sparsely distributed roles provided by data centers. Ultimately, we must prioritize land-use policies that favor tangible, locally-centered economic growth over the sprawling, resource-heavy footprint of infrastructure that serves a global market at the expense of local sustainability.",
+      "usage": {
+        "prompt_tokens": 840,
+        "completion_tokens": 1248
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 76590,
+      "started_at": "2026-09-15T18:15:51Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 1,
+      "order": 0,
+      "text": "Our position wins because it identifies the significant economic opportunity cost of allowing \"digital warehouses\" to displace high-employment, labor-intensive businesses. While data centers generate some tax revenue, this is a measly return when weighed against the massive consumption of finite public resources like water and electricity. We must maintain a strict distinction between essential public utility infrastructure and private facilities that prioritize the profit margins of global corporations over local resource sustainability. The opposition’s \"toll road\" argument fails to account for the reality that many data center roles are remote or sparse, lacking the high-density, accessible job creation found in traditional sectors. Ultimately, a fiscally responsible and community-focused policy must favor tangible, local economic growth over the expansive, resource-heavy footprint of infrastructure primarily serving the global digital marketplace.",
+      "usage": {
+        "prompt_tokens": 1042,
+        "completion_tokens": 1410
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 83551,
+      "started_at": "2026-09-15T18:17:07Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 0,
+      "order": 1,
+      "text": "Our position stands because data centers serve as the indispensable \"toll roads\" of the 21st-century economy, providing the fundamental infrastructure required for local businesses to survive in a globalized marketplace. Rather than viewing their resource consumption as a net loss, we must recognize that these facilities catalyze private investment into the modernization of essential energy and water grids, benefiting the entire community. The opportunity cost of *not* providing this infrastructure is far greater than the cost of land use, as it would result in local economic obsolescence. To prioritize 20th-century industrial models over these modern hubs is a form of economic protectionism that fails to account for how modern commerce actually functions. Ultimately, a free-market approach must prioritize the infrastructure that enables the entire breadth of our economy to compete and thrive.",
+      "usage": {
+        "prompt_tokens": 1214,
+        "completion_tokens": 790
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 52420,
+      "started_at": "2026-09-15T18:18:31Z",
+      "length": "medium"
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T18:10:36Z",
+  "judge_model": "gemma4:12b",
+  "judge_budget": 10000,
+  "fact_check_enabled": false,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "The argument is logically consistent, successfully transitioning from the immediate benefits of tax revenue to the broad necessity of digital infrastructure."
+        },
+        "evidence_grounding": {
+          "score": 22,
+          "max": 25,
+          "justification": "The use of 'tax revenue' and 'infrastructure' as core pillars is grounded in common economic and urban planning discourse.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "The proponent explicitly acknowledged the concern regarding utility consumption and land usage before providing their rebuttal."
+        },
+        "rebuttal_effectiveness": {
+          "score": 13,
+          "max": 15,
+          "justification": "The proponent successfully addressed the utility and opportunity cost points by framing data centers as essential infrastructure, though they didn't fully dismantle the distinction between local and global benefits.",
+          "hit_ledger": [
+            {
+              "point": "utility/land opportunity cost",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The case is very easy to follow with clear, consistent terminology."
+        }
+      },
+      "total": 92
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 29,
+          "max": 30,
+          "justification": "The argument is very strong, particularly the strategic distinction between 'global' infrastructure and 'local' community impact."
+        },
+        "evidence_grounding": {
+          "score": 23,
+          "max": 25,
+          "justification": "The concept of 'socialized costs' for private infrastructure is a strong, plausible framing for land-use debates.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "The opponent's points on tax revenue and high-skilled jobs were clearly identified and incorporated into the counter-argument."
+        },
+        "rebuttal_effectiveness": {
+          "score": 14,
+          "max": 15,
+          "justification": "The respondent effectively neutralized the 'necessity' argument by framing it as a corporate benefit versus a local cost.",
+          "hit_ledger": [
+            {
+              "point": "tax/high-skill employment",
+              "status": "rebutted"
+            },
+            {
+              "point": "essential infrastructure",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The argument is perfectly organized and logically follows from the opening statement."
+        }
+      },
+      "total": 95
+    }
+  ],
+  "winner": "con",
+  "winner_reason": "total"
+}

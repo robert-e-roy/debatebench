@@ -46,8 +46,12 @@ code. See ADR-002 for full scope.
   (checkability gates the other three fact-check verdicts; §1 and §2 stand, §3's
   reorder was measured and reverted), `ADR-026` (a malformed judge reply names
   its repair — stop the model and re-run — and the tool still does not retry;
-  resolves OPEN-QUESTIONS 14 except its `response_format` option) — accepted;
-  together they are the spec.
+  resolves OPEN-QUESTIONS 14 except its `response_format` option), `ADR-027`
+  (`debate --events` streams JSONL on stdout, one line per event, flushed per
+  line, with a `run` header carrying `schema_version`; a contract for other
+  programs so the stderr log stays free to change — Hard Rule 7 untouched, and
+  the stream is explicitly **not** a transcript) — accepted; together they are
+  the spec.
 - `MODEL-COVERAGE.md` — which models have actually been run, at what size, as
   debater or judge, with the artifact behind each. **No large (24B+) model has
   ever produced a token here**; every quality finding in this repo comes from

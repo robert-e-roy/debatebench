@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "started_at": "2026-09-15T18:23:30Z",
+  "finished_at": "2026-09-15T18:32:55Z",
+  "run": {
+    "topic": "Are DataCenters good for the community",
+    "seed": 2030440005,
+    "budget_tolerance": 16,
+    "phases": [
+      "opening",
+      "rebuttal",
+      "rebuttal",
+      "conclusion"
+    ],
+    "sides": [
+      {
+        "index": 0,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "pro",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      },
+      {
+        "index": 1,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "con",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      }
+    ]
+  },
+  "turns": [
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 0,
+      "order": 0,
+      "text": "Data centers provide a significant boost to the local economy by expanding the property tax base and creating high-value jobs in construction and technical maintenance. By providing the essential infrastructure for the modern economy, these facilities ensure long-term fiscal stability and regional growth for the surrounding community.",
+      "usage": {
+        "prompt_tokens": 114,
+        "completion_tokens": 751
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 51487,
+      "started_at": "2026-09-15T18:23:30Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 1,
+      "order": 1,
+      "text": "While data centers may increase the tax base, they impose significant \"externalities\" on the community through massive electricity and water consumption, which can drive up utility costs for local residents and businesses. Furthermore, these facilities are often highly automated, meaning they consume disproportionate amounts of public infrastructure and natural resources while creating relatively few high-quality jobs for the local workforce.",
+      "usage": {
+        "prompt_tokens": 177,
+        "completion_tokens": 692
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 45678,
+      "started_at": "2026-09-15T18:24:21Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 0,
+      "text": "My opponent correctly notes that data centers can expand the tax base and generate demand for technical and construction jobs. However, this fiscal benefit is often negated by the immense costs imposed on public infrastructure, such as the necessary upgrades to power grids and water systems to accommodate their massive consumption. Furthermore, the \"high-value\" roles are often restricted to niche specialists, while the construction work provides only a temporary spike in employment rather than long-term career growth for the local community. By prioritizing these automated centers, we incur a significant \"opportunity cost\" by dedicating land and resources to a project that provides a low ratio of local jobs to resource consumption. We must favor economic growth that generates tangible local prosperity rather than projects that consume public resources to fuel the infrastructure of distant corporations.",
+      "usage": {
+        "prompt_tokens": 284,
+        "completion_tokens": 1809
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 102032,
+      "started_at": "2026-09-15T18:25:07Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 1,
+      "text": "My opponent correctly highlights the concern that data centers consume significant resources while offering a relatively low ratio of immediate, local employment. However, this perspective fails to account for the long-term fiscal multiplier; the massive, reliable property tax revenue generated by these facilities provides a stable funding source for public infrastructure—improvements that benefit the entire community, not just the facility. Furthermore, while these roles may be specialized, they are the backbone of the digital economy that allows local small businesses to reach broader markets, thereby fostering indirect economic growth across the region. To argue that these centers are a drain on resources ignores the fact that they provide a concentrated, high-value tax base that offsets the costs of upgrading utilities for the broader public. Ultimately, we must view data centers as essential 21st-century infrastructure; any other land use that lacks such a consistent revenue stream would likely demand a higher tax burden on local residents to provide the same level of public service.",
+      "usage": {
+        "prompt_tokens": 453,
+        "completion_tokens": 851
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 49932,
+      "started_at": "2026-09-15T18:26:49Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 0,
+      "text": "My opponent’s strongest argument is that the heavy demand on public resources, such as power and water, constitutes a significant \"opportunity cost\" relative to the limited number of local jobs generated. However, this overlooks the fiscal reality that a concentrated and stable tax base from these facilities provides a dedicated, high-volume revenue stream specifically intended to fund those infrastructure upgrades for the entire community. By concentrating tax revenue in these centers, the community can modernize its utility grids without passing the resulting costs onto local residents through broader tax hikes. Furthermore, the claim that these centers serve only \"distant\" interests ignores the fact that local small businesses now depend on this digital infrastructure to compete in a globalized economy. Ultimately, from a cost-benefit perspective, data centers represent a fiscally superior land use because they provide a high-yield revenue stream that supports public infrastructure with a minimal tax burden on the average citizen.",
+      "usage": {
+        "prompt_tokens": 659,
+        "completion_tokens": 1650
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 96140,
+      "started_at": "2026-09-15T18:27:39Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 1,
+      "text": "My opponent’s strongest argument is that the concentrated tax revenue from these facilities provides a sufficient fiscal buffer to offset the substantial costs of upgrading local power and water infrastructure. However, this assumes a perfect correlation between tax revenues and the actual, escalating costs of utility scarcity, which often results in \"pass-through\" costs that inflate utility bills for local residents who are not part of the data economy. Furthermore, I must challenge the notion that indirect \"digital economy\" benefits justify the direct, localized drain on community resources; a neighbor's ability to sell products online is a general social good, but it does not justify the sacrifice of local resource security. By prioritizing these centers, we are essentially providing a public subsidy for global corporations that serve distant markets while offering a disproportionately low ratio of local, high-quality employment. Ultimately, a truly cost-centered approach demands that we prioritize land uses that maximize the ratio of local prosperity to resource consumption, rather than favoring a model that fuels global infrastructure at the expense of local resource availability.",
+      "usage": {
+        "prompt_tokens": 854,
+        "completion_tokens": 1746
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 103162,
+      "started_at": "2026-09-15T18:29:15Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 1,
+      "order": 0,
+      "text": "The conclusion is clear: our position must prevail because it prioritize the long-term sustainability of local resources over the expansion of distal corporate infrastructure. We have successfully demonstrated that the promised fiscal benefits are often undermined by \"pass-through\" costs, where the massive consumption of electricity and water results in inflated utility bills for local residents. Furthermore, the high degree of automation in these facilities creates an unfavorable cost-benefit ratio, demanding significant public infrastructure while offering a disproportionately low number of high-quality jobs for the local workforce. By prioritizing these centers, the community accepts a significant opportunity cost, sacrificing local resource security to provide a public subsidy for global networks. Ultimately, a fiscally responsible approach must favor land uses that maximize the direct, tangible prosperity of the local community rather than projects that prioritize global utility over local sustainability.",
+      "usage": {
+        "prompt_tokens": 1062,
+        "completion_tokens": 973
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 59216,
+      "started_at": "2026-09-15T18:30:58Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 0,
+      "order": 1,
+      "text": "My position should prevail because data centers represent a fiscally superior land use by providing a concentrated, high-volume tax base. This stable revenue stream is essential for funding the critical infrastructure upgrades required by our modern economy, ensuring these costs are not passed on to the average local taxpayer. Furthermore, these facilities serve as an indispensable cornerstone of the digital age, providing the infrastructure that allows local small businesses to compete in a globalized market. By prioritizing these centers, the community chooses an economic model that maximizes fiscal stability and growth. Ultimately, the cost-benefit analysis favors data centers as a means to secure a reliable, high-yield fiscal engine that supports the broader community's long-term prosperity.",
+      "usage": {
+        "prompt_tokens": 1239,
+        "completion_tokens": 898
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 58303,
+      "started_at": "2026-09-15T18:31:57Z",
+      "length": "medium"
+    }
+  ]
+}
