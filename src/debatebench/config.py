@@ -16,17 +16,19 @@ from urllib.parse import urlsplit
 
 import yaml
 
+from .backend import DEFAULT_READ_TIMEOUT
 from .retrieval import SOURCES
 from .yaml_loader import load_yaml
 
 PHASES = ("prep", "opening", "rebuttal", "retort", "conclusion")
 MOTION_SIDES = ("pro", "con")  # for and against the motion (ADR-007 §7)
 LENGTHS = ("short", "medium", "long")  # a phase entry's :suffix (ADR-016 §1)
+
 DEFAULT_LENGTH = "medium"  # what a bare non-prep entry asks for (ADR-022 §1)
 
-_RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output", "judge"}
+_RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output", "judge", "timeout"}
 _FORMAT_KEYS = {"phases"}
-_JUDGE_KEYS = {"transcript", "model", "base_url", "budget", "output", "fact_check"}
+_JUDGE_KEYS = {"transcript", "model", "base_url", "budget", "output", "fact_check", "timeout"}
 _SIDE_KEYS = {"team", "side", "model", "base_url", "budget", "prep_budget"}
 _TEAM_KEYS = {"id", "name", "voice", "stance", "values", "corpus"}
 
@@ -91,6 +93,7 @@ class JudgeConfig:
     budget: int
     output: Path
     fact_check: bool
+    timeout: int  # seconds to wait for a reply; ADR-025, default 600
 
 
 @dataclass(frozen=True)
@@ -107,6 +110,9 @@ class RunConfig:
     seed_generated: bool  # run.yaml had no seed: log this one and record it (ADR-007 §5)
     output: Path
     judge: JudgeConfig | None  # ADR-020 §1; absent is valid and is the pre-ADR-020 shape
+    # ADR-025: seconds to wait for a reply. Deliberately NOT in the transcript
+    # snapshot — it cannot shape the output, only whether one arrives (§6).
+    timeout: int
 
 
 def load_run(path: str | Path) -> RunConfig:
@@ -152,6 +158,7 @@ def load_run(path: str | Path) -> RunConfig:
         seed_generated=seed_generated,
         output=output,
         judge=judge,
+        timeout=_opt_int(run_path, data, "timeout", "timeout", minimum=1) or DEFAULT_READ_TIMEOUT,
     )
 
 
@@ -234,6 +241,8 @@ def _judge(run_path: Path, data: dict[str, Any], transcript: Path) -> JudgeConfi
         budget=_int(run_path, block, "budget", "judge.budget", minimum=1),
         output=output,
         fact_check=_opt_bool(run_path, block, "fact_check", "judge.fact_check", default=True),
+        timeout=_opt_int(run_path, block, "timeout", "judge.timeout", minimum=1)
+        or DEFAULT_READ_TIMEOUT,
     )
 
 

@@ -27,7 +27,7 @@ from .judging import (
     score_debate,
     write_scores,
 )
-from .openai_compat import OpenAICompatibleBackend, open_client
+from .openai_compat import DEFAULT_READ_TIMEOUT, OpenAICompatibleBackend, open_client
 from .transcript import Transcript, TranscriptError, load_transcript
 
 
@@ -52,6 +52,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="completion-token cap, applied to the scoring call and to the fact-check on its own",
     )
     parser.add_argument("--output", help="where to write the score file")
+    parser.add_argument("--timeout", type=int, help="seconds to wait for a reply (default 600)")
     parser.add_argument(
         "--fact-check",
         dest="fact_check",
@@ -75,12 +76,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     except _Missing as e:
         _log(str(e))
         return 1
-    args.model, args.base_url, args.budget, args.fact_check = (
+    args.model, args.base_url, args.budget, args.fact_check, args.timeout = (
         settings.model,
         settings.base_url,
         settings.budget,
         settings.fact_check,
+        settings.timeout,
     )
+
+    if args.timeout < 1:
+        _log(f"--timeout must be at least 1 second, got {args.timeout}")
+        return 1
 
     if args.budget < 1:
         _log(f"--budget must be at least 1, got {args.budget}")
@@ -155,6 +161,10 @@ def _settings(args: argparse.Namespace) -> tuple[Path, JudgeConfig]:
         budget=pick(args.budget, "budget", "--budget"),
         output=Path(pick(args.output, "output", "--output")).expanduser(),
         fact_check=_fact_check(args.fact_check, block),
+        # ADR-025 §2: flag, else the block's, else the default. Unlike the four
+        # above it is never required — a transcript run with no block still has one.
+        timeout=args.timeout if args.timeout is not None
+        else (block.timeout if block is not None else DEFAULT_READ_TIMEOUT),
     )
 
 
@@ -167,7 +177,7 @@ def _fact_check(flag: bool | None, block: JudgeConfig | None) -> bool:
 
 async def _score(transcript: Transcript, args: argparse.Namespace) -> ScoreSheet:
     """The scoring call, then the fact-check call when it's on (ADR-015 §3)."""
-    async with open_client() as client:
+    async with open_client(args.timeout) as client:
         backend = OpenAICompatibleBackend(client, args.base_url, args.model)
         sheet = await score_debate(
             transcript,

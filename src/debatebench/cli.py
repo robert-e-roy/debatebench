@@ -43,6 +43,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--con-model", help="override only the con side's model")
     parser.add_argument("--pro-budget", type=int, help="override only the pro side's cap")
     parser.add_argument("--con-budget", type=int, help="override only the con side's cap")
+    # ADR-025 §5: not an experimental variable — it cannot change a token of the
+    # output, only whether the output arrives, so it sits outside ADR-021's list.
+    parser.add_argument("--timeout", type=int, help="seconds to wait for a reply (default 600)")
     return parser
 
 
@@ -150,7 +153,7 @@ def _validate_override(setting: str, value: Any, flag: str) -> None:
 
 
 async def _run(config: RunConfig, events: EventBus) -> Transcript:
-    async with open_client() as client:
+    async with open_client(config.timeout) as client:
         backends = [OpenAICompatibleBackend(client, s.base_url, s.model) for s in config.sides]
         return await run_debate(config, backends, events)
 

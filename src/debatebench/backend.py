@@ -12,6 +12,13 @@ from typing import Literal, Protocol
 
 Role = Literal["system", "user", "assistant"]
 
+# ADR-025 §1: seconds to wait for a reply. It lives here because it is the one
+# module both `config` (which may not import httpx) and `openai_compat` (which
+# may not import yaml) are allowed to import — ADR-008's layering, pinned by
+# tests/test_layering.py. 600 was the hardcoded value before ADR-025 made it a
+# setting, and stays the default so no existing config behaves differently.
+DEFAULT_READ_TIMEOUT = 600
+
 
 @dataclass(frozen=True)
 class Message:

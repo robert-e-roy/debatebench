@@ -169,6 +169,7 @@ output: transcript.json
 | `sources` | Shared retrieval pools. Optional, and only meaningful with `prep`. |
 | `seed` | Optional. If omitted, one is generated, logged, and recorded in the transcript — never silently guessed. |
 | `output` | Required. The transcript path, resolved relative to the `run.yaml`. |
+| `timeout` | Optional, seconds to wait for a reply. Default 600. Raise it for a large reasoning model at a big budget — a 12B model thinking through a long prompt can exceed ten minutes on a cold load. `--timeout` overrides it. |
 
 Response length is a suffix on the phase, `name:length` — `short` (2 sentences),
 `medium` (5), `long` (10). No space after the colon. **A phase with no suffix

@@ -14,20 +14,30 @@ from typing import Any
 
 import httpx
 
-from .backend import BackendError, GenerationRequest, GenerationResult
+from .backend import DEFAULT_READ_TIMEOUT, BackendError, GenerationRequest, GenerationResult
+
 
 # httpx defaults to 5 s for every operation, which would kill real turns: B0
 # measured 25 s to first token on a 4,000-token prompt (ADR-008). Connecting to
 # a local server should be quick; a reply can legitimately take minutes.
-TIMEOUT = httpx.Timeout(connect=5.0, read=600.0, write=30.0, pool=5.0)
+# ADR-025 §1: only `read` is configurable. A connect taking over five seconds to
+# a local server is a fault, not patience. The default lives in config, which may
+# not import httpx (ADR-008).
+_FIXED = {"connect": 5.0, "write": 30.0, "pool": 5.0}
+TIMEOUT = httpx.Timeout(read=float(DEFAULT_READ_TIMEOUT), **_FIXED)
 
 _ERROR_TEXT_LIMIT = 500
 
 
 @asynccontextmanager
-async def open_client() -> AsyncIterator[httpx.AsyncClient]:
-    """One HTTP client for a run, shared by every side's backend."""
-    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+async def open_client(read_timeout: int = DEFAULT_READ_TIMEOUT) -> AsyncIterator[httpx.AsyncClient]:
+    """One HTTP client for a run, shared by every side's backend.
+
+    ``read_timeout`` is seconds to wait for a reply (ADR-025). A 12B reasoning
+    model at a large budget can exceed the 600-second default on a cold load —
+    measured, and the reason this is not a constant any more.
+    """
+    async with httpx.AsyncClient(timeout=httpx.Timeout(read=float(read_timeout), **_FIXED)) as client:
         yield client
 
 

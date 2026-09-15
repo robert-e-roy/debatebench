@@ -39,7 +39,11 @@ code. See ADR-002 for full scope.
   `schema_version` bump), `ADR-023` (a tie after the steelman tiebreak is
   resolved by a coin toss — `run.seed % 2`, keyed to the side index, recorded
   as `winner_reason: "coin_toss"`; supersedes ADR-013 §3 clause 3, no
-  `schema_version` bump) — accepted; together they are the spec.
+  `schema_version` bump), `ADR-025` (the read timeout is a `timeout:` key in
+  `run.yaml` and in the `judge:` block plus a `--timeout` flag on both commands,
+  default 600 seconds unchanged; deliberately **not** recorded in the transcript,
+  since it cannot shape the output — only whether one arrives) — accepted;
+  together they are the spec.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).
