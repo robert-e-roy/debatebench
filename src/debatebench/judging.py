@@ -390,9 +390,10 @@ def _json_object(text: str, *, truncated: bool) -> dict:
     # NOT done automatically — ADR-017 §4, and a visible failure is what let the
     # project measure a 33% malformed rate at all.
     repair = (
-        " Re-running often clears this: the reply is deterministic only while the model "
-        "stays loaded, so stopping the model (ollama stop <model>) and judging again "
-        "gets a different reply. Nothing else needs changing — not the seed, not the budget."
+        " Two things change the reply without touching the seed: stopping the model "
+        "(ollama stop <model>) and judging again, which works on some models and not "
+        "others, and changing --budget, which alters the request and so the reply. "
+        "Neither is guaranteed — some models return the same fault every time."
     )
     if start == -1 or end <= start:
         raise JudgeError(

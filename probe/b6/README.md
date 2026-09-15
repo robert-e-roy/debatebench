@@ -377,6 +377,42 @@ it means a budget tuned for one generation silently starves the next.
 sizes, and every one that works at all returns exactly two clauses. The gate asks
 for three in one ledger.
 
+## qwen3:32b — four attempts, four unparseable replies, and a new lever found
+
+| attempt | state | budget | fault |
+|---|---|---|---|
+| 1 | warm | 6,000 | `char 1038` |
+| 2 | cold | 6,000 | `char 1038` — **identical** |
+| 3 | cold | 6,000 | `char 1038` — **identical** |
+| 4 | cold | **12,000** | `char 3699` — **different** |
+
+**Verdict: `qwen3:32b-16k` cannot produce this format on this input.** It fits
+(24 GB, 100% GPU), it runs, and four attempts produced no ledger. That is the
+large rung's result.
+
+The two faults are different defects, and both are recognisable:
+
+- at `char 1038` — `"justification": "Hit_ledger": [` — it opened a
+  justification string and emitted a *key* inside it, conflating two fields;
+- at `char 3699` — `…dense with technical terms (e.g., "carbon leakage")…` —
+  **unescaped inner quotes**, the same family as the doubled-quote defect
+  OPEN-QUESTIONS 14 was originally written about.
+
+**The new lever: changing `--budget` changes the reply.** Attempts 1–3 were
+byte-identical failures across both load states; attempt 4 differed only in
+budget and produced a different reply that got **3.6× further** before breaking.
+So the request body is a lever on the output, independent of the seed and of
+model residency.
+
+That matters beyond this model. OPEN-QUESTIONS 14's option 2 was "re-ask with a
+different seed", and ADR-017 §6 forbids the tool changing the seed. **Changing
+the budget is a different mechanism with the same effect and no ADR against it** —
+though it would change what the budget *means*, so it is not free either.
+
+It also disproves a sentence in the error message written earlier today, which
+claimed "nothing else needs changing — not the seed, not the budget". The budget
+does change it. The message is corrected.
+
 ## ADR-026's repair advice failed on a model it was not measured on
 
 `qwen3:32b-16k` returned malformed JSON — `Expecting ',' delimiter: line 19

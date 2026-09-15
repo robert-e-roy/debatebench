@@ -29,7 +29,7 @@ would each need their own 631-speech run.
 | medium | **qwen3:8b** | 3 | 8B | 5.2 GB | ✅ extensively | ✅ **validated for ordering** | the workhorse; state-sensitive |
 | medium | **gemma4:12b** | — | 12B | 7.6 GB | ✅ 5 debates | ⚠️ works, slow, hungry | judged the mirror runs |
 | medium | **qwen3:14b** | 3 | 14B | 9.3 GB | untried | ✅ clauses (1)+(3) | state-**in**sensitive |
-| large | **qwen3:32b-16k** | 3 | 32B | 20 GB | ❌ never | ❌ **unparseable ×2** | fits at 24 GB, 100% GPU |
+| large | **qwen3:32b-16k** | 3 | 32B | 20 GB | ❌ never | ❌ **unparseable ×4** | fits at 24 GB, 100% GPU; cannot emit the format |
 | large | **Mistral-Small-24B-4bit** | — | 24B | ~13 GB | ❌ **never ran** | ❌ never ran | aborted at load (B0) |
 | large | **deepseek-r1:32b** | — | 32B | *removed* | ❌ never | ❌ never | 7.4 tok/s; thinking not disableable |
 
@@ -236,7 +236,11 @@ Seven judges on one transcript, same prompt, load state held constant:
 2. **Only one model's judging is validated**, only for ordering, and **only for
    that generation**.
 3. **No large model has produced a usable ledger.** `qwen3:32b` fits and runs
-   but returned unparseable JSON twice, cold and warm.
+   but returned unparseable JSON on **all four attempts** — three byte-identical
+   across both load states, and a fourth that differed only because the budget
+   changed. Two distinct defects: a key emitted inside a string value, and
+   unescaped inner quotes. The large rung's verdict is that it cannot emit this
+   format on this input.
 4. **LM Studio is claimed as supported and has never been tested.**
 5. **`gemma4:12b` has judged five debates and been characterised in none** — no
    Tau-C, no B6 gate run, no position-bias baseline of its own.
