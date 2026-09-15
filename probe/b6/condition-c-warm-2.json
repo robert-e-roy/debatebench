@@ -1,0 +1,158 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T13:50:43Z",
+  "judge_model": "qwen3:8b",
+  "judge_budget": 6000,
+  "fact_check_enabled": true,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "The PRO presents a coherent case linking planning certainty, revenue recycling, and proven emissions reductions. Each argument aligns with institutional consensus and empirical evidence, forming a tight logical structure."
+        },
+        "evidence_grounding": {
+          "score": 25,
+          "max": 25,
+          "justification": "All claims trace to the PRO's prep evidence (am-1, am-2, am-3, ds-1). The rebuttal references Brindlewick, revenue recycling, and economic efficiency, all grounded in their own materials.",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "The PRO fairly acknowledges the CON's points about leakage, regressivity, and rural inequities, addressing them without distortion or evasion."
+        },
+        "rebuttal_effectiveness": {
+          "score": 15,
+          "max": 15,
+          "justification": "The PRO directly counters the CON's claims about scalability, regressive impacts, and rural ineffectiveness with revenue recycling and federal scalability arguments. All points are rebutted.",
+          "hit_ledger": [
+            {
+              "point": "Brindlewick scalability",
+              "status": "rebutted"
+            },
+            {
+              "point": "regressive impact",
+              "status": "rebutted"
+            },
+            {
+              "point": "rural inequities",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The case is well-structured, with clear transitions between planning certainty, equity, and real-world effectiveness."
+        }
+      },
+      "total": 97
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "The CON offers a structured critique of leakage, regressivity, and policy ineffectiveness, connecting each to specific harms and empirical examples like Ferncastle."
+        },
+        "evidence_grounding": {
+          "score": 24,
+          "max": 25,
+          "justification": "Most arguments are grounded in the CON's prep (am-4, am-5, am-6, am-7, ds-2). However, the rebuttal references Brindlewick without citing a passage from their own evidence.",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "The CON fairly summarizes the PRO's claims about Brindlewick and revenue recycling but misses nuances like scalability arguments in their rebuttal."
+        },
+        "rebuttal_effectiveness": {
+          "score": 15,
+          "max": 15,
+          "justification": "The CON addresses the PRO's equity arguments and scalability claims with counterpoints about exemptions and rural inequities. All points are rebutted.",
+          "hit_ledger": [
+            {
+              "point": "Brindlewick scalability",
+              "status": "rebutted"
+            },
+            {
+              "point": "revenue recycling equity",
+              "status": "rebutted"
+            },
+            {
+              "point": "rural inequities",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The case is logically segmented into leakage, regressivity, and ineffectiveness, though some points (e.g., Ferncastle) require more context for full clarity."
+        }
+      },
+      "total": 95
+    }
+  ],
+  "winner": "pro",
+  "winner_reason": "total",
+  "fact_check": {
+    "checked_against": "recorded_evidence",
+    "claims": [
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "A federal carbon tax is a proven, equitable, and economically efficient tool to accelerate emissions reductions while protecting vulnerable communities.",
+        "verdict": "contradicted",
+        "evidence_ids": [
+          "am-4"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "The Brindlewick example proves that such a tax can slash household emissions by 14% in just two years.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-1"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "Revenue recycling as a flat dividend ensures the tax is progressive, offsetting regressive impacts.",
+        "verdict": "contradicted",
+        "evidence_ids": [
+          "am-4"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "The tax provides industries with predictable price signals, spurring innovation and long-term planning.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-2"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "Economists across the political spectrum favor taxes over regulation for cost-effective emissions reductions.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "ds-1"
+        ]
+      }
+    ]
+  }
+}

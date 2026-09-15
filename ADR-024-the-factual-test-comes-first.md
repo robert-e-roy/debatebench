@@ -55,6 +55,15 @@ gate written from it. The audit lists what a turn asserts; it does not pre-filte
 This is a wording correction, not a change of behaviour — the shipped prompt has
 always said "Filter nothing out".
 
+**That sentence was wrong when written, and is corrected here (2026-09-15).**
+The *system* prompt said "Filter nothing out"; the *user* turn said "Audit this
+debate's factual claims", pre-filtering from the last position the model reads.
+The shipped prompt contradicted itself, and §1 described only the half that
+agreed with it. Condition C rewrote the user turn and was reverted — it produced
+no `not_checkable` either, and collapsed the warm ledger from 20 claims to 5.
+The decision in §1 stands; the claim that the code already implemented it did
+not.
+
 ### 2. Checkability is a gate on the other three verdicts, not a fourth sibling
 
 The audit decides each assertion in two steps, in this order:

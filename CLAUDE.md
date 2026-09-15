@@ -110,10 +110,22 @@ code. See ADR-002 for full scope.
   measured on its own and is falsified.** Condition B (four draws, both states,
   `probe/b6/condition-b-*.json`) produced zero `not_checkable` and **lost all
   three cross-side `contradicted` verdicts in the warm state**, the regression
-  ADR-024 §5 named in advance. The reorder is reverted; the artifacts stay. Both
-  ledgers also shrank, which suggests leading with the checkability question
-  makes the audit list *less* rather than classify more finely — so how to
-  express §2 is now the open part, not whether it is right.
+  ADR-024 §5 named in advance. The reorder is reverted; the artifacts stay.
+  **Condition C then rewrote the user turn** — it said "Audit this debate's
+  factual claims", pre-filtering from the last position the model reads, against
+  the system prompt's "Filter nothing out" — and was **also reverted**: still
+  zero `not_checkable`, and the warm ledger collapsed from 20 claims to 5.
+  **Clause (3) has now never fired in 25 runs**, across three prompt variants
+  and both load states, all on `qwen3:8b`.
+  A pattern worth more than either result: **both prompt edits helped the cold
+  state and hurt the warm one**, so a variant judged on one state misleads about
+  the other, and warm — every call after the first — is what users get. Two
+  readings are left, and the cheap one comes first: **judge the same transcript
+  with a second model** (`gemma4:12b`, installed, needs a budget well above
+  6000) to separate "the prompt is wrong" from "this model will not produce the
+  verdict". Only if that fails does the structural fix — a `factual` boolean in
+  the claim schema, ADR-024 §2 as schema rather than prose — become worth its
+  ADR and `schema_version` decision.
   **The gate FAILED at condition A** under the N=5 standard fixed before the
   runs (`probe/b6/baseline-a-d1..d5.json`): clause (1) 5/5, clause (2) 4/5 (the
   one miss is the cold draw), clause (3) 0/5. That result also retired the

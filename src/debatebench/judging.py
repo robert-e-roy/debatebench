@@ -539,6 +539,10 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
     return GenerationRequest(
         messages=(
             Message("system", system),
+            # This line said "factual claims", contradicting the system prompt's
+            # "Filter nothing out" from the last position the model reads. Condition C
+            # rewrote it and was REVERTED: no not_checkable appeared, and the warm
+            # ledger collapsed from 20 claims to 5. See probe/b6/README.md.
             Message("user", f"{render(transcript)}\n\nAudit this debate's factual claims."),
         ),
         max_completion_tokens=budget,

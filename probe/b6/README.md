@@ -198,6 +198,60 @@ the audit list *less*, not classify more finely, which runs against the
 be phrased to protect listing, and ADR-024 §3's reserve option should not be
 assumed to escape this.
 
+## Condition C — the user turn's "factual claims", measured and REVERTED
+
+Run 2026-09-15 09:37–09:53. One line changed from condition A: the user turn,
+which said `Audit this debate's factual claims.` — pre-filtering, from the last
+position the model reads, in direct contradiction of the system prompt's
+"Filter nothing out" — became `Audit every assertion this debate makes.`
+Nothing else moved; the verdict list is condition A's order.
+
+| state | claims | supported | contradicted | unsupported | not_checkable | hash |
+|---|---|---|---|---|---|---|
+| cold | 14 | 9 | **3** | 2 | **0** | `2279df5a2d6761ee` |
+| warm | **5** | 3 | 2 | 0 | **0** | `d57e1aa58493ddc6` |
+
+Both same-state pairs byte-identical again; the protocol's self-test has now
+passed under three different prompts.
+
+**It fails, and the warm state collapses.** Cold improves markedly — 11 claims
+to 14, and zero `contradicted` to three. Warm falls from **20 claims to 5**, an
+audit that has stopped looking at most of the debate.
+
+## The pattern across three conditions — prompt changes invert by state
+
+| | A | B | C |
+|---|---|---|---|
+| cold claims | 11 | 9 | **14** |
+| cold `contradicted` | 0 | 1 | **3** |
+| warm claims | **20** | 16 | 5 |
+| warm `contradicted` | **3** | 0 | 2 |
+| `not_checkable`, either state | 0 | 0 | 0 |
+
+**Both prompt edits helped cold and hurt warm.** That is now two independent
+changes moving the two states in opposite directions, which makes prompt tuning
+against this setup unreliable in a specific way: a variant judged on one state
+will mislead about the other, and the warm state — every call after the first —
+is the one users actually get.
+
+**Clause (3) has never fired in 25 runs**, across three prompt variants and both
+states. No `not_checkable` has ever been produced on this transcript by
+`qwen3:8b`. Two readings remain and they have different next steps:
+
+1. **The instruction is still wrong**, and prose is the wrong instrument. The
+   structural version — a `factual` boolean in the claim schema, so the model
+   answers the gating question in a field instead of holding it in its head — is
+   ADR-024 §2 as schema rather than prose. It changes the claim shape, so it
+   needs an ADR and a `schema_version` decision.
+2. **This model will not produce the verdict**, whatever the prompt. Every one
+   of the 25 runs is `qwen3:8b`. Judging the same transcript with a second model
+   separates the two readings in four draws, and `gemma4:12b` is installed and
+   measured (OPEN-QUESTIONS 13) — it needs a budget well above 6000, since it
+   spends the first several thousand tokens thinking.
+
+Reading 2 is cheaper and strictly diagnostic: it changes no code and can only
+narrow the question. It should come first.
+
 ## Comparing condition A with condition B
 
 They were run under different protocols — A took five draws in an uncontrolled
