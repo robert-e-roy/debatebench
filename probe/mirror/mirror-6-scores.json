@@ -1,0 +1,104 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T17:41:33Z",
+  "judge_model": "gemma4:12b",
+  "judge_budget": 10000,
+  "fact_check_enabled": false,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "The argument is logically sound, effectively reframing the infrastructure 'burden' as a 'capital improvement' for long-term municipal stability."
+        },
+        "evidence_grounding": {
+          "score": 22,
+          "max": 25,
+          "justification": "The points regarding tax bases and economic multipliers are plausible in a fiscal context, though slightly more abstract than the opponent's points.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "The proponent acknowledges the specific concerns of infrastructure costs and low job counts before offering a defense."
+        },
+        "rebuttal_effectiveness": {
+          "score": 13,
+          "max": 15,
+          "justification": "Successfully countered the opponent's main points by pivoting to a higher-level strategic perspective of municipal growth.",
+          "hit_ledger": [
+            {
+              "point": "infrastructure burden",
+              "status": "rebutted"
+            },
+            {
+              "point": "low job count",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The case is very easy to follow and consistent throughout."
+        }
+      },
+      "total": 92
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 29,
+          "max": 30,
+          "justification": "Highly effective logic focusing on the 'opportunity cost' and the disparity between local needs and remote benefits."
+        },
+        "evidence_grounding": {
+          "score": 23,
+          "max": 25,
+          "justification": "A very grounded case that highlights specific, tangible constraints like water and electrical grid capacity.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "Accurately represents the proponent's claims regarding tax benefits and infrastructure modernization before countering them."
+        },
+        "rebuttal_effectiveness": {
+          "score": 14,
+          "max": 15,
+          "justification": "Strongly countered the multiplier argument by categorizing it as a secondary benefit that fails to offset immediate community costs.",
+          "hit_ledger": [
+            {
+              "point": "tax benefits",
+              "status": "rebutted"
+            },
+            {
+              "point": "infrastructure modernization",
+              "status": "rebutted"
+            },
+            {
+              "point": "economic multiplier",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The case is consistently framed and very clear."
+        }
+      },
+      "total": 95
+    }
+  ],
+  "winner": "con",
+  "winner_reason": "total"
+}

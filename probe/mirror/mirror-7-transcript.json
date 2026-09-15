@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "started_at": "2026-09-15T17:41:34Z",
+  "finished_at": "2026-09-15T17:49:55Z",
+  "run": {
+    "topic": "Are DataCenters good for the community",
+    "seed": 522445644,
+    "budget_tolerance": 16,
+    "phases": [
+      "opening",
+      "rebuttal",
+      "rebuttal",
+      "conclusion"
+    ],
+    "sides": [
+      {
+        "index": 0,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "pro",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      },
+      {
+        "index": 1,
+        "team_file": "tests/fixtures/teams/conservative.yaml",
+        "team": {
+          "id": "conservative-climate",
+          "name": "Free-Market Conservative",
+          "voice": "measured, cost-focused, cites economic evidence",
+          "stance": "conservative",
+          "values": [
+            "limited-government",
+            "cost-benefit",
+            "individual-liberty"
+          ],
+          "corpus": null
+        },
+        "side": "con",
+        "model": "gemma4:12b",
+        "base_url": "http://127.0.0.1:11434/v1",
+        "budget": 2000,
+        "prep_budget": null
+      }
+    ]
+  },
+  "turns": [
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 0,
+      "order": 0,
+      "text": "Data centers provide a substantial economic catalyst for communities by transforming underutilized land into a stable, high-value tax base that supports public services. Furthermore, as the essential infrastructure of the modern digital economy, these facilities foster regional growth and provide the necessary framework for local businesses to compete in a global marketplace.",
+      "usage": {
+        "prompt_tokens": 114,
+        "completion_tokens": 737
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 41104,
+      "started_at": "2026-09-15T17:41:34Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 0,
+      "phase": "opening",
+      "side_index": 1,
+      "order": 1,
+      "text": "While data centers generate tax revenue, they impose heavy costs on local infrastructure by consuming vast amounts of water and electricity, often prioritizing global corporate operations over the immediate needs of the local population. Furthermore, their extremely low employment-per-acre ratio represents an inefficient use of land that would more effectively support the local economy if used for manufacturing or housing.",
+      "usage": {
+        "prompt_tokens": 183,
+        "completion_tokens": 553
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 31271,
+      "started_at": "2026-09-15T17:42:15Z",
+      "length": "short"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 0,
+      "text": "The proponent correctly identifies that data centers provide a stable tax base and the foundational infrastructure required for a modern, globalized economy. However, a rigorous cost-benefit analysis suggests that these tax gains are often neutralized by the substantial public expenditures required to upgrade local power grids and water infrastructure to accommodate their high-demand operations. Furthermore, the \"transformation\" of land for data centers presents a significant opportunity cost, as it removes acreage from use for manufacturing or housing—sectors that generate far more local jobs and tangible economic activity. While these facilities facilitate global commerce, their inefficient employment-per-acre ratio means they do not provide the same level of local economic revitalization as traditional industrial developments. Ultimately, we must prioritize land uses that maximize local opportunity and labor participation over capital-intensive projects that prioritize corporate infrastructure over community needs.",
+      "usage": {
+        "prompt_tokens": 287,
+        "completion_tokens": 1106
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 71239,
+      "started_at": "2026-09-15T17:42:46Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 1,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 1,
+      "text": "The opposition correctly highlights the importance of land-use efficiency and the potential strain on local infrastructure. However, the \"cost\" of infrastructure upgrades is often offset by the creation of a more modernized, resilient grid that provides a more stable utility foundation for the entire region. Furthermore, dismissing data centers as \"low employment\" ignores their role as the essential digital \"rails\" of the modern economy; without this infrastructure, local businesses are significantly handicapped in their ability to compete in the global marketplace. Their preference for manufacturing over data centers overlooks the fact that data centers provide a consistently stable, high-value tax base that is often more reliable than volatile industrial developments. Ultimately, these facilities are not mere luxury projects but are the backbone of the current economy, providing the indispensable infrastructure upon which all other forms of local commerce and innovation rely.",
+      "usage": {
+        "prompt_tokens": 465,
+        "completion_tokens": 1004
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 58516,
+      "started_at": "2026-09-15T17:43:57Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 0,
+      "order": 0,
+      "text": "The opposition’s most compelling point is that data centers represent an inefficient use of land due to their low employment-per-acre ratio compared to housing or manufacturing. However, this perspective overlooks the fact that data centers are the \"digital rails\" of the 21st century; they provide the foundational infrastructure that allows every other local business to compete in a globalized economy. Furthermore, the claim that infrastructure costs \"neutralize\" tax gains fails to account for the permanent benefit of a modernized, more resilient power grid which provides a superior utility foundation for the entire region. By focusing solely on immediate labor counts, the opposition ignores the stability of a high-value, predictable tax base that is far less volatile than traditional industrial development. Ultimately, we must choose between a 20th-century view of land use and the necessary infrastructure required to sustain a modern, thriving economy.",
+      "usage": {
+        "prompt_tokens": 645,
+        "completion_tokens": 1204
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 71513,
+      "started_at": "2026-09-15T17:44:56Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 2,
+      "phase": "rebuttal",
+      "side_index": 1,
+      "order": 1,
+      "text": "The proponent correctly argues that data centers provide indispensable \"digital rails\" and a stable tax base that can modernize regional utility infrastructure. However, this \"modernization\" frequently functions as a significant public subsidy for private corporations, where local taxpayers bear the burden of infrastructure costs while multi-national entities reap the profits of the data flow. Furthermore, the argument for \"stability\" fails to account for the severe opportunity cost of land use; a stable tax base from a capital-intensive facility with a negligible employment-per-acre ratio is a poor substitute for the high-density job creation provided by manufacturing or housing. While the \"digital rails\" are necessary for the global economy, they are not an efficient mechanism for local economic development when compared to industries that directly foster local labor participation. Ultimately, we must prioritize land uses that maximize measurable local economic growth over infrastructure projects that prioritize corporate connectivity over community prosperity.",
+      "usage": {
+        "prompt_tokens": 838,
+        "completion_tokens": 1354
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 81289,
+      "started_at": "2026-09-15T17:46:07Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 1,
+      "order": 0,
+      "text": "The opposition's position fails to account for the profound opportunity costs and the disparity between corporate benefit and community gain. While data centers provide a stable tax base, these gains are often neutralized by the significant public expenditures required to upgrade critical infrastructure for private use. Furthermore, the low employment-per-acre ratio of these facilities represents an inefficient use of land that would more effectively drive growth if directed toward housing or manufacturing. Rather than subsidizing the \"digital rails\" for global corporations, we must prioritize land uses that maximize local labor participation and tangible economic activity. Ultimately, the community's prosperity is best served by championing job-creating industries over capital-intensive infrastructure projects that prioritize corporate connectivity over local needs.",
+      "usage": {
+        "prompt_tokens": 1019,
+        "completion_tokens": 1346
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 85648,
+      "started_at": "2026-09-15T17:47:28Z",
+      "length": "medium"
+    },
+    {
+      "phase_index": 3,
+      "phase": "conclusion",
+      "side_index": 0,
+      "order": 1,
+      "text": "The Pro position wins because it correctly identifies data centers as the essential \"digital rails\" of the 21st-century economy, providing the foundational infrastructure necessary for any modern business to thrive. While the opposition views infrastructure upgrades as a burden, these improvements actually establish a more resilient and modern utility grid that offers a lasting benefit to the entire region. Furthermore, the high-value and predictable tax base provided by these facilities offers a more stable fiscal foundation for public services than the volatile industrial developments the opposition favors. By hosting this infrastructure, a community provides the literal platform for local businesses to compete on a global scale. Ultimately, we must prioritize the indispensable infrastructure of the modern era over 20th-century land-use models that fail to account for our current economic reality.",
+      "usage": {
+        "prompt_tokens": 1175,
+        "completion_tokens": 871
+      },
+      "budget": 2000,
+      "hit_budget": false,
+      "finish_reason": "stop",
+      "latency_ms": 60668,
+      "started_at": "2026-09-15T17:48:54Z",
+      "length": "medium"
+    }
+  ]
+}

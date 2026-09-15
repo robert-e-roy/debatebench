@@ -42,8 +42,17 @@ code. See ADR-002 for full scope.
   `schema_version` bump), `ADR-025` (the read timeout is a `timeout:` key in
   `run.yaml` and in the `judge:` block plus a `--timeout` flag on both commands,
   default 600 seconds unchanged; deliberately **not** recorded in the transcript,
-  since it cannot shape the output — only whether one arrives) — accepted;
+  since it cannot shape the output — only whether one arrives), `ADR-024`
+  (checkability gates the other three fact-check verdicts; §1 and §2 stand, §3's
+  reorder was measured and reverted), `ADR-026` (a malformed judge reply names
+  its repair — stop the model and re-run — and the tool still does not retry;
+  resolves OPEN-QUESTIONS 14 except its `response_format` option) — accepted;
   together they are the spec.
+- `MODEL-COVERAGE.md` — which models have actually been run, at what size, as
+  debater or judge, with the artifact behind each. **No large (24B+) model has
+  ever produced a token here**; every quality finding in this repo comes from
+  models between roughly 3B and 12B, and only `qwen3:8b`'s judging is validated
+  at all. Read it before trusting any claim about debate or judging quality.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
   pair can't co-reside alongside normal workload; no concurrency was measured).

@@ -384,8 +384,21 @@ def _json_object(text: str, *, truncated: bool) -> dict:
         if truncated
         else ""
     )
+    # ADR-026 §2: the repair was measured after this message was written. The reply
+    # is deterministic only while the model stays loaded, so an unload-and-rerun
+    # gets a different one. Said here because the operator cannot guess it, and
+    # NOT done automatically — ADR-017 §4, and a visible failure is what let the
+    # project measure a 33% malformed rate at all.
+    repair = (
+        " Re-running often clears this: the reply is deterministic only while the model "
+        "stays loaded, so stopping the model (ollama stop <model>) and judging again "
+        "gets a different reply. Nothing else needs changing — not the seed, not the budget."
+    )
     if start == -1 or end <= start:
-        raise JudgeError(f"the reply holds no JSON object.{hint} It said: {text.strip()[:300]!r}")
+        raise JudgeError(
+            f"the reply holds no JSON object.{hint}{'' if truncated else repair} "
+            f"It said: {text.strip()[:300]!r}"
+        )
     body = cleaned[start : end + 1]
     try:
         payload = json.loads(body)
@@ -398,7 +411,7 @@ def _json_object(text: str, *, truncated: bool) -> dict:
             # column 78" is true and useless on its own: diagnosing it once cost
             # three throwaway scripts to recover a reply the error already held.
             raise JudgeError(
-                f"the reply's JSON is malformed: {e}.{hint} "
+                f"the reply's JSON is malformed: {e}.{hint}{repair} "
                 f"The text at the fault: {_around(body, getattr(e, 'pos', 0))}"
             ) from e
     if not isinstance(payload, dict):

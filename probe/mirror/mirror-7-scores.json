@@ -1,0 +1,100 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.0.dev0",
+  "judged_at": "2026-09-15T17:58:10Z",
+  "judge_model": "gemma4:12b",
+  "judge_budget": 10000,
+  "fact_check_enabled": false,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 27,
+          "max": 30,
+          "justification": "The argument effectively frames data centers as indispensable 'digital rails,' shifting the debate from a simple land-use issue to a foundational infrastructure necessity."
+        },
+        "evidence_grounding": {
+          "score": 20,
+          "max": 25,
+          "justification": "The claims are internally consistent and use plausible economic metrics like 'tax base stability' and 'modernized infrastructure' to support the case.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "The side correctly identifies the opponent's concerns regarding land-use efficiency and infrastructure costs before providing a counter-narrative."
+        },
+        "rebuttal_effectiveness": {
+          "score": 13,
+          "max": 15,
+          "justification": "Strongly reframed infrastructure costs as long-term regional investments and land-use concerns as a matter of era-appropriate economic priority.",
+          "hit_ledger": [
+            {
+              "point": "low employment-per-acre",
+              "status": "rebutted"
+            },
+            {
+              "point": "infrastructure costs",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 9,
+          "max": 10,
+          "justification": "The logic is easy to follow, clearly distinguishing between short-term costs and long-term systemic benefits."
+        }
+      },
+      "total": 87
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "The argument excels in characterizing the 'hidden' costs of the proposal, specifically the disparity between corporate benefit and public burden."
+        },
+        "evidence_grounding": {
+          "score": 21,
+          "max": 25,
+          "justification": "Strongly grounded in common urban planning concerns such as opportunity costs and the specific allocation of land for local jobs versus specialized infrastructure.",
+          "prep_grounded": false
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "The side accurately incorporates the 'digital rails' and 'stable tax' points of the opponent before dismantling them as insufficient for local prosperity."
+        },
+        "rebuttal_effectiveness": {
+          "score": 14,
+          "max": 15,
+          "justification": "Strongly countered the notion of 'infrastructure investment' by framing it as a 'public subsidy' for private corporations.",
+          "hit_ledger": [
+            {
+              "point": "digital rails",
+              "status": "rebutted"
+            },
+            {
+              "point": "stable tax base",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The case is highly coherent, clearly centering the 'community' aspect of the motion."
+        }
+      },
+      "total": 92
+    }
+  ],
+  "winner": "con",
+  "winner_reason": "total"
+}

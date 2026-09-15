@@ -316,6 +316,18 @@ about. Note that it binds the backend: `mlx_lm` honours `response_format` in
 neither mode, so anything relying on it would work on Ollama and silently not
 on MLX.
 
+**RESOLVED for options 1–3 by ADR-026 (2026-09-15); option 4 is all that is
+left of this item.** Options 1 and 2 are declined: the tool does not retry, and
+ADR-017 §4's reason has been vindicated rather than weakened — **a 33% malformed
+rate (2 of 6 calls in one batch) is only knowable because the failures were
+loud.** Option 3's "permanently unscored" half is false, so it is no longer a
+cost: re-running after `ollama stop` gets a different reply, demonstrated on
+`probe/scale/` where a failed judge succeeded on a plain re-run with no seed and
+no code change. The error now says so. Option 4 stays open with the measurement
+shape specified in ADR-026 §3 — compare the parse-failure rate **and the ledgers
+themselves**, since constrained decoding can change what a model writes, not
+merely whether it parses.
+
 ## Recorded elsewhere — index
 
 | Where | Open question |
