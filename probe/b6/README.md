@@ -306,6 +306,37 @@ and still completed — the same context-inflation that killed `deepseek-r1:32b`
 where `supported` was meant — after about eight minutes. That is the malformed
 class ADR-026 declines to retry around, on the slowest model available.
 
+## qwen3:14b under the full protocol — clause (3) is stable, clause (2) never appears
+
+Four draws, two per load state, 2026-09-15 17:41–17:58.
+
+| state | draws | claims | supported | contradicted | `not_checkable` | hash |
+|---|---|---|---|---|---|---|
+| cold | 2 | 12 | 8 | **0** | **4** | `d72f8775e05bb83b` |
+| warm | 2 | 13 | 9 | **0** | **4** | `1be4a3d66d141d09` |
+
+Same-state pairs byte-identical — the protocol's self-test passes a fourth time,
+now on a fourth model. **Four `not_checkable` in every draw, in both states, and
+zero `contradicted` in every draw.**
+
+So 14b is *stable* where 8b is not. On `qwen3:8b` the load state decides whether
+clause (2) appears at all — warm finds three contradictions, cold finds none. On
+`qwen3:14b` the state barely moves the ledger (12 claims against 13) and moves
+neither clause.
+
+**The two models are complementary and neither is sufficient:**
+
+| | (1) supported | (2) contradicted | (3) not_checkable |
+|---|---|---|---|
+| `qwen3:8b` warm | ✅ | ✅ 3 | ❌ 0 |
+| `qwen3:8b` cold | ✅ | ❌ 0 | ❌ 0 |
+| `qwen3:4b` | ✅ | ❌ 0 | ✅ 2 |
+| `qwen3:14b` both states | ✅ | ❌ 0 | ✅ 4 |
+
+B6 asks for all three in one ledger. **Every model tested gets exactly two, and
+which two depends on the model rather than on the prompt.** Three prompt
+conditions were reverted chasing a defect that moves with the judge.
+
 ## The second-model diagnostic has not run — four draws, four timeouts
 
 Attempted 2026-09-15 10:09–11:15. `gemma4:12b` against the gate transcript at
