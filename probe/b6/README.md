@@ -149,6 +149,73 @@ pre-ADR-019 ledger on this same transcript is saved here as
 But with draw-to-draw variance this large, one run either side is not a
 before/after, and the withdrawal below stands for a second reason.
 
+## Condition A baseline, N=5 — the gate FAILS, and the variance has a shape
+
+Run 2026-09-14 21:26–21:59 under the standard fixed earlier that day, on
+`transcript-2026-09-14-gate.json`, `qwen3:8b`, budget 6000, five draws
+sequentially. Artifacts `baseline-a-d1.json` … `d5.json`.
+
+| draw | claims | supported | contradicted | not_checkable | hash |
+|---|---|---|---|---|---|
+| 1 | 11 | 10 | 0 | 0 | `455775e5835cd5ec` |
+| 2 | 20 | 15 | **3** | 0 | `be6197db7ac41208` |
+| 3 | 20 | 15 | **3** | 0 | `be6197db7ac41208` |
+| 4 | 20 | 15 | **3** | 0 | `be6197db7ac41208` |
+| 5 | 20 | 15 | **3** | 0 | `be6197db7ac41208` |
+
+**Result: FAIL.** Clause (1) in 5/5, clause (2) in 4/5, **clause (3) in 0/5**.
+No ledger carried all three. Per the standard there is no sixth draw. The three
+contradictions in draws 2–5 are genuinely cross-side — side 1's claims against
+side 0's `am-3` and `am-1` — so clause (2) is properly met, not a coincidence of
+counts.
+
+## Correction: the audit is deterministic, and "not reproducible" was wrong
+
+**Fifteen runs now exist on this one transcript, and they have produced exactly
+two outputs**, byte-identical within each group once `judged_at` is removed:
+
+- `455775e5835cd5ec` — 11 claims, no contradictions. **3 runs.**
+- `be6197db7ac41208` — 20 claims, 3 contradictions. **12 runs.**
+
+There is no sampling spread. Ordering separates them perfectly:
+
+| run | when | preceded by | hash |
+|---|---|---|---|
+| run 1 | 10:43 | `llama-server` loaded at 10:41 | A |
+| runs 2–7 | 10:47–11:09 | each other, back to back | B ×6 |
+| `rejudge-…-a` | 17:43 | ~13 min since the last `qwen3:8b` call | A |
+| `rejudge-…-b` | 17:49 | run A, immediately | B |
+| `baseline-a-d1` | 21:26 | ~3.5 h idle | A |
+| `baseline-a-d2…d5` | 21:32–21:59 | each other, back to back | B ×4 |
+
+Every first call after the model sat idle past Ollama's keep-alive gives A;
+every call closely following another gives B. 3/3 and 12/12.
+
+**So the withdrawal recorded above is itself withdrawn.** The earlier entry
+said "the cold-server explanation is withdrawn … the variable cannot be load
+state", on the grounds that `rejudge-b` was the fresh-load call. That rested on
+reading a `ps` line — a `llama-server` started minutes earlier — as the
+`qwen3:8b` runner. It carried `--mmproj`, so it was a vision model's runner, not
+this one. The inference was wrong and the conclusion built on it was wrong.
+ADR-017 §6's reproducible re-judging holds **within a load state**; it does not
+survive one.
+
+A plausible mechanism, not yet tested: a cold load has no prefix cache, so the
+long prompt is prefilled in a different batching order and diverges in the
+low bits. Ollama does report `prompt_tokens_details.cached_tokens`, and it was
+observed going 0 → 25 between a cold and a warm call during the gemma4 probe.
+
+**This is a post-hoc pattern with a perfect fit, not a tested prediction.** The
+test that would settle it: `ollama stop qwen3:8b`, one draw (predict A), then a
+second immediately (predict B). Those are **not** gate draws and must not be
+counted toward any N.
+
+**It also compromises the N=5 protocol as written.** Five consecutive draws are
+not five independent samples — they are one cold draw and four warm ones, and
+the four warm ones are the same bytes. N=5 sampled two states, one of them four
+times. Any future condition has to either control the state or say which state
+it is measuring.
+
 **The gate needs a run protocol, not another run.** Clause (3) cannot be
 diagnosed from single draws when a single input yields 11 or 20 claims. Any
 prompt change must be measured over N draws per condition, comparing verdict
