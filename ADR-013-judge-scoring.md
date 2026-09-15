@@ -93,6 +93,12 @@ together; the total is never printed alone.
    evidence doesn't support is the same dishonesty the hard invariant
    already refuses for a one-sided debate.
 
+   **Superseded by ADR-023** (2026-09-14). A coin toss resolves it instead —
+   `run.seed % 2`, recorded as `winner_reason: "coin_toss"`. The objection
+   above holds against a verdict that *looks* earned; it does not hold against
+   one the file labels as a toss, and `winner_reason` was already written on
+   every run.
+
 ### 4. Evidence grounding degrades gracefully when Prep didn't run
 
 `prep` is optional (ADR-007 §4, ADR-010 §2). Scoring `evidence_grounding`
@@ -140,6 +146,12 @@ writes:
 
 `winner` is `"pro"`, `"con"`, or `"draw"`. `winner_reason` is one of
 `"total"`, `"steelman_tiebreak"`, or `"tied_after_steelman_tiebreak"`.
+
+**Amended by ADR-023** (2026-09-14): `winner_reason` gains **`"coin_toss"`**,
+which replaces `"tied_after_steelman_tiebreak"` in new files. `"draw"` and the
+old reason stay legal values so score files written before that ADR keep
+reading; nothing produces them now. No `schema_version` bump — the shape is
+unchanged, only which values occur (ADR-023 §4).
 
 ## Why
 

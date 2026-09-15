@@ -143,7 +143,7 @@ async def score_debate(
         )
         for side in transcript.run.sides
     )
-    winner, reason = decide(sides)
+    winner, reason = decide(sides, transcript.run.seed)
     return ScoreSheet(
         judged_at=utc_now(),
         judge_model=model,
@@ -156,11 +156,13 @@ async def score_debate(
     )
 
 
-def decide(sides: tuple[SideScore, ...]) -> tuple[str, str]:
+def decide(sides: tuple[SideScore, ...], seed: int) -> tuple[str, str]:
     """The winner, by arithmetic outside the model (ADR-013 §3).
 
-    Higher total, then steelman fidelity, then an honest draw. A forced verdict
-    the scores don't support would be worse than no verdict.
+    Higher total, then steelman fidelity, then a coin toss (ADR-023). The toss
+    is the transcript's own seed, not a draw made here, so a tied transcript
+    always resolves the same way — and so that the one step of the pipeline
+    which is pure arithmetic stays that way.
     """
     first, second = sides
     if first.total != second.total:
@@ -168,7 +170,10 @@ def decide(sides: tuple[SideScore, ...]) -> tuple[str, str]:
     steelman = {side.side_index: _dimension(side, "steelman_fidelity").score for side in sides}
     if steelman[first.side_index] != steelman[second.side_index]:
         return (max(sides, key=lambda s: steelman[s.side_index]).side, "steelman_tiebreak")
-    return ("draw", "tied_after_steelman_tiebreak")
+    # ADR-023 §2-3: keyed to the side index, not the team, so a sides-swapped
+    # pair at one seed gives each team one toss (OPEN-QUESTIONS 9).
+    won = next(side for side in sides if side.side_index == seed % 2)
+    return (won.side, "coin_toss")
 
 
 def _dimension(side: SideScore, name: str) -> DimensionScore:

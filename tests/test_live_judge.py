@@ -147,7 +147,7 @@ def test_an_evenly_matched_debate_is_scored(run_dir: Path, capfd):
         _show(document)
 
     assert document["winner"] in {"pro", "con", "draw"}
-    assert document["winner_reason"] in {"total", "steelman_tiebreak", "tied_after_steelman_tiebreak"}
+    assert document["winner_reason"] in {"total", "steelman_tiebreak", "coin_toss"}
     totals = [entry["total"] for entry in document["sides"]]
     print(f"\ntotals {totals}, margin {abs(totals[0] - totals[1])}")
 

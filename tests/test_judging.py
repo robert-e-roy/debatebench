@@ -129,11 +129,38 @@ def test_steelman_fidelity_breaks_a_tie(run_dir: Path):
     assert (sheet.winner, sheet.winner_reason) == ("con", "steelman_tiebreak")
 
 
-def test_an_exact_tie_is_a_draw_not_a_coin_flip(run_dir: Path):
+def test_an_exact_tie_is_resolved_by_a_coin_toss(run_dir: Path):
+    # ADR-023 supersedes ADR-013 §3's draw. The fixture's seed is 42, so 42 % 2
+    # picks side_index 0, which is pro here.
     _, transcript = debated(run_dir)
     sheet, _ = judged(transcript, judge_reply(side(0), side(1)))
 
-    assert (sheet.winner, sheet.winner_reason) == ("draw", "tied_after_steelman_tiebreak")
+    assert transcript.run.seed == 42
+    assert (sheet.winner, sheet.winner_reason) == ("pro", "coin_toss")
+
+
+def test_the_coin_is_keyed_to_the_side_index_not_the_team(run_dir: Path):
+    """ADR-023 §3: swap the sides at one seed and the other team wins the toss.
+
+    A team-keyed coin would hand the same team both tosses, which is a constant
+    added to the very comparison OPEN-QUESTIONS 9's swap protocol exists to make.
+    """
+    config = configure(run_dir, ("opening", "rebuttal"), swap_sides=True)
+    transcript = asyncio.run(run_debate(config, fakes()))
+    sheet, _ = judged(transcript, judge_reply(side(0), side(1)))
+
+    assert transcript.run.seed == 42  # the same seed as the unswapped run above
+    assert (sheet.winner, sheet.winner_reason) == ("con", "coin_toss")
+
+
+def test_a_tied_transcript_tosses_the_same_way_twice(run_dir: Path):
+    # The coin is the recorded seed, not a draw made at judging time, so
+    # re-judging one transcript cannot change who won.
+    _, transcript = debated(run_dir)
+    first, _ = judged(transcript, judge_reply(side(0), side(1)))
+    second, _ = judged(transcript, judge_reply(side(0), side(1)))
+
+    assert (first.winner, first.winner_reason) == (second.winner, second.winner_reason)
 
 
 def test_the_winner_follows_the_side_label_not_the_list_position(run_dir: Path):

@@ -269,8 +269,10 @@ One call, both sides, five dimensions scored independently and never blended:
 | `clarity` | 10 |
 
 The **winner is arithmetic, computed outside the model**: higher total, then
-`steelman_fidelity` as the tiebreak, then an explicit draw. The model is never
-asked who won. Every dimension is printed beside the total, because a total on
+`steelman_fidelity` as the tiebreak, then a coin toss — `run.seed % 2`, so a
+tied transcript always resolves the same way and you can check it by hand
+(ADR-023). `winner_reason` says which rule decided it, and `coin_toss` means
+the scores did not. The model is never asked who won. Every dimension is printed beside the total, because a total on
 its own explains nothing.
 
 A dimension that fails to parse is an **error**, never a zero — a zero would be

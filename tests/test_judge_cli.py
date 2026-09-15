@@ -258,10 +258,13 @@ def test_it_writes_the_score_file_and_explains_itself(
     assert "pro wins (total)" in err
 
 
-def test_a_draw_is_reported_as_a_draw(transcript_file: Path, run_dir: Path, fake_judge, capfd):
+def test_a_tie_is_reported_as_a_coin_toss(transcript_file: Path, run_dir: Path, fake_judge, capfd):
+    # ADR-023 §5: the reason is the whole defence of a tossed winner, so the CLI
+    # must name it — "pro wins" alone would be the disguised verdict ADR-013 §3
+    # refused, which is the one thing this change must not become.
     fake_judge(judge_reply(side(0), side(1)))
     assert run(transcript_file, run_dir / "score.json") == 0
-    assert "a draw (tied after steelman tiebreak)" in capfd.readouterr().err
+    assert "pro wins (coin toss)" in capfd.readouterr().err
 
 
 def test_the_score_file_holds_nothing_but_json(

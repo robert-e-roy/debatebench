@@ -36,6 +36,9 @@ code. See ADR-002 for full scope.
   `--pro-*`/`--con-*` overrides; nothing else, and Hard Rule 7 stands),
   `ADR-022` (a phase entry with no `:length` suffix asks for `medium`, resolved
   at load; supersedes ADR-011 §4 and ADR-016 §3, narrows ADR-016 §6, no
+  `schema_version` bump), `ADR-023` (a tie after the steelman tiebreak is
+  resolved by a coin toss — `run.seed % 2`, keyed to the side index, recorded
+  as `winner_reason: "coin_toss"`; supersedes ADR-013 §3 clause 3, no
   `schema_version` bump) — accepted; together they are the spec.
 - `BUILD-GUIDE.md` — the session-by-session build plan (B0–B7), each session with
   an exit gate. **B0 is done** for the machine as used (`RESULTS.md`: the 8B+24B
