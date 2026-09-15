@@ -21,6 +21,7 @@ from typing import Any
 
 from .backend import BackendError
 from .config import ConfigError, RunConfig, Side, load_run
+from .event_stream import make_event_writer
 from .events import DebateEvent, EventBus, EventType, Listener
 from .openai_compat import OpenAICompatibleBackend, open_client
 from .orchestrator import DebateError, Transcript, run_debate
@@ -46,6 +47,12 @@ def _parser() -> argparse.ArgumentParser:
     # ADR-025 §5: not an experimental variable — it cannot change a token of the
     # output, only whether the output arrives, so it sits outside ADR-021's list.
     parser.add_argument("--timeout", type=int, help="seconds to wait for a reply (default 600)")
+    # ADR-027: a machine-readable view on the one stream this command leaves free.
+    parser.add_argument(
+        "--events",
+        action="store_true",
+        help="stream one JSON object per event to stdout, for another program to read",
+    )
     return parser
 
 
@@ -73,6 +80,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     events = EventBus()
     events.subscribe(make_log_event(tuple(side.side for side in config.sides)))
+    if args.events:
+        # stdout, which Hard Rule 7 left free by putting the transcript in a named
+        # file rather than a redirect. The stderr log is unaffected (ADR-027 §1).
+        events.subscribe(make_event_writer(config))
     try:
         transcript = asyncio.run(_run(config, events))
     except (DebateError, BackendError) as e:

@@ -169,6 +169,26 @@ output: transcript.json
 | `sources` | Shared retrieval pools. Optional, and only meaningful with `prep`. |
 | `seed` | Optional. If omitted, one is generated, logged, and recorded in the transcript — never silently guessed. |
 | `output` | Required. The transcript path, resolved relative to the `run.yaml`. |
+### Watching a run from another program
+
+`debate --events` writes one JSON object per line to **stdout**, flushed as it
+goes, while the human log continues on stderr (ADR-027):
+
+```bash
+debate run.yaml --events | my-viewer      # events on stdout, log on stderr
+```
+
+The first line is a `run` header carrying the topic, seed, phases, each side's
+label/team/model, and a `schema_version`. After it come `phase_started`,
+`turn_started`, `turn_completed` (with the speech text, usage and timing),
+`phase_completed`, and finally `run_completed` — or `run_failed` with the error.
+
+**The stream is not a transcript.** It is not rotated, not atomic, and a failed
+run leaves a partial stream describing turns that were never written anywhere.
+Read the `output:` file for the durable record, and **wait for `run_completed`
+before you do** — on a failed run, the file sitting at that path belongs to the
+*previous* run.
+
 | `timeout` | Optional, seconds to wait for a reply. Default 600. Raise it for a large reasoning model at a big budget — a 12B model thinking through a long prompt can exceed ten minutes on a cold load. `--timeout` overrides it. |
 
 Response length is a suffix on the phase, `name:length` — `short` (2 sentences),

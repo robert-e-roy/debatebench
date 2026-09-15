@@ -16,6 +16,9 @@ CASES = [
     ("debatebench.judging", {"httpx", "yaml"}),  # scoring is pure; only the CLI talks HTTP
     ("debatebench.config", {"httpx"}),
     ("debatebench.openai_compat", {"yaml"}),
+    # ADR-027: the stream is stdlib json, and a consumer importing it must not
+    # drag in HTTP or YAML.
+    ("debatebench.event_stream", {"httpx", "yaml"}),
 ]
 
 
