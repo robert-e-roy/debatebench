@@ -17,17 +17,20 @@ Compiled 2026-09-15 from `RESULTS.md` (B0), `BACKEND-PROBE-RESULTS.md`,
 | medium | **qwen3:8b** | 8B, reasoning | 5.2 GB | ✅ extensively | ✅ **validated for ordering** | the workhorse |
 | medium | **gemma4:12b** | 12B, reasoning | 7.6 GB | ✅ 5 debates | ⚠️ works, slow, hungry | newest, least characterised |
 | large | **Mistral-Small-24B-4bit** | 24B | ~13 GB | ❌ **never ran** | ❌ never ran | aborted at load |
-| large | **deepseek-r1:32b** | 32B | 19 GB | ❌ never ran | ❌ **never ran** | loads, then exhausts swap |
+| large | **deepseek-r1:32b** @128K | 32B | 19 GB | ❌ never ran | ❌ never ran | 55 GB resident, OOM |
+| large | **deepseek-r1:32b-16k** | 32B | 19 GB | untried | ⚠️ **runs, 7.4 tok/s** | fits at 23 GB, thinking can't be disabled |
 
-**The large class has never produced a token.** Two models attempted, both
-defeated by memory before inference: Mistral-Small-24B aborted at load in B0, and
-`deepseek-r1:32b` loaded at a 131,072-token context, reported 55 GB resident,
-drove the machine to 0.1 GiB free with swap nearly exhausted, and had its probe
-killed by the OS. Everything this project knows about debate quality comes from
-models between roughly 3B and 12B.
+**The large class has produced exactly two tokens' worth of evidence, and it
+arrived today.** `deepseek-r1:32b` at Ollama's default 131,072-token context
+reported 55 GB resident, drove the machine to 0.1 GiB free with swap nearly
+exhausted, and had its probe killed by the OS. Rebuilt at a **16K context** it
+fits in 23 GB at 100% GPU and answers — at **7.4 tok/s**, about a fifth of
+`qwen3:8b`, with thinking that cannot be switched off. Mistral-Small-24B still
+has never run at all.
 
-**Neither is ruled out.** Both failures are about *fitting*, and both have an
-untried lever: a quiet machine for the 24B, a smaller context for the 32B.
+So every *quality* finding in this repo still comes from models between roughly
+3B and 12B. What changed is that a large-model reading is now possible rather
+than blocked — at roughly an hour per judged transcript.
 
 ## What each size class actually does here
 
@@ -104,8 +107,46 @@ symptom: it did not fit in unified memory, so half of it ran on CPU.
 **This is not "a 32B model cannot run here" — it is "this model at a 128K
 context cannot".** `debatebench`'s judge needs a context that holds one
 transcript and one reply, which is tens of thousands of tokens, not 131,072.
-Retrying with `OLLAMA_CONTEXT_LENGTH` or a Modelfile `PARAMETER num_ctx` set to
-something like 16384 is the obvious next attempt and has not been made.
+
+#### At a 16K context it fits, and answers — measured 2026-09-15
+
+`deepseek-r1:32b-16k`, a two-line Modelfile (`FROM deepseek-r1:32b`,
+`PARAMETER num_ctx 16384`). The first large model in this project to produce a
+token:
+
+```
+NAME                   SIZE     PROCESSOR    CONTEXT
+deepseek-r1:32b-16k    23 GB    100% GPU     16384
+```
+
+55 GB to 23 GB, and the CPU spill is gone — **100% GPU**. So the context was the
+whole problem.
+
+Three results, and only the first is good:
+
+- **It fits, barely.** Resident it leaves **0.1 GiB free** with 5.6 GB of swap in
+  use. It runs, but there is no headroom: anything else substantial starting
+  during a run risks the same OOM kill that ended the 128K attempt.
+- **It is slow: 7.4 tok/s**, against `qwen3:8b`'s 33.9 and AFM's 38.6 (B0). A
+  judge call at `--budget 16000` is therefore roughly **35 minutes of generation
+  alone**, before prompt processing, and `judge` makes two calls when
+  fact-checking. Budget 60–90 minutes for one judged transcript.
+- **`reasoning_effort: "none"` is ignored.** Control produced 1,513 characters of
+  thinking; with the flag, 1,380. That is noise, not obedience — and it breaks
+  the mitigation measured on `gemma4:12b`, which went from 318 characters of
+  thinking to zero. **On `deepseek-r1` the thinking cannot be switched off**, so
+  every budget must clear it.
+
+For scale: a trivial prompt — *answer with one JSON object, `{"ok": true}`* —
+cost **325 completion tokens**, of which about 310 were thinking, for a 14
+character answer.
+
+Thinking arrives in the separate `reasoning` field, not inline as `<think>`, so
+the adapter's all-reasoning-no-answer guard (ADR-025 era) covers it correctly.
+
+**Verdict: usable as a judge, expensive as one.** It is the only path this
+project has to a large-model reading, and it costs about an hour per transcript
+with no way to make it cheaper.
 
 **Operational note, learned the expensive way:** check `ollama ps` for `SIZE`
 and `CONTEXT` after loading a large model and before committing to a run. The
