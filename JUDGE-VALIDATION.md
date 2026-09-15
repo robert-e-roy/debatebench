@@ -284,6 +284,61 @@ slightly different things and both stand.
 The ceiling is still the right anchor for a *threshold*, because it is the
 honest answer to "how well do humans do this task". It is not a cap.
 
+## The scale is compressed at the top — measured 2026-09-15
+
+Two findings from data already on disk, no new runs. Both bear on the
+calibration failure recorded above, and the second answers an open question
+ADR-023 left.
+
+**1. The judge avoids the middle of its scale.** The 631-speech validation run
+(`probe/validation/judge-scores-qwen3-8b-full.json`) scored on 1–5:
+
+| score | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| count | 96 | 233 | **41** | 194 | 67 |
+| share | 15.2% | 36.9% | **6.5%** | 30.7% | 10.6% |
+
+The distribution is **bimodal with a hole at the midpoint** — 3 is used a fifth
+as often as its neighbours. A judge that rarely says "middling" turns small
+quality differences into large score gaps, which is a property worth knowing
+about a tool whose output is a comparison.
+
+**2. Over half of all rubric dimensions ever scored came back at maximum.**
+Across every debatebench score file on disk, deduplicated to **4 distinct
+dimension-score sets** (the 25 `probe/b6` files are one transcript re-judged, so
+they count once):
+
+| | side 0 | side 1 |
+|---|---|---|
+| `examples/scores.json` | 100/100, 5 of 5 maxed | 91/100, 0 maxed |
+| `examples/scores-prep.json` | 100/100, **5 of 5 maxed** | 100/100, **5 of 5 maxed** |
+| gemma4:12b mirror run | 85/100, 0 maxed | 93/100, 1 maxed |
+| `probe/b6` gate transcript | 97/100, 3 maxed | 95/100, 2 maxed |
+
+**21 of 40 dimension scores (52%) sit at the maximum**, and every total observed
+falls in **85–100**. The bottom 85% of a 100-point scale has never been used.
+
+**This answers ADR-023's open question.** It asked whether an observed tie means
+"equal" or "the scale topped out". The one draw on record is `scores-prep.json`
+at 100/100 against 100/100, with **all ten dimensions at maximum**. That is a
+ceiling, not a close contest — so the coin toss ADR-023 introduced is, on the
+only tie we have, resolving a saturation artefact rather than a genuine dead
+heat. The toss is still the right call for a tie; what this says is that *ties
+of this kind are evidence about the rubric*, and a run of them should be read as
+the scale failing rather than the debate being even.
+
+**Sample caveats, stated rather than buried.** Four distinct score sets, three
+transcripts, two judge models — far too few to put an interval on. The 1–5
+distribution is a different task (single speeches, one dimension) from the
+0–100 rubric and corroborates only the shape, not the numbers. What is solid is
+the direction: both measurements point the same way, and neither required a new
+run to find.
+
+**What would settle it:** score a deliberately weak debate — one side arguing
+badly on purpose — and see whether the rubric can reach the bottom half at all.
+That is one debate and one judge call, and it is the cheapest test of whether
+these scores carry information below 85.
+
 ## Decisions
 
 1. **Acceptance threshold — proposed, anchored on the table above.** Against the
