@@ -63,7 +63,10 @@ code. See ADR-002 for full scope.
   here; a bad release is yanked and superseded, never re-uploaded, because PyPI
   forbids reusing a version; `0.1.0` claims the commands and the three file
   formats are stable within 0.1.x, **not** that B6's gate is met) — accepted;
-  together they are the spec.
+  together they are the spec. **`ADR-030`** (the `factual` boolean: accepted,
+  implemented, measured and **reverted** the same day — §9 carries the result and
+  is the part worth reading; ADR-024 §4 stands unamended because the code
+  enforcement that would have justified amending it is gone with the revert).
 - `MODEL-COVERAGE.md` — which models have actually been run, at what size, as
   debater or judge, with the artifact behind each. **No large (24B+) model has
   ever produced a token here**; every quality finding in this repo comes from
@@ -165,8 +168,28 @@ code. See ADR-002 for full scope.
   generation as a column and the warning that **`JUDGE-VALIDATION`'s Tau-C
   result is pinned to `qwen3:8b` and does not transfer across generations**.
   The structural fix — a `factual` boolean in the claim schema, ADR-024 §2 as
-  schema rather than prose — is now the live option, because no prompt wording
-  can make one model do what another does.
+  schema rather than prose — was built and measured on 2026-09-16 as **ADR-030,
+  and is REVERTED**. Four draws under the protocol (`probe/b6/adr030-*.json`):
+  **zero `not_checkable`, all three cross-side `contradicted` lost, and the
+  ledger down from 20 claims to 16.** The prediction ADR-030 §7 recorded before
+  the run was wrong on all three counts. The value judgement it targeted was not
+  reclassified — it **vanished from the ledger**; one lost contradiction became
+  `supported` citing the speaker's *own* passage. **That is now three channels
+  and three identical failures** — verdict-list order (B), user-turn framing (C),
+  and a required schema field (ADR-030): on `qwen3:8b` every change that
+  foregrounds the checkability question trades away clause (2) and shrinks the
+  ledger. **Clause (3) is not reachable on `qwen3:8b` by changing what we ask
+  for**, and the option this file previously called "the live one" is closed.
+  One real side effect: all four draws were **byte-identical across the
+  cold/warm boundary**, the first time `qwen3:8b` has been state-insensitive on
+  this transcript — which bears on the determinism note above.
+  **The most promising route left is `qwen3:14b`**, which already produces
+  clause (3) stably in both states and needs only clause (2). Its failure is now
+  characterised (`probe/b6/ladder-qwen3-14b.json`): it lists *both* halves of the
+  `am-3`/`am-4` contradiction pair, cites both ids correctly, and marks each
+  `supported`. The citation mechanics are exact; it never weighs a claim against
+  the **opposing** side's passage — an ADR-019 precedence failure on a model
+  ADR-019 was never measured on, and uninvestigated.
   **The gate FAILED at condition A** under the N=5 standard fixed before the
   runs (`probe/b6/baseline-a-d1..d5.json`): clause (1) 5/5, clause (2) 4/5 (the
   one miss is the cold draw), clause (3) 0/5. That result also retired the

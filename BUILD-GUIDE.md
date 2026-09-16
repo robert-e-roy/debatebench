@@ -368,6 +368,9 @@ separates the two verdicts by a question it never tells the model to ask
 first: is this a factual claim at all? That is the next thing to test, and it
 is testable by wording.
 
+**"Testable by wording" was tested three times and is false** — see the status
+block below.
+
 **Withdrawn:** the claim that ADR-019 "traded clause (3) for clause (2)". The
 run that produced a `not_checkable` used a different transcript and its score
 file was not saved, so there is no before/after on one input and no trade was
@@ -377,6 +380,47 @@ One further observation from the same ledger, unresolved: claim 10 attributes
 the PRO's Brindlewick claim to the **CON**, because the CON restated it in
 order to rebut it. A side quoting its opponent to attack them is not
 asserting the thing.
+
+**Status 2026-09-16 — clause (3) is closed as unreachable on `qwen3:8b`, and
+the gate's best remaining route changes model.** Three conditions have now
+attacked the checkability question through three independent channels, and all
+three failed the same way:
+
+| condition | channel | `not_checkable` | claims | cross-side `contradicted` |
+|---|---|---|---|---|
+| baseline (A) | — | 0 | 20 | 3 |
+| B (ADR-024 §3) | verdict-list order | 0 | fewer | **0** |
+| C | user-turn framing | 0 | **5** | — |
+| **ADR-030** | **required `factual` field** | **0** | **16** | **0** |
+
+ADR-030 was the schema option this guide and `CLAUDE.md` both named as the one
+left: a required boolean answered before the verdict, with `not_checkable`
+removed from the verdict list and derived from it. Four draws under the amended
+protocol, artifacts in `probe/b6/adr030-*.json`, committed before any conclusion
+was written. **Reverted**: zero `not_checkable`, all three cross-side
+contradictions gone, ledger 20 → 16. Its §7 prediction was recorded in advance
+and was wrong on all three counts.
+
+The mechanism is worth carrying: the value judgement it targeted was **not
+reclassified, it vanished from the ledger**, and one lost contradiction became
+`supported` citing the speaker's *own* passage. Being made to answer "is this
+factual?" per assertion reads as licence to drop the ones that are not — two
+lines below a prompt saying "Filter nothing out".
+
+**So clause (3) is not reachable on `qwen3:8b` by changing what we ask for.**
+`qwen3:4b` and `qwen3:14b` produce it unprompted on this same transcript.
+
+**The route left is `qwen3:14b`**, which has clause (3) stably in both states and
+needs only clause (2). Its failure is now characterised rather than assumed: it
+lists *both* halves of the `am-3`/`am-4` contradiction pair, cites both ids
+correctly, and marks each `supported`. Citation mechanics exact; it simply never
+weighs a claim against the **opposing** side's passage. That is an ADR-019
+precedence failure on a model ADR-019 was never measured on — a different defect
+from the one B6 has been chasing, and the next thing to investigate.
+
+One side effect worth noting: under ADR-030 all four draws were **byte-identical
+across the cold/warm boundary**, the first time `qwen3:8b` has been
+state-insensitive on this transcript.
 
 ---
 

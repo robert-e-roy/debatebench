@@ -359,6 +359,75 @@ same prompt. That asymmetry is recorded rather than normalised away: it is
 OPEN-QUESTIONS 13 (budget counts thinking) landing on the newest generation, and
 it means a budget tuned for one generation silently starves the next.
 
+## ADR-030: the schema attempt, and the third failure through a third channel
+
+`ADR-024 §2 as schema` — the option this page named as the one left — was built
+and measured on 2026-09-16. Every claim carried a required `factual` boolean
+before its verdict; `not_checkable` was removed from the verdict list and derived
+from `factual: false`. Four draws, two per load state, `qwen3:8b`, budget 6000,
+same transcript. Artifacts: `adr030-{cold,warm}-{1,2}.json`.
+
+| draw | claims | supported | contradicted | unsupported | `not_checkable` | hash |
+|---|---|---|---|---|---|---|
+| cold ×2 | 16 | 13 | **0** | 3 | **0** | `873a3c47aeee8f64` |
+| warm ×2 | 16 | 13 | **0** | 3 | **0** | `873a3c47aeee8f64` |
+| baseline warm | 20 | 15 | **3** | 2 | 0 | `36859fa6f7798c1c` |
+
+**Reverted.** Zero `not_checkable`, all three cross-side contradictions lost, and
+the ledger down from 20 claims to 16 — the prediction ADR-030 §7 recorded in
+advance was wrong on all three counts.
+
+**The interesting part is what happened to the two target assertions.** The value
+judgement, "the CON's focus on leakage overlooks climate urgency", was not
+reclassified — it **vanished from the ledger**. The prediction, "can offset
+fossil fuel reliance", stayed `unsupported`. Of the three lost contradictions,
+one became `supported` **citing the speaker's own passage** and two dropped out
+entirely.
+
+So being made to answer "is this factual?" for every assertion was read as
+licence to drop the ones that are not, two lines under a prompt that says
+"Filter nothing out".
+
+### Three channels, three identical failures
+
+| condition | channel | `not_checkable` | claims | cross-side `contradicted` |
+|---|---|---|---|---|
+| baseline (A) | — | 0 | 20 | 3 |
+| B | verdict-list order | 0 | fewer | **0** |
+| C | user-turn framing | 0 | **5** | — |
+| ADR-030 | required schema field | 0 | **16** | **0** |
+
+**On `qwen3:8b`, every change that foregrounds the checkability question trades
+away clause (2) and shrinks the ledger.** Three independent channels — what the
+model reads, how the task is framed, and what the reply must structurally
+contain — produce the same outcome. The schema channel was the strongest one
+available, and ADR-030 argued explicitly that removing the competition between
+`unsupported` and `not_checkable` should differ from reordering it. It did not.
+
+**Clause (3) is not reachable on `qwen3:8b` by changing what we ask for.**
+`qwen3:4b` and `qwen3:14b` produce it unprompted on this same transcript. The
+variable is the judge — which is what this page concluded before ADR-030 was
+written, and what ADR-030 failed to overturn.
+
+### A real side effect: the load-state sensitivity disappeared
+
+`qwen3:8b` is the model this project's determinism note rests on: cold 11 claims,
+warm 20, decided by residency. Under ADR-030 **all four draws were byte-identical
+across the cold/warm boundary** — 16 claims either way, one hash. First time this
+model has been state-insensitive on this transcript. It does not rescue the
+change; it is a reproducible effect of it, and it bears on the determinism claim
+in `CLAUDE.md`, which is already flagged as `qwen3:8b`-specific.
+
+### Where this leaves the gate
+
+The most promising route left is **not** another prompt or schema change to 8b.
+It is `qwen3:14b`, which already produces clause (3) stably in both states and
+needs only clause (2) — and whose failure is now characterised: it lists both
+halves of the `am-3`/`am-4` contradiction pair, cites both correctly, and marks
+each `supported`. Its citation mechanics are exact; it never weighs a claim
+against the *opposing* side's passage. That is an ADR-019 precedence failure on a
+model ADR-019 was never measured on, and it has not been investigated.
+
 ## The full clause table, every judge tested
 
 | judge | (1) supported | (2) contradicted | (3) `not_checkable` |

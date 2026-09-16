@@ -32,26 +32,15 @@ def claim(
     text: str = "Brindlewick cut household emissions by 14 percent.",
     verdict: str = "supported",
     evidence_ids=None,
-    factual=None,
 ) -> dict:
     """One audit entry. The wire shape cites the turn number the rendering
     prints; the coordinates are mapped back in code, so a model never has to
-    transcribe phase_index and side_index — the field it kept mangling.
-
-    ADR-030: `factual` comes first and `not_checkable` is derived from
-    `factual: false`, so a not_checkable entry carries no verdict and no ids.
-    Tests keep naming the verdict they want; this maps it onto the wire shape.
-    """
-    if factual is None:
-        factual = verdict != "not_checkable"
-    if not factual:
-        return {"turn": turn, "claim": text, "factual": False}
+    transcribe phase_index and side_index — the field it kept mangling."""
     if evidence_ids is None:
         evidence_ids = CITED if verdict in ("supported", "contradicted") else ()
     return {
         "turn": turn,
         "claim": text,
-        "factual": True,
         "verdict": verdict,
         "evidence_ids": list(evidence_ids),
     }
@@ -64,96 +53,6 @@ def claims_reply(*claims: dict) -> str:
 def checked(transcript, text: str, *, budget: int = 4000, completion_tokens: int = 300):
     backend = FakeBackend(reply(text, completion_tokens=completion_tokens))
     return asyncio.run(fact_check_debate(transcript, backend, budget=budget)), backend
-
-
-# --- ADR-030: factual is a field the model must answer -------------------------
-
-
-def test_a_claim_without_factual_fails_the_run(run_dir: Path, prepared_sources):
-    """ADR-030 §4, Hard Rule 1. Defaulting it restores the gap ADR-024 found."""
-    _, transcript, _ = prep_debate(run_dir)
-    entry = claim()
-    del entry["factual"]
-    with pytest.raises(JudgeError, match="no factual field"):
-        checked(transcript, claims_reply(entry))
-
-
-def test_factual_false_derives_not_checkable_and_cites_nothing(run_dir: Path, prepared_sources):
-    # ADR-030 §2: the model says it is not factual; the verdict follows from that.
-    _, transcript, _ = prep_debate(run_dir)
-    audit, _ = checked(
-        transcript, claims_reply({"turn": 3, "claim": "PRO overlooks the cost", "factual": False})
-    )
-    assert [c.verdict for c in audit.claims] == ["not_checkable"]
-    assert audit.claims[0].evidence_ids == ()
-
-
-def test_factual_false_discards_a_verdict_rather_than_arguing_with_it(
-    run_dir: Path, prepared_sources
-):
-    """ADR-030 §2 is a derivation, not a validation.
-
-    A model that answers `factual: false` and then supplies `supported` anyway
-    has contradicted itself in a way it cannot be told how to resolve, and
-    failing a whole run over it would be worse than taking the first answer.
-    """
-    _, transcript, _ = prep_debate(run_dir)
-    audit, _ = checked(
-        transcript,
-        claims_reply(
-            {
-                "turn": 3,
-                "claim": "PRO overlooks the cost",
-                "factual": False,
-                "verdict": "supported",
-                "evidence_ids": list(CITED),
-            }
-        ),
-    )
-    assert [c.verdict for c in audit.claims] == ["not_checkable"]
-    assert audit.claims[0].evidence_ids == ()  # cleared, not carried over
-
-
-def test_factual_true_may_not_also_be_not_checkable(run_dir: Path, prepared_sources):
-    # The one inconsistency the model *can* fix, so it is told, not papered over.
-    _, transcript, _ = prep_debate(run_dir)
-    entry = claim(verdict="unsupported")
-    entry["verdict"] = "not_checkable"
-    with pytest.raises(JudgeError, match="factual: true but verdict not_checkable"):
-        checked(transcript, claims_reply(entry))
-
-
-def test_the_prompt_asks_for_factual_before_any_verdict(run_dir: Path, prepared_sources):
-    # ADR-030 §1: the order in the prompt is the order of the two questions.
-    _, transcript, _ = prep_debate(run_dir)
-    system = build_fact_check_request(transcript, budget=4000).messages[0].content
-    assert system.index("factual") < system.index("- supported:")
-    assert "Do not decide a verdict first" in system
-
-
-def test_not_checkable_is_no_longer_offered_as_a_verdict(run_dir: Path, prepared_sources):
-    """ADR-030 §2-3: removing the competition is the difference from condition B.
-
-    B reordered a list of four and lost clause (2). Here the model never chooses
-    between `unsupported` and `not_checkable` — the list it is shown holds only
-    the three verdicts a factual claim can take.
-    """
-    _, transcript, _ = prep_debate(run_dir)
-    system = build_fact_check_request(transcript, budget=4000).messages[0].content
-    assert "- not_checkable:" not in system
-    for verdict in ("- supported:", "- contradicted:", "- unsupported:"):
-        assert verdict in system
-    # ADR-019's precedence and ADR-024 §3's baseline order are left alone.
-    assert system.index("- supported:") < system.index("- contradicted:") < system.index(
-        "- unsupported:"
-    )
-    assert "CONTRADICTION WINS" in system
-
-
-def test_not_checkable_is_still_a_stored_verdict(run_dir: Path, prepared_sources):
-    # It is derived rather than chosen, so it must stay in the vocabulary the
-    # score file and the prep-less path both use.
-    assert "not_checkable" in VERDICTS
 
 
 # --- the ledger it produces ---------------------------------------------------

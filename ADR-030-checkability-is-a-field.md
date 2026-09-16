@@ -1,6 +1,8 @@
 # ADR-030: The Checkability Question Is a Field the Model Must Answer, Not a Verdict It May Reach
 
-**Status:** Accepted
+**Status:** Accepted, and its mechanism (§1–§4) **measured and REVERTED** on
+2026-09-16. §7's prediction was wrong on all three counts; the result and what it
+teaches are in §9, which is the part of this ADR worth reading.
 **Date:** 2026-09-16
 **Depends on:** ADR-015 §2 (the four verdicts), ADR-019 (contradiction wins),
 ADR-024 §2 (checkability gates the other three verdicts), ADR-013 §5 (the score
@@ -195,11 +197,98 @@ missing clause (2) for an unrelated reason.
   ledger with the question unanswered. On the evidence so far that is the
   0.6b/1.7b models, which already return one claim and cannot do the task.
 
+## 9. Measured 2026-09-16 — falsified on all three counts, and reverted
+
+Four draws, two per load state, `qwen3:8b`, budget 6000, against the saved gate
+transcript. Artifacts committed before this section was written
+(`probe/b6/adr030-*.json`, commit `f787447`).
+
+| draw | claims | supported | contradicted | unsupported | `not_checkable` | hash |
+|---|---|---|---|---|---|---|
+| cold ×2 | 16 | 13 | **0** | 3 | **0** | `873a3c47aeee8f64` |
+| warm ×2 | 16 | 13 | **0** | 3 | **0** | `873a3c47aeee8f64` |
+| **baseline warm** | **20** | 15 | **3** | 2 | 0 | `36859fa6f7798c1c` |
+
+Against §7's three requirements:
+
+1. **Clause (3) did not fire.** Zero `not_checkable`, which is what the change
+   existed to produce.
+2. **Clause (2) was lost.** All three cross-side `contradicted` verdicts gone —
+   the regression ADR-024 §5 named in advance.
+3. **The ledger shrank**, 20 claims to 16.
+
+**What actually happened to the two target assertions is the finding.** The
+value judgement — "the CON's focus on leakage overlooks climate urgency" — was
+not reclassified. It **disappeared from the ledger entirely**. The prediction —
+"can offset fossil fuel reliance" — stayed `unsupported`. And of the three lost
+contradictions, one became `supported` **citing the speaker's own passage**
+while two dropped out of the ledger.
+
+So a required `factual` field made this model *list less* and *look across sides
+less*, which is precisely what conditions B and C did. Being forced to answer
+"is this factual?" for every assertion appears to be read as licence to drop the
+assertions that are not, despite the prompt saying the opposite two lines
+earlier.
+
+### What three failures through three channels are worth
+
+This is now a replicated result rather than an anecdote. **On `qwen3:8b`, every
+change that foregrounds the checkability question trades away clause (2) and
+shrinks the ledger** — through verdict-list order (B), through user-turn framing
+(C), and now through a required schema field, which is the strongest channel
+available and the one §"The reason to be suspicious" argued should escape. It
+did not.
+
+The argument in that section — that removing the competition differs from
+reordering it — was reasonable and is wrong. It is left in place above, unedited,
+because the prediction being legible is the only thing that makes this reading
+possible.
+
+**The honest conclusion is that clause (3) is not reachable on `qwen3:8b` by
+changing what we ask for.** Three channels, three failures, same shape. `qwen3:4b`
+and `qwen3:14b` produce it unprompted on the same transcript. The variable is the
+judge, which is what `probe/b6/README.md` concluded before this ADR was written
+and what this ADR did not manage to overturn.
+
+### One genuinely new thing: the state sensitivity vanished
+
+Baseline `qwen3:8b` is the model this project's determinism note is built on —
+cold gives 11 claims, warm gives 20, and which one you get depends on whether the
+model was resident. **Under this change all four draws are byte-identical across
+the cold/warm boundary**: 16 claims either way, one hash.
+
+That is the first time `qwen3:8b` has been state-insensitive on this transcript.
+It does not rescue the change, but it is a real, reproducible effect of it, and
+it bears on CLAUDE.md's determinism claim — which is already flagged as measured
+on `qwen3:8b` and not general. Whether a mandatory boolean is what removed the
+state sensitivity, or whether any sufficiently constraining reply shape would,
+is untested.
+
+### What is reverted and what is kept
+
+- **Reverted:** §1–§4 in full — `build_fact_check_request`, `parse_claims`, the
+  `_CLAIM_SHAPE`, and the seven tests that pinned the contract. The wire shape is
+  back to four verdicts in one list.
+- **Kept:** the artifacts, this section, and §"Context"'s two premise checks,
+  neither of which the measurement touched — `qwen3:8b` warm is still two
+  verdicts from the gate, and `qwen3:14b`'s cross-side blindness is still an
+  uninvestigated ADR-019 failure on an unmeasured model.
+- **ADR-024 §4 stands unamended.** §6 proposed amending it; with §1–§4 reverted
+  there is no code enforcement to justify the amendment, so the original text —
+  "nothing in the code can tell an opinion from a fact" — is untouched.
+
 ## Open questions this doesn't resolve
 
 - **`qwen3:14b`'s cross-side blindness**, newly characterised above: it cites
   correctly and never compares across sides. That is ADR-019's problem on a model
-  ADR-019 was not measured on, and it needs its own investigation.
+  ADR-019 was not measured on, and it needs its own investigation. It is now the
+  most promising route to the gate left, since 14b already produces clause (3)
+  stably in both states and needs only clause (2).
+- **Why a mandatory field made the model drop assertions**, when the prompt
+  directly above it says "Filter nothing out". Three conditions have now produced
+  a smaller ledger; none has explained the mechanism.
+- **Whether a constraining reply shape removes load-state sensitivity in
+  general**, or whether that was specific to this one (§9).
 - Whether `factual` should also be asked of the *scoring* pass, where
   `evidence_grounding` has the same latent question.
 - Whether a prediction is non-factual in the sense that matters — ADR-024's open
