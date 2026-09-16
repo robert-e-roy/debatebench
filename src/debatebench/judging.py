@@ -502,8 +502,8 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
         if known
         else (
             "Nothing was recorded to check against: this debate had no prep phase. "
-            "Cite no ids at all — there are none — and give every assertion the "
-            "verdict not_checkable."
+            "Cite no ids at all — there are none — and mark every assertion "
+            "factual: false, which records it as not_checkable."
         )
     )
     system = "\n".join([
@@ -521,6 +521,21 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
         "claim one side makes is often contradicted by a passage the other side "
         "retrieved, and catching that is the point of this audit.",
         "",
+        # ADR-030 §1-2: the checkability question is a field, not a fourth verdict
+        # competing with unsupported. Conditions B and C reordered and reworded the
+        # four-verdict list and both lost clause (2) while gaining no not_checkable;
+        # this removes the competition instead of rearranging it.
+        "FIRST, for every assertion, answer `factual`:",
+        "- factual: false — an opinion, a prediction, or a value judgement rather "
+        "than a statement of fact. Give NO verdict and NO ids; the entry is just the "
+        "turn, the claim and factual: false. \"X overlooks Y\", \"Z is the right "
+        "policy\" and \"W will happen by 2030\" are all factual: false.",
+        "- factual: true — a statement of fact, which a record could in principle "
+        "bear on. Only then give it one of the three verdicts below.",
+        "",
+        "Answer factual for every assertion before you consider any verdict. Do not "
+        "decide a verdict first and infer factual from it.",
+        "",
         "CONTRADICTION WINS (ADR-019). If any passage contradicts the claim, the "
         "verdict is contradicted — even when another passage backs it, and even when "
         "the backing passage is the speaker's own. A claim is only supported when "
@@ -531,15 +546,16 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
         # ADR-024 §3's reorder was measured and REVERTED (condition B, 2026-09-14):
         # leading with not_checkable produced no not_checkable at all and cost all
         # three cross-side contradictions in the warm state. Artifacts and the full
-        # comparison are in probe/b6/README.md. This is the baseline order.
+        # comparison are in probe/b6/README.md. This is the baseline order, and
+        # ADR-030 §3 deliberately leaves it alone. not_checkable is gone from the
+        # list because it is now derived from factual: false, not chosen here.
+        "The three verdicts, for factual: true assertions only:",
         "- supported: a recorded passage backs the claim AND no recorded passage "
         "contradicts it. Cite the backing id.",
         "- contradicted: a recorded passage contradicts it, including one the "
         "opponent retrieved. Cite the contradicting id, not the backing one.",
         "- unsupported: it is a factual claim, but nothing recorded bears on it "
         "either way. Cite nothing.",
-        "- not_checkable: an opinion, a prediction or a value judgement rather than a "
-        "factual claim. Cite nothing.",
         "",
         available,
         "",
@@ -564,10 +580,14 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
     )
 
 
+# ADR-030 §1: `factual` is required and sits before `verdict`, so the model
+# writes its answer to the checkability question before it writes a verdict —
+# and, for a non-factual assertion, writes no verdict at all.
 _CLAIM_SHAPE = """{
   "claims": [
-    {"turn": 3, "claim": "what was asserted",
-     "verdict": "supported", "evidence_ids": ["am-1"]}
+    {"turn": 3, "claim": "what was asserted", "factual": true,
+     "verdict": "supported", "evidence_ids": ["am-1"]},
+    {"turn": 5, "claim": "an opinion or a prediction", "factual": false}
   ]
 }"""
 
@@ -603,12 +623,7 @@ def parse_claims(
         claim = entry.get("claim")
         if not isinstance(claim, str) or not claim.strip():
             raise JudgeError(f"{where} has no claim text")
-        verdict = entry.get("verdict")
-        if verdict not in VERDICTS:
-            raise JudgeError(
-                f"{where} verdict is {verdict!r}, not one of {', '.join(VERDICTS)}"
-            )
-        ids = _evidence_citations(entry.get("evidence_ids"), where, verdict, known)
+        verdict, ids = _decide_verdict(entry, where, known)
         claims.append(
             Claim(
                 phase_index=phase_index,
@@ -619,6 +634,47 @@ def parse_claims(
             )
         )
     return tuple(claims)
+
+
+def _decide_verdict(
+    entry: dict, where: str, known: frozenset[str]
+) -> tuple[str, tuple[str, ...]]:
+    """ADR-030: `factual` is answered first, and false derives the verdict.
+
+    The model never picks `not_checkable`; it says an assertion is not factual
+    and this turns that into the verdict. So the two cannot drift apart, and the
+    checkability question cannot be skipped by reaching an adjacent verdict —
+    which is what `unsupported` was, in a flat list of four.
+    """
+    factual = entry.get("factual")
+    if not isinstance(factual, bool):
+        # ADR-030 §4, Hard Rule 1. Defaulting it would restore exactly the gap
+        # ADR-024 diagnosed: `unsupported` defensible without the question asked.
+        raise JudgeError(
+            f"{where} has no factual field (got {factual!r}). Every claim must answer "
+            "factual: true or false before its verdict — false for an opinion, a "
+            "prediction or a value judgement, which records it as not_checkable"
+        )
+
+    if not factual:
+        # §2: a derivation, not a validation. A verdict supplied here is discarded
+        # rather than argued with — the model cannot be told how to resolve a
+        # disagreement with itself, and failing the run over one would be worse.
+        return ("not_checkable", ())
+
+    verdict = entry.get("verdict")
+    factual_verdicts = tuple(v for v in VERDICTS if v != "not_checkable")
+    if verdict == "not_checkable":
+        raise JudgeError(
+            f"{where} says factual: true but verdict not_checkable, which contradict "
+            f"each other. A factual claim takes {', '.join(factual_verdicts)}; an "
+            "opinion, prediction or value judgement takes factual: false and no verdict"
+        )
+    if verdict not in factual_verdicts:
+        raise JudgeError(
+            f"{where} verdict is {verdict!r}, not one of {', '.join(factual_verdicts)}"
+        )
+    return (verdict, _evidence_citations(entry.get("evidence_ids"), where, verdict, known))
 
 
 def _evidence_citations(
