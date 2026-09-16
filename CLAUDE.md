@@ -213,19 +213,17 @@ code. See ADR-002 for full scope.
   run's output exactly** (pro 100/100, con 91/100, winner `pro` on total, 15
   claims): same seed, same config, same scores across a packaging boundary,
   which is the first end-to-end determinism evidence this project has that
-  spans build and publish rather than just two local runs. **Not yet published to real
-  PyPI**, where the name was still unclaimed (404 on the JSON API, re-checked
-  2026-09-16). **ADR-029 is that decision** and the repository is set up to
-  execute it: version bumped to `0.1.0` (a `.dev0` would not be selected by a
-  plain `pip install`), `.github/workflows/release.yml` publishing by **Trusted
-  Publishing** so no PyPI token exists anywhere, triggered by a *published*
-  GitHub Release rather than a tag push. One step is outstanding and only the
-  account owner can do it — creating the pending publisher on PyPI binding
-  project `debatebench` / owner `robert-e-roy` / repo `debatebench` / workflow
-  `release.yml` / environment `pypi`. Until it exists the upload cannot
-  authenticate, which is the intended failure mode. **The README's Status
-  section still says "TestPyPI only" and that stays true until an upload
-  actually succeeds** — it is updated by the release, not before it. The sdist deliberately ships the whole internal
+  spans build and publish rather than just two local runs. **Released to real PyPI as `0.1.0` on
+  2026-09-16** per ADR-029: <https://pypi.org/project/debatebench/>. `pip
+  install debatebench` works with no index flags. Published by **Trusted
+  Publishing** from `.github/workflows/release.yml`, triggered by a *published*
+  GitHub Release — **no PyPI token exists anywhere**, which is deliberate, two
+  having already leaked here. The release built from the tagged commit, ran the
+  suite there, uploaded, then installed from real PyPI into a clean virtualenv
+  and ran both commands; verified again independently afterwards (wheel + sdist,
+  `httpx>=0.28` and `pyyaml>=6.0` resolved, both console scripts, `0.1.0`
+  reported by `package_version()`). A version can never be re-uploaded, so a bad
+  release is yanked and superseded — never replaced (ADR-029 §6). The sdist deliberately ships the whole internal
   record — every ADR, this file, `BUILD-GUIDE`, `OPEN-QUESTIONS`,
   `JUDGE-VALIDATION`, both probe write-ups — decided knowingly, on the grounds
   that the ADRs *are* the spec. It was scanned for personal data first: no home

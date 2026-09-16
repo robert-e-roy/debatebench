@@ -30,18 +30,19 @@ follow the link above.
 
 ## Status
 
-Pre-1.0. Published to **TestPyPI** only — not to the real PyPI:
+Pre-1.0, released on PyPI:
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ \
-            --extra-index-url https://pypi.org/simple/ \
-            debatebench
+pip install debatebench
 ```
 
-The second index is not optional: TestPyPI does not mirror `httpx` or PyYAML,
-so without it the dependencies fail to resolve.
-
 Or from a checkout: `pip install .`
+
+**What `0.1.0` claims:** the two commands, their flags, and the three JSON
+formats are stable within the 0.1.x line — each file carries a `schema_version`,
+and that is the thing to check against. The Python API (`debatebench.api`) is
+pre-1.0 on its own terms and may change with a minor version. It does **not**
+claim the tool is finished — see the known gap below.
 
 Built and gated so far: config and validation, the backend seam, the phase loop,
 transcript writing, prep retrieval, judge scoring, and the fact-check pass.
