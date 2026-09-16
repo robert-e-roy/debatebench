@@ -61,6 +61,21 @@ The job runs in a GitHub **environment** named `pypi`, so the trusted-publisher
 binding names an environment as well as a workflow, and a release can be given a
 required reviewer later without touching this ADR.
 
+There is **no `workflow_dispatch`** on the release workflow. A manual run would
+publish from whatever `main` happens to be at that moment, which is the same
+accident this clause rules out for a stray tag push, reached another way. A
+failed release is not re-run; it becomes a new version, because PyPI will not
+accept `0.1.0` a second time however the first attempt ended.
+
+**A version bump relocks in the same commit.** `uv.lock` pins this project at
+its own version, and both workflows use `uv sync --locked` on purpose — a lock
+that has drifted from `pyproject.toml` should fail rather than be re-resolved
+into something untested. The consequence is that an un-relocked bump breaks the
+*release* job, after the tag exists, where the only remedy is §6. So the
+invariant is a test rather than a note: `tests/test_packaging.py` compares the
+two and fails on the bump commit, locally and in CI, where relocking is free.
+It was verified by simulating the bump it is meant to catch.
+
 ### 4. What `0.1.0` claims, and what it does not
 
 It does **not** claim the tool is finished. B6's live gate is unmet: no judge
@@ -73,14 +88,29 @@ file formats are stable enough to depend on within the 0.1.x line, and the
 `schema_version` in each file is the thing to check. `debatebench.api` is
 pre-1.0 on ADR-028 §9's terms and may change with a minor version.
 
-### 5. A bad release is yanked, never replaced
+### 5. The release verifies its own upload before anyone depends on it
+
+`twine check` validates metadata, not that the artifact installs and runs. B7's
+gate clause was *install from an index and run*, and that is the clause that
+produced this project's only determinism evidence spanning build and publish.
+So a third job repeats it against real PyPI: install `debatebench==<version>`
+into a virtualenv that has never seen the source, run both console scripts, and
+import `debatebench.api`. It retries, because the index can lag an upload by
+under a minute and a release should not fail on CDN timing.
+
+This cannot prevent a bad upload — nothing can, given §6. It converts "we will
+find out when someone reports it" into "we know within a minute whether to
+yank", which is the difference between the remedy being available and being
+used.
+
+### 6. A bad release is yanked, never replaced
 
 If `0.1.0` is wrong, the fix is `0.1.1`. The broken version is yanked — which
 leaves it installable by exact pin, so an existing lockfile does not break,
 while removing it from fresh resolution. Deleting it is not an option worth
 reaching for: it frees nothing, since the version can never be reused.
 
-### 6. Claiming the name is deliberate, and the collision is unchanged
+### 7. Claiming the name is deliberate, and the collision is unchanged
 
 `debatebench` on PyPI becomes permanent on first upload. The unrelated
 **DebateBench** benchmark (arXiv 2502.06279) is a dataset, not a package, and
@@ -125,9 +155,13 @@ configuration step on PyPI's website and then never again.
 
 - Whether a `0.1.x` line is maintained at all, or whether the next release is
   simply `0.2.0` when B6 closes.
-- Whether the release workflow should publish to TestPyPI first and verify an
-  install from there before touching PyPI. It would have caught nothing so far,
-  and it doubles the number of permanent name commitments.
+- Whether the release workflow should publish to TestPyPI *first* and verify an
+  install from there before touching PyPI. §5 now verifies the real upload
+  instead, which is cheaper and tests the artifact people actually get; a
+  TestPyPI rehearsal would catch a broken package *before* it is permanent,
+  which §5 explicitly cannot. Left open because it doubles the number of
+  permanent name commitments, and nothing has yet gone wrong that it would have
+  caught.
 - Whether `debatebench.api` reaching 1.0 should coincide with the package
   reaching 1.0. ADR-028 §9 ties the API's promise to the package version, which
   may prove too coarse.

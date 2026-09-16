@@ -15,10 +15,13 @@ name: release
 
 # A *published GitHub Release*, not a tag push (ADR-029 §3): pushing a tag by
 # mistake must not publish anything, and a version on PyPI cannot be replaced.
+# No workflow_dispatch: a manual run would publish from whatever main happens to
+# be, which is the same accident §3 rules out for a stray tag push, by another
+# route. Re-running a failed release means a new version, because PyPI will not
+# take 0.1.0 twice however the first attempt went.
 on:
   release:
     types: [published]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -66,3 +69,39 @@ jobs:
           path: dist/
 
       - uses: pypa/gh-action-pypi-publish@v1.14.2
+
+  # twine check validates metadata, not that the thing installs and runs. B7's
+  # gate clause was "install from an index and run", and that is what proved
+  # determinism across a packaging boundary — so the release repeats it against
+  # real PyPI. This cannot prevent a bad upload; it tells us within a minute
+  # whether to yank, which is the only remedy ADR-029 §6 leaves.
+  verify:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install from real PyPI into a venv that has never seen the source
+        run: |
+          version="$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+          echo "waiting for debatebench==$version to be installable"
+          cd "$(mktemp -d)"           # out of the checkout, so nothing resolves locally
+          python -m venv venv
+          # PyPI's index can lag the upload by under a minute; retry rather than
+          # fail a release on CDN timing.
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if ./venv/bin/pip install --no-cache-dir "debatebench==$version"; then
+              installed=yes; break
+            fi
+            echo "attempt $attempt failed; retrying in 15s"
+            sleep 15
+          done
+          [ "${installed:-no}" = yes ] || { echo "::error::debatebench==$version never became installable"; exit 1; }
+
+          ./venv/bin/debate --help > /dev/null
+          ./venv/bin/judge --help > /dev/null
+          ./venv/bin/python -c "from debatebench.api import debate, judge, load_run; from debatebench.transcript import package_version; print('installed version:', package_version())"
+          echo "debatebench==$version installs from PyPI and both commands run"
