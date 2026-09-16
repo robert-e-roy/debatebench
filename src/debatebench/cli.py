@@ -8,6 +8,10 @@ stderr (Hard Rule 7).
 `--model` and `--budget` override the file for one run, so an A/B needs no
 second config (ADR-021). They change the loaded config before anything runs,
 which is what keeps the transcript's snapshot a record of what actually spoke.
+
+The run itself is `api.debate` (ADR-028 §4): this module is that function plus
+argv, stderr and an exit code, so a library caller and this command cannot get
+different behaviour out of the same config.
 """
 
 from __future__ import annotations
@@ -19,12 +23,12 @@ from collections.abc import Sequence
 from dataclasses import replace
 from typing import Any
 
+from .api import debate
 from .backend import BackendError
 from .config import ConfigError, RunConfig, Side, load_run
 from .event_stream import make_event_writer
 from .events import DebateEvent, EventBus, EventType, Listener
-from .openai_compat import OpenAICompatibleBackend, open_client
-from .orchestrator import DebateError, Transcript, run_debate
+from .orchestrator import DebateError
 from .transcript import write_transcript
 
 
@@ -85,7 +89,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         # file rather than a redirect. The stderr log is unaffected (ADR-027 §1).
         events.subscribe(make_event_writer(config))
     try:
-        transcript = asyncio.run(_run(config, events))
+        transcript = asyncio.run(debate(config, events=events))
     except (DebateError, BackendError) as e:
         _log(f"debate failed: {e}")
         return 1
@@ -161,12 +165,6 @@ def _validate_override(setting: str, value: Any, flag: str) -> None:
         raise _OverrideError(f"{flag} must be an integer of at least 1, got {value}")
     if setting == "model" and not value.strip():
         raise _OverrideError(f"{flag} must be a non-empty model name")
-
-
-async def _run(config: RunConfig, events: EventBus) -> Transcript:
-    async with open_client(config.timeout) as client:
-        backends = [OpenAICompatibleBackend(client, s.base_url, s.model) for s in config.sides]
-        return await run_debate(config, backends, events)
 
 
 def make_log_event(labels: tuple[str, ...]) -> Listener:

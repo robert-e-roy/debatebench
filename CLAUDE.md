@@ -50,8 +50,15 @@ code. See ADR-002 for full scope.
   (`debate --events` streams JSONL on stdout, one line per event, flushed per
   line, with a `run` header carrying `schema_version`; a contract for other
   programs so the stderr log stays free to change — Hard Rule 7 untouched, and
-  the stream is explicitly **not** a transcript) — accepted; together they are
-  the spec.
+  the stream is explicitly **not** a transcript), `ADR-028` (one public module,
+  `debatebench.api`: two async functions `debate(config)` and `judge(transcript)`
+  named for the two commands, a curated export list, and **both CLIs call it**
+  so there is one composition rather than two; it writes no files and takes an
+  injected `Backend`, so a caller needs no HTTP server; `__init__.py` still
+  exports nothing, and the JSON `schema_version`s remain the durable contract
+  while the Python surface is pre-1.0 — resolves ADR-027's open question about
+  whether the event stream should be the only machine-readable seam: it is not)
+  — accepted; together they are the spec.
 - `MODEL-COVERAGE.md` — which models have actually been run, at what size, as
   debater or judge, with the artifact behind each. **No large (24B+) model has
   ever produced a token here**; every quality finding in this repo comes from

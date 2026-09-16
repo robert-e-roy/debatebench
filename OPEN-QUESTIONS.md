@@ -328,6 +328,33 @@ shape specified in ADR-026 §3 — compare the parse-failure rate **and the ledg
 themselves**, since constrained decoding can change what a model writes, not
 merely whether it parses.
 
+### 15. The public API's six exceptions have no common base
+
+**Blocks:** nothing. Raised by ADR-028, which created the surface that makes it
+visible.
+
+`debatebench.api` exports six unrelated exception types — `ConfigError`,
+`DebateError`, `JudgeError`, `BackendError`, `TranscriptError`,
+`RetrievalError`. A caller who wants "anything debatebench raises" — the normal
+thing to want at the edge of a script — has to write all six in a tuple, and
+will silently miss the seventh when one is added.
+
+A shared base (`DebatebenchError(Exception)`, with each of the six inheriting
+it) is backwards-compatible: every existing `except ConfigError` keeps working,
+and `except DebatebenchError` starts working. The cost is that it touches six
+modules across the layering ADR-008 fixes, so the base class needs a home that
+all six may import — `backend.py` is the precedent (ADR-025 put
+`DEFAULT_READ_TIMEOUT` there for exactly that reason), though an exception base
+is not obviously a backend concern and a new `errors.py` may be cleaner.
+
+Two things to settle before writing it: whether `ValueError` from `api.judge`
+(no `base_url`, no `backend`) should also become one — it is an argument error,
+not a run failure, and probably should not — and whether the base is exported
+as part of the API surface, which it must be for the point of it to hold.
+
+Not urgent. It is additive, so doing it later costs nothing that doing it now
+would save.
+
 ## Recorded elsewhere — index
 
 | Where | Open question |

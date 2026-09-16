@@ -178,6 +178,23 @@ transcript recorded**, never against the model's own knowledge. With no
 evidence recorded there is nothing to check against, and the score file says so
 in a note rather than pretending.
 
+## Doing the same thing from Python
+
+Both commands are wrappers over `debatebench.api`, so these examples have an
+in-process equivalent — same config, same transcript, and your own backend if
+you'd rather not run a server:
+
+```python
+import asyncio
+from debatebench.api import debate, load_run, write_transcript
+
+config = load_run("examples/run.yaml")
+transcript = asyncio.run(debate(config))
+write_transcript(transcript, config.output)
+```
+
+See *Using it from Python* in the top-level README for the whole surface.
+
 ## When it goes wrong
 
 | What you see | What it means |

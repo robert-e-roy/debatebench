@@ -5,6 +5,9 @@ Takes either a ``run.yaml`` with a ``judge:`` block or a transcript plus flags
 change needs no edit. ADR-007 gave this command flags alone, when it had one;
 it has four, and ADR-020 records why that reversed. Nothing but the score JSON
 goes to the file; everything the command says goes to stderr.
+
+The scoring and fact-check calls are `api.judge` (ADR-028 §4); this module is
+that function plus argv, the ADR-020 merge, stderr and an exit code.
 """
 
 from __future__ import annotations
@@ -16,19 +19,12 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from collections import Counter
-from dataclasses import replace
 
+from .api import judge
+from .backend import DEFAULT_READ_TIMEOUT
 from .config import ConfigError, JudgeConfig, load_run
-from .judging import (
-    VERDICTS,
-    JudgeError,
-    ScoreSheet,
-    fact_check_debate,
-    score_debate,
-    write_scores,
-)
-from .openai_compat import DEFAULT_READ_TIMEOUT, OpenAICompatibleBackend, open_client
-from .transcript import Transcript, TranscriptError, load_transcript
+from .judging import VERDICTS, JudgeError, ScoreSheet, write_scores
+from .transcript import TranscriptError, load_transcript
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -106,7 +102,16 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     _log(f'judging {len(transcript.turns)} turns on {args.model}: "{transcript.run.topic}"')
     try:
-        sheet = asyncio.run(_score(transcript, args))
+        sheet = asyncio.run(
+            judge(
+                transcript,
+                model=args.model,
+                budget=args.budget,
+                base_url=args.base_url,
+                fact_check=args.fact_check,
+                timeout=args.timeout,
+            )
+        )
     except JudgeError as e:
         _log(f"judging failed: {e}")
         return 1
@@ -173,23 +178,6 @@ def _fact_check(flag: bool | None, block: JudgeConfig | None) -> bool:
     if flag is not None:
         return flag
     return block.fact_check if block is not None else True
-
-
-async def _score(transcript: Transcript, args: argparse.Namespace) -> ScoreSheet:
-    """The scoring call, then the fact-check call when it's on (ADR-015 §3)."""
-    async with open_client(args.timeout) as client:
-        backend = OpenAICompatibleBackend(client, args.base_url, args.model)
-        sheet = await score_debate(
-            transcript,
-            backend,
-            model=args.model,
-            budget=args.budget,
-            fact_check_enabled=args.fact_check,
-        )
-        if not args.fact_check:
-            return sheet
-        checked = await fact_check_debate(transcript, backend, budget=args.budget)
-        return replace(sheet, fact_check=checked)
 
 
 def _report(sheet: ScoreSheet) -> None:

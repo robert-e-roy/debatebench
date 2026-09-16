@@ -8,6 +8,10 @@ Two commands:
 - **`debate`** — runs the debate, writes a transcript as JSON.
 - **`judge`** — reads that transcript, writes a score file as JSON.
 
+Both are thin wrappers over one public module, **`debatebench.api`**, which you
+can call directly and give your own backend — see
+[*Using it from Python*](#using-it-from-python).
+
 It is built for a narrow job: comparing models, prompts, or personas on
 sustained argument, where the interesting signal is how a position survives
 contact with a good opponent. There is no consensus, voting, or convergence
@@ -188,6 +192,10 @@ run leaves a partial stream describing turns that were never written anywhere.
 Read the `output:` file for the durable record, and **wait for `run_completed`
 before you do** — on a failed run, the file sitting at that path belongs to the
 *previous* run.
+
+That is the seam for a consumer in another process or another language. In
+Python, subscribe to the same events in-process instead: see
+[*Using it from Python*](#using-it-from-python).
 
 | `timeout` | Optional, seconds to wait for a reply. Default 600. Raise it for a large reasoning model at a big budget — a 12B model thinking through a long prompt can exceed ten minutes on a cold load. `--timeout` overrides it. |
 
@@ -399,6 +407,70 @@ given. Credentials in a `base_url` are stripped before it is recorded.
 The **score file** records the judge model, its budget, every dimension with its
 justification, each side's total, the winner and the reason, and — when enabled
 — the fact-check ledger.
+
+## Using it from Python
+
+Everything supported is in **`debatebench.api`** and nothing else (ADR-028).
+Other module paths are reachable, but internal, and change without notice.
+
+```python
+import asyncio
+from debatebench.api import debate, judge, load_run, write_transcript, write_scores
+
+config = load_run("run.yaml")
+transcript = asyncio.run(debate(config))
+write_transcript(transcript, config.output)
+
+sheet = asyncio.run(judge(transcript, model="qwen3:8b",
+                          base_url="http://localhost:11434/v1", budget=6000))
+print(sheet.winner, sheet.winner_reason, [side.total for side in sheet.sides])
+```
+
+Four things to know:
+
+- **Nothing here writes a file.** `debate` returns a `Transcript` and `judge`
+  returns a `ScoreSheet`; `write_transcript` and `write_scores` are separate
+  calls, and they rotate an existing file exactly as the commands do. One wart:
+  `run.yaml` still *requires* `output:`, and `debate()` ignores it.
+- **Both are `async`.** Wrap them in `asyncio.run(...)`, or await them from a
+  loop you already have. There is no synchronous version, deliberately: it would
+  raise inside a running loop, which is where a live viewer would call it.
+- **You can bring your own model.** Pass `backends=` (one per side) or
+  `backend=`, and no HTTP call is made at all — anything with a single
+  `async generate(request)` satisfies the `Backend` protocol:
+
+  ```python
+  transcript = asyncio.run(debate(config, backends=[my_pro, my_con]))
+  ```
+
+  Omit it and the OpenAI-compatible adapter is built from the config, honouring
+  its `timeout`. `Backend` is a *static* typing `Protocol`: your type checker
+  verifies it structurally, and `isinstance(mine, Backend)` raises `TypeError`
+  rather than answering. That is deliberate — a runtime check could only confirm
+  that a `generate` attribute exists, not that it is `async` or takes the right
+  argument, and a misleading `True` is worse than no check.
+- **You can watch a run in-process.** Subscribe to the same event bus the
+  `--events` stream is built on:
+
+  ```python
+  from debatebench.api import EventBus, EventType
+
+  bus = EventBus()
+  bus.subscribe(lambda e: print(e.type, e.phase_index))
+  transcript = asyncio.run(debate(config, events=bus))
+  ```
+
+  `make_event_writer(config)` is exported too, if you want the ADR-027 JSONL
+  written to a stream of your own.
+
+Failures raise: `ConfigError`, `DebateError`, `JudgeError`, `BackendError`,
+`TranscriptError`, `RetrievalError`. They have no common base class yet.
+
+**Stability.** `debatebench.api` is pre-1.0 and may change with a minor version;
+each change gets an ADR and a note here. The **file formats** are the durable
+contract — the transcript, the score file and the event stream each carry a
+`schema_version`. If you need a stronger promise than pre-1.0 Python, read and
+write the JSON.
 
 ## Not in scope
 

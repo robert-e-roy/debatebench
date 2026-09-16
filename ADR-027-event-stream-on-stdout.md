@@ -149,6 +149,10 @@ and left exactly the right gap.
   that only wants timings. No measurement suggests the volume is a problem.
 - Whether a future `judge` stream is worth inventing events for, if per-claim
   fact-check progress ever becomes visible mid-call.
-- Whether this stream should eventually be the *only* machine-readable seam,
+- ~~Whether this stream should eventually be the *only* machine-readable seam,
   with the internal bus kept private. That depends on the public-API question
-  `__init__.py` still leaves open.
+  `__init__.py` still leaves open.~~ **Answered by ADR-028 (2026-09-16): it is
+  not.** `debatebench.api` exports `EventBus`, `DebateEvent` and `EventType`, so
+  an in-process consumer subscribes directly and an out-of-process one reads this
+  stream. `make_event_writer` is exported too, so a library caller can produce
+  exactly this format on a stream of its own choosing — one format, two seams.

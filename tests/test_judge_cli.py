@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from debatebench import judge_cli
+from debatebench import api
 from debatebench.judge_cli import main
 from debatebench.transcript import write_transcript
 from fakes import FakeBackend, reply
@@ -35,7 +35,8 @@ def fake_judge(monkeypatch):
             made.append(FakeBackend(*[reply(t, completion_tokens=400) for t in texts]))
             return made[-1]
 
-        monkeypatch.setattr(judge_cli, "OpenAICompatibleBackend", build)
+        # Patched where the adapter is now built: api, not the command (ADR-028 §4).
+        monkeypatch.setattr(api, "OpenAICompatibleBackend", build)
         return made
 
     return install
