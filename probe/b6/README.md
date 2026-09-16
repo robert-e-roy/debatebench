@@ -413,10 +413,24 @@ written, and what ADR-030 failed to overturn.
 
 `qwen3:8b` is the model this project's determinism note rests on: cold 11 claims,
 warm 20, decided by residency. Under ADR-030 **all four draws were byte-identical
-across the cold/warm boundary** — 16 claims either way, one hash. First time this
-model has been state-insensitive on this transcript. It does not rescue the
-change; it is a reproducible effect of it, and it bears on the determinism claim
-in `CLAUDE.md`, which is already flagged as `qwen3:8b`-specific.
+across the cold/warm boundary** — 16 claims either way, one hash.
+
+**Checked as a paired comparison**, because the first version of this claim
+compared today's runs against a two-day-old baseline under a different prompt,
+which confounds the schema change with anything that drifted in between. A cold
+draw on the **reverted** prompt, run the same day:
+
+| prompt | state | claims | hash |
+|---|---|---|---|
+| unchanged, 2026-09-14 | cold | 11 | `2fddcc93b6f8afc0` |
+| **unchanged, 2026-09-16 (control)** | cold | 11 | `2fddcc93b6f8afc0` |
+| unchanged, 2026-09-14 | warm | 20 | `36859fa6f7798c1c` |
+| ADR-030 | cold *and* warm | 16 | `873a3c47aeee8f64` |
+
+The control is byte-identical to the 2026-09-14 cold draw. Nothing drifted, the
+split is still there on the unchanged prompt, and the reply schema is what
+removed it. It also means **the audit reproduces to the byte across two days**,
+which is a stronger determinism result than this page previously recorded.
 
 ### Where this leaves the gate
 

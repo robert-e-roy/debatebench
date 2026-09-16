@@ -258,11 +258,30 @@ model was resident. **Under this change all four draws are byte-identical across
 the cold/warm boundary**: 16 claims either way, one hash.
 
 That is the first time `qwen3:8b` has been state-insensitive on this transcript.
-It does not rescue the change, but it is a real, reproducible effect of it, and
-it bears on CLAUDE.md's determinism claim — which is already flagged as measured
-on `qwen3:8b` and not general. Whether a mandatory boolean is what removed the
-state sensitivity, or whether any sufficiently constraining reply shape would,
-is untested.
+
+**Established as a paired comparison, not inferred across days.** The first
+reading of this compared today's ADR-030 draws against a cold baseline recorded
+on 2026-09-14 under the previous prompt — two variables at once, which is not
+evidence for either. So the control was run: a cold draw on the **reverted**
+prompt, the same day, after the revert. It returned 11 claims and hashes
+`2fddcc93b6f8afc0`, **byte-identical to the 2026-09-14 cold draw**
+(`probe/b6/adr030-control-cold-reverted.json`).
+
+| prompt | state | claims | hash |
+|---|---|---|---|
+| unchanged, 2026-09-14 | cold | 11 | `2fddcc93b6f8afc0` |
+| **unchanged, 2026-09-16 control** | cold | 11 | `2fddcc93b6f8afc0` |
+| unchanged, 2026-09-14 | warm | 20 | `36859fa6f7798c1c` |
+| ADR-030 | cold and warm | 16 | `873a3c47aeee8f64` |
+
+So nothing on the machine drifted, the 11/20 split is still there on the
+unchanged prompt, and the reply schema is what removed it. Two things follow.
+The effect is real and attributable. And this project's determinism result is
+stronger than recorded: the audit reproduces **to the byte across two days**, not
+merely within a session.
+
+Whether any sufficiently constraining reply shape would do the same, or only
+this one, remains untested.
 
 ### What is reverted and what is kept
 

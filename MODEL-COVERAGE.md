@@ -79,6 +79,16 @@ about the fact-check pass. Its known behaviours:
 - **Deterministic within a model load state, not across one.** Cold gives an
   11-claim ledger with zero `contradicted`; warm gives 20 claims with three.
   A cold judge silently under-reports (`probe/b6/README.md`).
+  **Reproducible to the byte across two days** (2026-09-16): a cold draw on the
+  unchanged prompt hashes identically to the 2026-09-14 cold draw,
+  `2fddcc93b6f8afc0`. Determinism here spans sessions, not just a session.
+- **The load-state sensitivity is a property of the prompt, not only the model.**
+  Under ADR-030's reply schema all four draws were identical *across* the
+  cold/warm boundary — 16 claims either way — while the unchanged prompt, run
+  cold the same day as a paired control, still gave 11. So a sufficiently
+  constraining reply shape removed the state sensitivity on this model. ADR-030
+  was reverted for unrelated reasons (below); the effect is recorded because it
+  is the only thing that has ever moved this behaviour.
 - **A reasoning model**: `budget` counts its thinking (OPEN-QUESTIONS 13).
 - Malformed JSON at a measured rate — 2 of 6 calls in one batch.
 
@@ -228,6 +238,33 @@ Seven judges on one transcript, same prompt, load state held constant:
 - **Context defaults are a live hazard.** Ollama gave `qwen3:4b` a
   262,144-token context (43 GB resident, CPU spill) and `deepseek-r1:32b` a
   131,072 one (55 GB, OOM kill). Cap `num_ctx` before running anything large.
+
+## The fact-check clause gap, and what closing it now depends on
+
+`qwen3:8b` is the only judge here whose ordering is validated, and it produces
+B6 clauses (1) and (2) warm and has **never** produced clause (3) — zero
+`not_checkable` in 29 draws now. Three changes have attacked that through three
+independent channels and all three were measured and reverted:
+
+| condition | channel | `not_checkable` | claims | cross-side `contradicted` |
+|---|---|---|---|---|
+| baseline | — | 0 | 20 | 3 |
+| B | verdict-list order | 0 | fewer | **0** |
+| C | user-turn framing | 0 | **5** | — |
+| ADR-030 | required `factual` field in the reply schema | 0 | **16** | **0** |
+
+**Read this before attributing a fact-check result to a prompt.** Every attempt
+to make `qwen3:8b` answer the checkability question costs clause (2) and shrinks
+the ledger. `qwen3:4b` and `qwen3:14b` produce clause (3) unprompted on the same
+transcript, so the variable is the judge, not the wording.
+
+**`qwen3:14b`'s missing clause (2) is a different defect**, characterised
+2026-09-16 and not yet fixed: it lists both halves of a contradiction pair,
+cites both ids correctly, and marks each `supported`. Its citation mechanics are
+exact; it never weighs a claim against the *opposing* side's passage. That is
+ADR-019's precedence rule failing on a model ADR-019 was never measured on — and
+since 14b already has clause (3) in both states, it is the shortest remaining
+route to a passing gate.
 
 ## The gaps, in the order they matter
 

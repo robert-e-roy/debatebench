@@ -180,9 +180,15 @@ code. See ADR-002 for full scope.
   foregrounds the checkability question trades away clause (2) and shrinks the
   ledger. **Clause (3) is not reachable on `qwen3:8b` by changing what we ask
   for**, and the option this file previously called "the live one" is closed.
-  One real side effect: all four draws were **byte-identical across the
-  cold/warm boundary**, the first time `qwen3:8b` has been state-insensitive on
-  this transcript — which bears on the determinism note above.
+  One real side effect, established by a **paired control** rather than
+  inferred across days: all four ADR-030 draws were **byte-identical across the
+  cold/warm boundary** (16 claims either way), while a cold draw on the
+  *reverted* prompt the same day returned 11 claims hashing
+  `2fddcc93b6f8afc0` — **byte-identical to the 2026-09-14 cold draw**. So
+  nothing drifted, the 11/20 split persists on the unchanged prompt, and the
+  reply schema is what removed the state sensitivity. It also makes the
+  determinism result above stronger than stated: this audit reproduces **to the
+  byte across two days**, not merely within a session.
   **The most promising route left is `qwen3:14b`**, which already produces
   clause (3) stably in both states and needs only clause (2). Its failure is now
   characterised (`probe/b6/ladder-qwen3-14b.json`): it lists *both* halves of the
