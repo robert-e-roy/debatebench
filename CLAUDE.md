@@ -429,5 +429,10 @@ All source projects are MIT — see ADR-001 for exact attribution requirements.
 ## Testing
 
 Per ADR-004 (accepted): pytest, with a scripted `FakeBackend` for every default
-test, and live-model tests opt-in behind `DEBATEBENCH_LIVE_TESTS=1`. CI is
-deferred to B7. Python ≥ 3.11 (ADR-008).
+test, and live-model tests opt-in behind `DEBATEBENCH_LIVE_TESTS=1`. Python ≥
+3.11 (ADR-008). **CI exists as of 2026-09-16** — `.github/workflows/tests.yml`
+runs the default suite on 3.11 and 3.12 against the fake backend, which
+discharges ADR-004's "deferred to B7" clause while keeping its reason: a hosted
+runner has no Apple Intelligence and no Ollama, so live tests never run there.
+The repository is <https://github.com/robert-e-roy/debatebench> (public, MIT),
+with `box` kept as a second remote for backup per the workspace convention.

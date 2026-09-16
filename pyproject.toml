@@ -20,13 +20,19 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-# No [project.urls] yet: this project has no public repository, and a link that
-# does not resolve is worse than none.
 # ADR-008: these two and nothing else without an ADR.
 dependencies = [
     "httpx>=0.28",
     "PyYAML>=6.0",
 ]
+
+# Must stay below `dependencies`: a [project.urls] table opened before it would
+# swallow every remaining key of [project], and the package would declare no
+# dependencies at all.
+[project.urls]
+Homepage = "https://github.com/robert-e-roy/debatebench"
+Repository = "https://github.com/robert-e-roy/debatebench"
+Issues = "https://github.com/robert-e-roy/debatebench/issues"
 
 [project.scripts]
 debate = "debatebench.cli:main"

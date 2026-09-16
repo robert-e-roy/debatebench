@@ -28,6 +28,17 @@
 - **CI is deferred to B7.** Hosted CI runners can't be assumed to have Apple
   Intelligence, so live tests stay off CI regardless.
 
+  **Discharged 2026-09-16** (`.github/workflows/tests.yml`), two days after B7,
+  because until then there was no remote to run it on. The clause's *reason*
+  outlived its deferral and is now the workflow's design: CI never sets
+  `DEBATEBENCH_LIVE_TESTS`, so every job runs against the scripted
+  `FakeBackend` and the live-model tests skip. A runner has no Apple
+  Intelligence, no Ollama and no GPU, and a suite that needed one would be a
+  suite nobody could run. It runs pytest on 3.11 and 3.12, the two versions
+  `pyproject.toml` classifies, and installs from `uv.lock` with `--locked` so a
+  lock that has drifted from `pyproject.toml` fails the job instead of being
+  quietly re-resolved into something untested.
+
 ## Why
 
 `CLAUDE.md` asks for a reasoned choice, not whatever is most familiar. pytest is

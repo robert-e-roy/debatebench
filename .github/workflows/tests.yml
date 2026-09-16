@@ -1,0 +1,41 @@
+# CLAUDE.md said "CI is deferred to B7" from B0 until 2026-09-16. B7 finished on
+# 2026-09-14 without a workflow because there was no remote to run one; the repo
+# now exists, so this closes it.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # pyproject declares >=3.11 and classifies 3.11 and 3.12. Both run.
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      # --locked, not --frozen: a uv.lock that has drifted from pyproject should
+      # fail here rather than be silently re-resolved into something untested.
+      - run: uv sync --locked
+
+      # DEBATEBENCH_LIVE_TESTS is deliberately unset, so every test runs against
+      # the scripted FakeBackend (ADR-004) and the live-model tests skip. CI has
+      # no Ollama, no AFM and no GPU, and a suite that needed one would be a
+      # suite nobody could run.
+      - name: pytest (fake backend only; live-model tests skip)
+        run: uv run --locked pytest -q
