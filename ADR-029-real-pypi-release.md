@@ -67,6 +67,28 @@ accident this clause rules out for a stray tag push, reached another way. A
 failed release is not re-run; it becomes a new version, because PyPI will not
 accept `0.1.0` a second time however the first attempt ended.
 
+**The README at the tagged commit is the PyPI page, permanently.** `readme =
+"README.md"` copies the file into the artifact's metadata at build time; PyPI
+renders that copy, offers no way to edit it, and will not accept the version
+again. So every document the release freezes has to be true *at the tag*, not
+shortly afterwards.
+
+`0.1.0` got this wrong. Its README was deliberately left saying "Published to
+**TestPyPI** only — not to the real PyPI", on the reasoning that it stayed true
+until an upload succeeded and should not claim otherwise in advance. The
+reasoning was sound about the repository and wrong about the artifact: a branch
+is momentarily behind reality for a few minutes and then corrected, while the
+published page is wrong forever and is the first thing a reader sees. It shipped
+a PyPI page telling people the package was not on PyPI, and instructing them to
+install it from TestPyPI with two index flags.
+
+The correct order is: fix the README **in the release commit**, then tag. The
+window where `main` describes a release that has not happened yet is closed by
+the release itself, minutes later. `tests/test_packaging.py` now enforces it —
+for a non-pre-release version the README must carry a plain `pip install
+debatebench` and must not mention `test.pypi.org` — and the guard was checked
+against the README that actually shipped, which it fails.
+
 **A version bump relocks in the same commit.** `uv.lock` pins this project at
 its own version, and both workflows use `uv sync --locked` on purpose — a lock
 that has drifted from `pyproject.toml` should fail rather than be re-resolved

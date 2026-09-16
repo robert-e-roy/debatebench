@@ -38,8 +38,8 @@ pip install debatebench
 
 Or from a checkout: `pip install .`
 
-**What `0.1.0` claims:** the two commands, their flags, and the three JSON
-formats are stable within the 0.1.x line — each file carries a `schema_version`,
+**What a `0.1.x` release claims:** the two commands, their flags, and the three
+JSON formats are stable within that line — each file carries a `schema_version`,
 and that is the thing to check against. The Python API (`debatebench.api`) is
 pre-1.0 on its own terms and may change with a minor version. It does **not**
 claim the tool is finished — see the known gap below.

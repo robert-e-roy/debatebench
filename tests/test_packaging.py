@@ -62,6 +62,43 @@ def test_the_released_version_is_installable_by_a_plain_pip_install():
     assert ".dev" not in version, f"version {version!r} is a dev release (ADR-029 §1)"
 
 
+def _readme() -> str:
+    path = ROOT / "pyproject.toml"
+    if not path.is_file():
+        pytest.skip("running from an installed package, not the tree")
+    name = tomllib.loads(path.read_text(encoding="utf-8"))["project"]["readme"]
+    return (ROOT / name).read_text(encoding="utf-8")
+
+
+def test_the_readme_describes_the_release_it_is_about_to_become():
+    """The README *is* the PyPI page, frozen at build time.
+
+    `readme = "README.md"` means the file is copied into the artifact's metadata
+    when the wheel is built, and PyPI renders that copy. It cannot be edited
+    afterwards and the version cannot be re-uploaded, so a README fixed *after*
+    a release is permanently wrong on that release's page — which is exactly
+    what happened to 0.1.0, whose page told readers the package was not on PyPI
+    while sitting on PyPI.
+
+    So for a real (non-pre-release) version the README must tell people to
+    install the way that actually works, and must not still be pointing at
+    TestPyPI.
+    """
+    version = _pyproject()["project"]["version"]
+    if any(marker in version for marker in (".dev", "a", "b", "rc")):
+        pytest.skip(f"{version} is a pre-release; the plain install line need not be true yet")
+
+    readme = _readme()
+    assert "pip install debatebench" in readme, (
+        "the README never gives the plain `pip install debatebench` line, so the PyPI "
+        "page for this version would not tell a reader how to install it"
+    )
+    assert "test.pypi.org" not in readme, (
+        "the README still points at TestPyPI. That text becomes this version's PyPI "
+        "page and cannot be edited afterwards — fix the README *before* tagging"
+    )
+
+
 def test_both_console_scripts_are_declared():
     # They are the product. A packaging change that dropped one would otherwise
     # only show up when someone installed the wheel.
