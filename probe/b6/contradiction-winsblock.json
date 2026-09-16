@@ -1,0 +1,44 @@
+{
+  "1_regressive_before_rebate": {
+    "claim": "A carbon tax is regressive before any rebate arrives",
+    "passage_id": "am-3",
+    "answers": {
+      "qwen3:4b": {
+        "without_block": "NO",
+        "with_block": "NO",
+        "text": "NO  \nThe recorded passage explicitly states that the carbon tax is regressive (as it \"turns a regressive tax into a progressive transfer\"), which supports the assertion that the carbon tax is regressive before any rebate arrives, so it does not contradict it."
+      },
+      "qwen3:8b": {
+        "without_block": "NO",
+        "with_block": "NO",
+        "text": "NO. The recorded passage does not contradict the assertion because it acknowledges the regressive nature of the carbon tax before rebates, stating it becomes progressive with the dividend."
+      },
+      "qwen3:14b": {
+        "without_block": "NO",
+        "with_block": "NO",
+        "text": "NO. The recorded passage does not contradict the assertion; it implicitly acknowledges the tax is regressive (before the rebate) by stating that the dividend transforms it into a progressive transfer."
+      }
+    }
+  },
+  "2_brindlewick_not_scalable": {
+    "claim": "Brindlewick's success is exceptional and not scalable",
+    "passage_id": "am-1",
+    "answers": {
+      "qwen3:4b": {
+        "without_block": "NO",
+        "with_block": "NO",
+        "text": "NO  \nThe recorded passage does not address whether Brindlewick's emissions reduction success is exceptional or scalable, so it does not contradict the assertion."
+      },
+      "qwen3:8b": {
+        "without_block": "NO",
+        "with_block": "NO",
+        "text": "NO. The recorded passage provides evidence of Brindlewick's successful emission reduction but does not address whether this success is exceptional or scalable, so it does not contradict the assertion."
+      },
+      "qwen3:14b": {
+        "without_block": "NO",
+        "with_block": "NO",
+        "text": "NO. The recorded passage only states Brindlewick's successful emission reduction, without addressing whether the success is \"exceptional\" or \"not scalable,\" leaving the assertion uncontradicted."
+      }
+    }
+  }
+}

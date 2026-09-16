@@ -1,0 +1,68 @@
+{
+  "1_regressive_before_rebate": {
+    "claim": "A carbon tax is regressive before any rebate arrives",
+    "passage_id": "am-3",
+    "answers": {
+      "qwen3:4b": {
+        "verdict": "NO",
+        "text": "NO  \nThe passage implies that the carbon tax is regressive before the dividend is implemented, as it describes the dividend turning \"a regressive tax\" into a progressive transfer."
+      },
+      "qwen3:8b": {
+        "verdict": "NO",
+        "text": "NO. The passage discusses the effect of a dividend rebate making a carbon tax progressive, but the assertion focuses on the regressive nature before rebates. The passage does not contradict the assertion as it addresses a different scenario (with rebates) rather than the pre-rebate state."
+      },
+      "qwen3:14b": {
+        "verdict": "NO",
+        "text": "NO  \nThe recorded passage does not address the regressive nature of the carbon tax before a rebate is implemented, focusing instead on the effect after revenue is returned as a flat dividend."
+      },
+      "qwen3.5:4b": {
+        "verdict": "NO",
+        "text": "NO\nThe passage describes how the dividend transforms the system from a regressive tax into a progressive transfer, implying the underlying tax structure is indeed regressive before such intervention."
+      }
+    }
+  },
+  "2_brindlewick_not_scalable": {
+    "claim": "Brindlewick's success is exceptional and not scalable",
+    "passage_id": "am-1",
+    "answers": {
+      "qwen3:4b": {
+        "verdict": "NO",
+        "text": "NO  \nThe recorded passage does not address whether Brindlewick's success is exceptional or scalable, so it does not contradict the assertion."
+      },
+      "qwen3:8b": {
+        "verdict": "NO",
+        "text": "NO. The recorded passage only demonstrates Brindlewick's success in reducing emissions but does not address whether the carbon tax approach is scalable or exceptional, leaving the assertion uncontradicted."
+      },
+      "qwen3:14b": {
+        "verdict": "NO",
+        "text": "NO. The recorded passage provides evidence of Brindlewick's successful emissions reduction but does not address whether this success is scalable or exceptional, leaving the assertion unchallenged."
+      },
+      "qwen3.5:4b": {
+        "verdict": "NO",
+        "text": "NO\nThe recorded passage provides factual details about Brindlewick's emission reduction and the general function of carbon taxes but does not claim or suggest that this specific success is unique or unable to be replicated by other municipalities."
+      }
+    }
+  },
+  "3_regressive_burdens": {
+    "claim": "Carbon taxes create regressive burdens on low-income households",
+    "passage_id": "am-3",
+    "answers": {
+      "qwen3:4b": {
+        "verdict": "NO",
+        "text": "NO\nThe recorded passage identifies carbon taxes as regressive (by describing \"a regressive tax\"), thereby agreeing with the assertion that carbon taxes create regressive burdens on low-income households."
+      },
+      "qwen3:8b": {
+        "verdict": "NO",
+        "text": "NO. The passage does not contradict the assertion because it acknowledges that carbon taxes can have regressive effects (higher energy bills for low-income households) but argues that a dividend can mitigate this, turning it into a progressive transfer."
+      },
+      "qwen3:14b": {
+        "verdict": "YES",
+        "text": "YES. The passage contradicts the assertion by stating that returning carbon tax revenue as a flat dividend offsets the regressive impact of higher energy bills, transforming the tax into a progressive transfer."
+      },
+      "qwen3.5:4b": {
+        "verdict": "YES",
+        "text": "YES\nThe passage explicitly states that the policy results in a progressive transfer for households through revenue returns, which directly contradicts the assertion that carbon taxes create regressive burdens on these households."
+      }
+    }
+  }
+}
