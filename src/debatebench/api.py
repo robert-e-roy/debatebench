@@ -150,7 +150,9 @@ async def debate(
 
     ``backends`` is one per side, in side-index order; omit it and one
     ``OpenAICompatibleBackend`` per side is built from the config and torn down
-    before this returns, honouring ``config.timeout`` (ADR-025).
+    before this returns, honouring ``config.timeout`` (ADR-025). Pass your own
+    and no HTTP client is opened, so ``config.timeout`` is not consulted — the
+    waiting is then your backend's business.
 
     ``config.output`` is *not* used — ADR-007 requires the key, this function
     ignores it (ADR-028 §5). Write the result yourself:
@@ -175,7 +177,7 @@ async def judge(
     base_url: str | None = None,
     backend: Backend | None = None,
     fact_check: bool = True,
-    timeout: int = DEFAULT_READ_TIMEOUT,
+    timeout: int | None = None,
 ) -> ScoreSheet:
     """Score a transcript, and audit its claims unless ``fact_check=False``.
 
@@ -184,11 +186,27 @@ async def judge(
     runs, so an injected one should be passed the name it is really using.
 
     Pass ``base_url=`` to use the built-in adapter, or ``backend=`` for your
-    own. Writes nothing: ``write_scores(sheet, path)`` does that.
+    own. ``timeout`` applies only to a client this function opens, so it may not
+    be combined with ``backend=``. Writes nothing: ``write_scores(sheet, path)``
+    does that.
 
     Raises ``JudgeError`` if the reply can't be parsed or overran its budget.
     """
+    # Hard Rule 5: the budget is enforced here, not left to the caller's care.
+    # `debate` gets this from load_run's validation; these four arrive as bare
+    # keyword arguments, so this is the only place that can check them.
+    if budget < 1:
+        raise ValueError(f"judge() needs a budget of at least 1 completion token, got {budget}")
+    if not model.strip():
+        raise ValueError("judge() needs a non-empty model name: it is recorded in the score file")
+
     if backend is not None:
+        if timeout is not None:
+            raise ValueError(
+                f"judge() was given both backend= and timeout={timeout}, and the timeout "
+                "would do nothing: it configures the HTTP client this function opens, and "
+                "your backend brings its own. Set the timeout on that backend instead"
+            )
         return await _score(transcript, backend, model=model, budget=budget, fact_check=fact_check)
     if base_url is None:
         raise ValueError(
@@ -196,7 +214,7 @@ async def judge(
             "openai-compatible adapter (e.g. 'http://localhost:11434/v1'), or backend= "
             "with your own implementation of the Backend protocol (ADR-009)"
         )
-    async with open_client(timeout) as client:
+    async with open_client(DEFAULT_READ_TIMEOUT if timeout is None else timeout) as client:
         adapter = OpenAICompatibleBackend(client, base_url, model)
         return await _score(transcript, adapter, model=model, budget=budget, fact_check=fact_check)
 

@@ -158,6 +158,40 @@ def test_the_fact_check_is_a_second_call_and_is_on_by_default(run_dir: Path):
     assert sheet.fact_check is not None and sheet.fact_check_enabled is True
 
 
+def test_a_budget_below_one_is_refused_before_the_call(run_dir: Path):
+    """Hard Rule 5 reaches the API. The command checks --budget; nothing checked this.
+
+    A budget of 0 would otherwise reach score_debate, which only fails a reply
+    over ``budget + 16`` — so a 16-token reply would pass against a cap of none.
+    """
+    _, transcript = debated(run_dir)
+    backend = FakeBackend(reply(judge_reply(side(0), side(1)), completion_tokens=400))
+
+    with pytest.raises(ValueError) as e:
+        asyncio.run(api.judge(transcript, model="m", budget=0, backend=backend))
+    assert "at least 1 completion token" in str(e.value)
+    assert backend.requests == []  # refused before anything was sent
+
+
+def test_an_empty_model_name_is_refused(run_dir: Path):
+    # It is recorded in the score file, so a blank one makes the sheet unreadable.
+    _, transcript = debated(run_dir)
+    with pytest.raises(ValueError) as e:
+        asyncio.run(api.judge(transcript, model="  ", budget=4000, backend=FakeBackend()))
+    assert "non-empty model name" in str(e.value)
+
+
+def test_a_timeout_beside_your_own_backend_says_it_would_do_nothing(run_dir: Path):
+    # An argument that silently does nothing is the wart ADR-028 §5 records for
+    # config.output; here it is avoidable, so it is refused instead.
+    _, transcript = debated(run_dir)
+    with pytest.raises(ValueError) as e:
+        asyncio.run(
+            api.judge(transcript, model="m", budget=4000, backend=FakeBackend(), timeout=30)
+        )
+    assert "timeout=30" in str(e.value) and "brings its own" in str(e.value)
+
+
 def test_judge_with_nowhere_to_send_the_call_names_both_ways_to_fix_it(run_dir: Path):
     _, transcript = debated(run_dir)
     with pytest.raises(ValueError) as e:

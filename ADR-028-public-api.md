@@ -90,6 +90,14 @@ closes it before returning.
 This is what a caller cannot easily do through the CLI, and it is what makes an
 in-process API worth having rather than a `subprocess.run` wrapper.
 
+`judge`'s settings arrive as bare keyword arguments, so it is the only place
+that can check them: a budget below 1 and a blank model name are refused before
+any call is made. `debate` needs no equivalent because `load_run` has already
+validated the config it is handed (ADR-007 §6) — which is exactly why §"Open
+questions" below leaves a hand-built `RunConfig` as the caller's problem.
+Passing `timeout=` alongside `backend=` is refused too, rather than silently
+ignored: the timeout configures a client that, in that branch, is never opened.
+
 `Backend` stays a plain `Protocol`, **not** `@runtime_checkable`, so
 `isinstance(mine, Backend)` raises `TypeError`. Decorating it was considered and
 declined: `runtime_checkable` verifies only that a `generate` attribute exists,
@@ -146,19 +154,23 @@ convenience that breaks for its primary audience is not a convenience.
 
 ### 7. Collisions are renamed, not shadowed
 
-A flat namespace has four genuine collisions. Each gets a distinct public name,
-and the internal one keeps its module-local name:
+A flat namespace collides in three places. Each colliding name gets a distinct
+public one, and the internal name is left alone:
 
-| public name | internal |
-|---|---|
-| `transcript_json` | `transcript.as_json_dict` |
-| `scores_json` | `judging.as_json_dict` |
-| `TRANSCRIPT_SCHEMA_VERSION` | `transcript.SCHEMA_VERSION` |
-| `SCORE_SCHEMA_VERSION` | `judging.SCORE_SCHEMA_VERSION` |
-| `EVENT_SCHEMA_VERSION` | `event_stream.SCHEMA_VERSION` |
+| public name | internal | why |
+|---|---|---|
+| `transcript_json` | `transcript.as_json_dict` | renamed — two functions, one name |
+| `scores_json` | `judging.as_json_dict` | renamed — the other of that pair |
+| `TRANSCRIPT_SCHEMA_VERSION` | `transcript.SCHEMA_VERSION` | prefixed — two constants, one name |
+| `EVENT_SCHEMA_VERSION` | `event_stream.SCHEMA_VERSION` | prefixed — the other of that pair |
+| `SCORE_SCHEMA_VERSION` | `judging.SCORE_SCHEMA_VERSION` | unchanged — listed so all three versions read alike |
+
+The last row is not a rename. It is in the table because the three version
+constants are exported as a set and should look like one, and because a reader
+checking this table against the code should find every version constant in it.
 
 `prompts.build_request` and `judging.build_request` collide too; §8 excludes
-both, so the collision never reaches the surface.
+both, so that collision never reaches the surface.
 
 ### 8. What is deliberately outside the surface
 
