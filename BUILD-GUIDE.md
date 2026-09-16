@@ -249,13 +249,62 @@ the Swift app's feature, attaching later to the event seam B2 already wired.
 extracted factual claim with a verdict and, where applicable, the
 `evidence_ids` that support or contradict it.
 
-**Exit gate:** three checks. (1) A side cites something present in *its own*
-prep evidence — verdict `supported`, correct `evidence_ids`. (2) A side
-asserts something that the *opponent's* recorded evidence contradicts —
-verdict `contradicted`, pointing at the opponent's passage; this is the
-finding `prep_grounded` alone can never produce, and the reason the pass
-exists. (3) A side asserts an opinion or prediction — verdict
-`not_checkable`, not a false `unsupported`.
+**Exit gate — re-specified 2026-09-16 by ADR-031; B6 is CLOSED.**
+
+One testable condition, which a future change can break:
+
+> **The pass produces a well-formed, structurally checkable ledger.** Every
+> claim maps to a turn the transcript contains, by the turn number the rendering
+> prints. Every cited id is one the transcript recorded — an invented id fails
+> the run. `supported` and `contradicted` cite at least one id; `unsupported`
+> and `not_checkable` cite none. The verdict vocabulary is exactly ADR-015 §2's
+> four and anything else fails. The audit is a second backend call capped by
+> `--budget` on its own, enforced with ADR-010 §3's tolerance. A malformed reply
+> fails loudly **carrying the offending text**, not just a coordinate, and names
+> a repair where one is known (ADR-026). A transcript with no recorded evidence
+> degrades to all-`not_checkable` with a note rather than inventing citations.
+
+**Met**, pinned against the scripted backend by `tests/test_fact_check.py` (the
+ledger's shape, the citation rules, the vocabulary, the budget, the prep-less
+path) and `tests/test_judging.py` (`test_a_malformed_reply_shows_the_text_at_the_fault`,
+which asserts the error carries the offending region rather than a line/column),
+and demonstrated live across seven judges, artifacts in `probe/b6/`.
+
+Three things are **recorded as findings, not gated**: every verdict in the
+vocabulary has been observed on a real model (`not_checkable` on `qwen3:4b` and
+`qwen3:14b`, the other three on `qwen3:8b` warm); which verdicts a judge
+produces varies by model *and generation*, documented per model in
+`MODEL-COVERAGE.md`; and the known defects are written down — `contradicted`
+citations are not verified to name what actually contradicted
+(OPEN-QUESTIONS 16), and no accuracy validation exists.
+
+**What this gate no longer claims** (ADR-031 §4): that the audit's verdicts are
+correct, that a `contradicted` citation names what contradicted the claim, or
+that any one judge produces the full range of verdicts. Verdict accuracy moved
+to the validation track under OPEN-QUESTIONS 6, where B5's accuracy question
+already lives. The old gate asserted the opposite of the first two, and that
+assertion is withdrawn.
+
+---
+
+### Historical: the retired gate and its two protocols
+
+Kept because four hypotheses were falsified against them and the reasoning is
+the evidence. **None of the following is current.**
+
+**The retired three-clause gate.** (1) A side cites something present in *its
+own* prep evidence — verdict `supported`, correct `evidence_ids`. (2) A side
+asserts something that the *opponent's* recorded evidence contradicts — verdict
+`contradicted`, pointing at the opponent's passage; "the finding `prep_grounded`
+alone can never produce, and the reason the pass exists". (3) A side asserts an
+opinion or prediction — verdict `not_checkable`, not a false `unsupported`.
+Retired because (3) is a property of the judge rather than the prompt, and (2)
+asks for something ADR-015 §2's definition of "the record" does not support —
+see ADR-031.
+
+**The first protocol opened on a premise that was withdrawn the same day.** It
+is reproduced verbatim below, with its own correction immediately after, because
+a standard built on a false premise is worth being able to read.
 
 **How the gate is measured — decided 2026-09-14, before any run against it.**
 The audit is not reproducible (see `probe/b6/README.md`): one transcript, one

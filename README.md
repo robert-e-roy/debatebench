@@ -44,10 +44,10 @@ and that is the thing to check against. The Python API (`debatebench.api`) is
 pre-1.0 on its own terms and may change with a minor version. It does **not**
 claim the tool is finished — see the known gap below.
 
-Built and gated so far: config and validation, the backend seam, the phase loop,
+Built and gated: config and validation, the backend seam, the phase loop,
 transcript writing, prep retrieval, judge scoring, and the fact-check pass.
-**One known gap**, stated plainly because it affects a default: see
-[`--fact-check`](#fact-check) below.
+**The fact-check has limits that affect a default**, stated plainly rather than
+buried: see [`--fact-check`](#fact-check) below.
 
 ## Quickstart
 
@@ -346,16 +346,31 @@ transcript actually records — both sides' evidence and turns — never against
 model's own knowledge of the world. Verdicts are `supported`, `contradicted`,
 `unsupported`, and `not_checkable`.
 
-> **Known gap.** This pass has not met its exit gate. Over seventeen runs on one
-> saved transcript, no ledger has ever carried a `not_checkable` verdict.
-> **An earlier version of this note said the audit "skips non-factual
-> statements". That was wrong.** The opinions are listed; they land in
-> `unsupported`, one verdict over, because the prompt never told the model to
-> ask "is this a factual claim at all?" before asking whether the record backs
-> it. ADR-024 makes that the first question; the fix is being measured, not
-> assumed. Claims the audit *does* list have been accurate, including ones
-> contradicting the opponent's own recorded evidence. Treat the ledger as
-> incomplete rather than wrong, and `--no-fact-check` skips the second call.
+> **Known limits — read these before relying on a ledger.** The pass is built
+> and its output is well formed: every claim maps to a real turn, every citation
+> names a passage the transcript recorded, and a reply that cannot be parsed
+> fails loudly rather than being dropped. **What is not established is that the
+> verdicts are correct.**
+>
+> **Which verdicts you get depends on the judge**, not on the wording. On one
+> saved transcript, `qwen3:8b` returns `supported`/`contradicted`/`unsupported`
+> and has never once returned `not_checkable` in 29 draws; `qwen3:4b` and
+> `qwen3:14b` return `not_checkable` on the same transcript and no
+> `contradicted`. Same prompt, same input. Three attempts to change this by
+> rewording or by changing the reply schema were measured and reverted.
+>
+> **A `contradicted` citation is not verified to be what contradicted.** The
+> audit judges against everything recorded — passages *and* both sides' turns —
+> but only passages have ids, so a contradiction found in a turn gets a passage
+> id attached to it. Asked about the cited passage on its own, four models
+> including the one that produced the verdict rejected two of three
+> contradictions on that transcript. Treat `contradicted` as "the record
+> somewhere opposes this", not as "this passage refutes it".
+>
+> `supported` verdicts, which cite the claimant's own passage, have been the
+> most reliable in practice. `--no-fact-check` skips the second call entirely.
+> The full evidence, including four falsified hypotheses with their predictions
+> recorded beforehand, is in `probe/b6/`.
 
 > **Judge with the model already loaded.** On Ollama the audit is deterministic
 > *within* a model load state and not across one: the first call after the model

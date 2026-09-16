@@ -101,6 +101,18 @@ already settled in ADR-013 §4.
   parsed, zero failures), clearing the ≥0.38 threshold fixed before any judge
   ran and sitting at 135% of the measured 0.405 human ceiling. The 117-speech
   subset corroborates at +0.513.
+- **The fact-check pass is a second, separate validation question, and nothing
+  validates it (added 2026-09-16, ADR-031 §5).** `JUDGE-VALIDATION`'s Tau-C
+  bears on scoring only: it measures rank correlation over graded speeches, and
+  the audit emits a ledger of categorical verdicts. B6's gate used to assert
+  those verdicts were right; ADR-031 withdrew that and moved the question here.
+  What is known: coverage varies by judge and generation rather than by prompt
+  (`MODEL-COVERAGE.md`), and a `contradicted` citation is not verified to name
+  what contradicted (item 16). What validating it would take is unsettled — there
+  is no fact-check equivalent of the human-rated dataset that answered the
+  scoring half, and constructing one means labelling claim/passage pairs by hand.
+  Until then the pass ships with its limits stated in the README, which is the
+  disclosure that has to be right.
 - **But only its *ordering* passes, and that bounds what may be claimed.** All
   three human-authored sources land within 0.18 of human ratings; every
   machine-generated source is 0.95–1.52 low. Tau-C measures rank alone and is

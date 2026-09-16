@@ -63,7 +63,11 @@ code. See ADR-002 for full scope.
   here; a bad release is yanked and superseded, never re-uploaded, because PyPI
   forbids reusing a version; `0.1.0` claims the commands and the three file
   formats are stable within 0.1.x, **not** that B6's gate is met) — accepted;
-  together they are the spec. **`ADR-030`** (the `factual` boolean: accepted,
+  together they are the spec. **`ADR-031`** (B6 closes on a re-specified gate:
+  one testable condition — a well-formed, structurally checkable ledger — with
+  verdict *accuracy* moved to the validation track under OPEN-QUESTIONS 6, and
+  the old three-clause conjunction retired along with both its protocols; §4
+  lists exactly what B6 no longer claims). **`ADR-030`** (the `factual` boolean: accepted,
   implemented, measured and **reverted** the same day — §9 carries the result and
   is the part worth reading; ADR-024 §4 stands unamended because the code
   enforcement that would have justified amending it is gone with the revert).
@@ -92,9 +96,22 @@ code. See ADR-002 for full scope.
   invented place names that exist only in that side's evidence. **B5 is done**
   (2026-09-12): `judge` scores a transcript in one call, five dimensions per
   side, with the total and winner computed outside the model and printed beside
-  every score. **B6 is built and its live gate is still NOT met** (updated
-  2026-09-14): the fact-check pass runs end to end and produces a full claims
-  ledger, but no single run has produced all three of its checks at once.
+  every score. **B6 is DONE and its gate is met** (2026-09-16) — but the gate is not the
+  one it started with. **ADR-031 re-specified it and closed the session**, after
+  four interventions across three channels failed to satisfy the original
+  three-clause conjunction. The new gate has one testable condition — the pass
+  produces a well-formed, structurally checkable ledger: claims map to real
+  turns, citations name recorded ids, the verdict vocabulary is exactly
+  ADR-015 §2's four, the budget is enforced, a malformed reply fails loudly
+  carrying its repair, and a prep-less transcript degrades to all
+  `not_checkable` with a note. **What B6 no longer claims**: that the verdicts
+  are correct, that a `contradicted` citation names what contradicted the claim,
+  or that one judge produces the full range of verdicts. Verdict accuracy moved
+  to the validation track under OPEN-QUESTIONS 6, where B5's accuracy question
+  already lived — the diagnosis being that B6's original gate was a validation
+  question written in a build gate's clothes. **All of B0–B7 are now closed.**
+  The history below is kept because four hypotheses were falsified against it
+  and the reasoning is the evidence.
   **Each check has now been seen — never together.** The 2026-09-13 runs gave
   (1) and (2), including a claim contradicted by the *opponent's* recorded
   evidence, the finding `prep_grounded` cannot produce, and missed the opinion
