@@ -1,0 +1,68 @@
+# ADR-029: publish to PyPI with no PyPI credential anywhere. The job proves it
+# is this repository to PyPI over OIDC, so there is no token to store, rotate,
+# leak or revoke — which is the specific failure this project has already had.
+#
+# Before the first run, the account owner must create a *pending publisher* at
+# https://pypi.org/manage/account/publishing/ binding:
+#     project      debatebench
+#     owner        robert-e-roy
+#     repository   debatebench
+#     workflow     release.yml
+#     environment  pypi
+# Until that exists the upload step fails to authenticate, which is the intended
+# failure mode: nothing can publish by accident.
+name: release
+
+# A *published GitHub Release*, not a tag push (ADR-029 §3): pushing a tag by
+# mistake must not publish anything, and a version on PyPI cannot be replaced.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Pinned exactly: setup-uv publishes no floating major tag (see tests.yml).
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          python-version: "3.11"
+
+      # The suite runs here too. The release artifact and the tested tree are
+      # then the same checkout, rather than two things assumed to match.
+      - run: uv sync --locked
+      - run: uv run --locked pytest -q
+
+      - name: Build the wheel and sdist from the tagged commit
+        run: uv build
+
+      - name: Refuse metadata PyPI would reject
+        run: uvx twine check dist/*
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # Named so the trusted-publisher binding can require it, and so a reviewer
+    # can be added later without changing this file.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/debatebench
+    permissions:
+      id-token: write  # the OIDC token; this is the whole authentication story
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@v1.14.2

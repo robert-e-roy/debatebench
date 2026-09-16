@@ -57,8 +57,13 @@ code. See ADR-002 for full scope.
   injected `Backend`, so a caller needs no HTTP server; `__init__.py` still
   exports nothing, and the JSON `schema_version`s remain the durable contract
   while the Python surface is pre-1.0 — resolves ADR-027's open question about
-  whether the event stream should be the only machine-readable seam: it is not)
-  — accepted; together they are the spec.
+  whether the event stream should be the only machine-readable seam: it is not),
+  `ADR-029` (release `0.1.0` to real PyPI via Trusted Publishing from a
+  published GitHub Release — no token anywhere, since two have already leaked
+  here; a bad release is yanked and superseded, never re-uploaded, because PyPI
+  forbids reusing a version; `0.1.0` claims the commands and the three file
+  formats are stable within 0.1.x, **not** that B6's gate is met) — accepted;
+  together they are the spec.
 - `MODEL-COVERAGE.md` — which models have actually been run, at what size, as
   debater or judge, with the artifact behind each. **No large (24B+) model has
   ever produced a token here**; every quality finding in this repo comes from
@@ -208,9 +213,19 @@ code. See ADR-002 for full scope.
   run's output exactly** (pro 100/100, con 91/100, winner `pro` on total, 15
   claims): same seed, same config, same scores across a packaging boundary,
   which is the first end-to-end determinism evidence this project has that
-  spans build and publish rather than just two local runs. **Not published to real
-  PyPI**, where the name was still unclaimed (404) on 2026-09-14; that step
-  needs its own decision. The sdist deliberately ships the whole internal
+  spans build and publish rather than just two local runs. **Not yet published to real
+  PyPI**, where the name was still unclaimed (404 on the JSON API, re-checked
+  2026-09-16). **ADR-029 is that decision** and the repository is set up to
+  execute it: version bumped to `0.1.0` (a `.dev0` would not be selected by a
+  plain `pip install`), `.github/workflows/release.yml` publishing by **Trusted
+  Publishing** so no PyPI token exists anywhere, triggered by a *published*
+  GitHub Release rather than a tag push. One step is outstanding and only the
+  account owner can do it — creating the pending publisher on PyPI binding
+  project `debatebench` / owner `robert-e-roy` / repo `debatebench` / workflow
+  `release.yml` / environment `pypi`. Until it exists the upload cannot
+  authenticate, which is the intended failure mode. **The README's Status
+  section still says "TestPyPI only" and that stays true until an upload
+  actually succeeds** — it is updated by the release, not before it. The sdist deliberately ships the whole internal
   record — every ADR, this file, `BUILD-GUIDE`, `OPEN-QUESTIONS`,
   `JUDGE-VALIDATION`, both probe write-ups — decided knowingly, on the grounds
   that the ADRs *are* the spec. It was scanned for personal data first: no home
