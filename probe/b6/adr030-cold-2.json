@@ -1,0 +1,265 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.1",
+  "judged_at": "2026-09-16T14:36:59Z",
+  "judge_model": "qwen3:8b",
+  "judge_budget": 6000,
+  "fact_check_enabled": true,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "The PRO presents a coherent case linking planning certainty, revenue recycling, and proven emissions reductions (Brindlewick) to the motion. The arguments logically prioritize efficiency and equity, with clear connections to institutional consensus in economics."
+        },
+        "evidence_grounding": {
+          "score": 25,
+          "max": 25,
+          "justification": "All claims are directly tied to the PRO's prep evidence: (am-2) for planning certainty, (am-3) for equity, (am-1) for emissions reduction, and (ds-1) for economic efficiency. Rebuttals also cite these sources without deviation.",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 19,
+          "max": 20,
+          "justification": "The PRO fairly addresses the CON’s core arguments: leakage, regressivity, rural inequities, and loopholes. They acknowledge the CON’s claims about Brindlewick’s scalability but counter with federal design and revenue recycling."
+        },
+        "rebuttal_effectiveness": {
+          "score": 15,
+          "max": 15,
+          "justification": "The PRO effectively rebuts each CON point: scalability (by emphasizing federal implementation), rural inequities (by framing renewable investment as an incentive), and loopholes (as policy choices, not inherent flaws).",
+          "hit_ledger": [
+            {
+              "point": "Brindlewick scalability",
+              "status": "rebutted"
+            },
+            {
+              "point": "revenue recycling",
+              "status": "rebutted"
+            },
+            {
+              "point": "rural inequities",
+              "status": "rebutted"
+            },
+            {
+              "point": "loopholes",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The case is clearly structured, with explicit examples (Brindlewick) and logical flow between economic, equity, and policy effectiveness arguments."
+        }
+      },
+      "total": 97
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "The CON presents a well-structured case highlighting leakage, regressivity, rural inequities, and evasion via exemptions. The arguments are logically sequenced to undermine the PRO’s claims of effectiveness and fairness."
+        },
+        "evidence_grounding": {
+          "score": 24,
+          "max": 25,
+          "justification": "The CON cites all five prep passages (am-6, am-4, am-7, am-5, ds-2) for their arguments. However, their rebuttal to the PRO’s Brindlewick example does not reference their own evidence, weakening evidence grounding for that point.",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "The CON fairly summarizes the PRO’s strongest arguments (planning certainty, equity, Brindlewick example) and counters them with leakage, regressivity, and rural inequities. Some points (e.g., revenue recycling) are addressed but not fully engaged with."
+        },
+        "rebuttal_effectiveness": {
+          "score": 15,
+          "max": 15,
+          "justification": "The CON successfully rebuts the PRO’s claims about Brindlewick’s scalability and revenue recycling by emphasizing leakage and exemptions. However, their focus on ‘leakage’ overlooks the PRO’s emphasis on urgency, which the PRO directly addresses.",
+          "hit_ledger": [
+            {
+              "point": "Brindlewick scalability",
+              "status": "rebutted"
+            },
+            {
+              "point": "revenue recycling",
+              "status": "rebutted"
+            },
+            {
+              "point": "rural inequities",
+              "status": "rebutted"
+            },
+            {
+              "point": "loopholes",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 10,
+          "max": 10,
+          "justification": "The case is logically structured, with clear separation of economic, equity, and policy ineffectiveness arguments, though some complexity around leakage and border adjustments may reduce clarity slightly."
+        }
+      },
+      "total": 95
+    }
+  ],
+  "winner": "pro",
+  "winner_reason": "total",
+  "fact_check": {
+    "checked_against": "recorded_evidence",
+    "claims": [
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "A federal carbon tax is a proven, equitable, and economically efficient tool to accelerate emissions reductions while protecting vulnerable communities.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-1",
+          "am-3"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "The Brindlewick example proves that such a tax can slash household emissions by 14% in just two years.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-1"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "Revenue recycling as a flat dividend ensures the tax is progressive.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-3"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "A carbon tax is regressive before any rebate arrives.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-4"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "Taxing emissions at home while trading partners do not simply moves the factory, and with it the emissions.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-5"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "Every carbon tax passed so far has arrived with exemptions for the largest emitters.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "ds-2"
+        ]
+      },
+      {
+        "phase_index": 2,
+        "side_index": 1,
+        "claim": "The Brindlewick example demonstrates a carbon tax’s efficacy, slashing household emissions by 14% through revenue recycling.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-1"
+        ]
+      },
+      {
+        "phase_index": 2,
+        "side_index": 1,
+        "claim": "Such gains are exceptional, not scalable, and depend on flawed assumptions about compliance and leakage mitigation.",
+        "verdict": "unsupported",
+        "evidence_ids": []
+      },
+      {
+        "phase_index": 2,
+        "side_index": 1,
+        "claim": "The absence of functional border adjustments and rampant exemptions for corporations ensures the policy disproportionately burdens low-income households.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-6",
+          "am-4",
+          "ds-2"
+        ]
+      },
+      {
+        "phase_index": 2,
+        "side_index": 0,
+        "claim": "Brindlewick’s outcome demonstrates the *potential* of a carbon tax when paired with revenue recycling and robust enforcement.",
+        "verdict": "unsupported",
+        "evidence_ids": []
+      },
+      {
+        "phase_index": 2,
+        "side_index": 0,
+        "claim": "The tax can incentivize rural renewable energy investment, not just penalize fossil fuel dependence.",
+        "verdict": "unsupported",
+        "evidence_ids": []
+      },
+      {
+        "phase_index": 2,
+        "side_index": 0,
+        "claim": "Exemptions for corporations are a policy choice, not an inherent flaw.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "ds-2"
+        ]
+      },
+      {
+        "phase_index": 2,
+        "side_index": 0,
+        "claim": "The tax’s equity lies in its revenue-sharing mechanism, which neutralizes regressive impacts.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-3"
+        ]
+      },
+      {
+        "phase_index": 3,
+        "side_index": 0,
+        "claim": "A federal carbon tax, when paired with revenue recycling and robust enforcement, delivers measurable emissions reductions.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-1",
+          "am-3"
+        ]
+      },
+      {
+        "phase_index": 3,
+        "side_index": 1,
+        "claim": "The federal carbon tax fails to address emissions in critical sectors like rural areas.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-7"
+        ]
+      },
+      {
+        "phase_index": 3,
+        "side_index": 1,
+        "claim": "Its reliance on complex, unenforceable border adjustments and loopholes for corporations erodes market fairness.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-6",
+          "am-5",
+          "ds-2"
+        ]
+      }
+    ]
+  }
+}
