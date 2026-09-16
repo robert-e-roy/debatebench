@@ -1,0 +1,215 @@
+{
+  "schema_version": 2,
+  "debatebench_version": "0.1.1",
+  "judged_at": "2026-09-16T15:20:45Z",
+  "judge_model": "qwen3:14b",
+  "judge_budget": 6000,
+  "fact_check_enabled": true,
+  "sides": [
+    {
+      "side_index": 0,
+      "side": "pro",
+      "dimensions": {
+        "argument_quality": {
+          "score": 28,
+          "max": 30,
+          "justification": "PRO presents a coherent case with clear logic, citing Brindlewick as a real-world example and addressing regressive concerns through revenue recycling. Arguments are well-structured and responsive to counterpoints."
+        },
+        "evidence_grounding": {
+          "score": 23,
+          "max": 25,
+          "justification": "PRO extensively references their prep evidence (am-1, am-2, am-3, ds-1), though some rebuttals could have deeper grounding in specific passages.",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 18,
+          "max": 20,
+          "justification": "PRO fairly reframes CON's arguments (e.g., rural inequities and exemptions) as challenges to be addressed, though not every counterpoint is explicitly acknowledged."
+        },
+        "rebuttal_effectiveness": {
+          "score": 14,
+          "max": 15,
+          "justification": "PRO effectively counters CON's focus on Brindlewick scalability and exemptions, framing them as solvable through federal design rather than inherent flaws.",
+          "hit_ledger": [
+            {
+              "point": "Brindlewick's success is not scalable",
+              "status": "rebutted"
+            },
+            {
+              "point": "Exemptions for corporations erode fairness",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 9,
+          "max": 10,
+          "justification": "PRO's arguments are concise, logically structured, and emphasize key themes (equity, efficiency) without unnecessary jargon."
+        }
+      },
+      "total": 92
+    },
+    {
+      "side_index": 1,
+      "side": "con",
+      "dimensions": {
+        "argument_quality": {
+          "score": 26,
+          "max": 30,
+          "justification": "CON effectively highlights regressive impacts, carbon leakage, and corporate loopholes. Arguments are valid but occasionally rely on hypothetical critiques of policy design rather than direct rebuttal of PRO's evidence."
+        },
+        "evidence_grounding": {
+          "score": 24,
+          "max": 25,
+          "justification": "CON thoroughly references evidence (am-4, am-5, am-6, am-7, ds-2), including the Ferncastle smelter case, though some rebuttals (e.g., on rural inequities) lack direct linkage to prep materials.",
+          "prep_grounded": true
+        },
+        "steelman_fidelity": {
+          "score": 17,
+          "max": 20,
+          "justification": "CON fairly acknowledges PRO's revenue-recycling point but misses subtleties in PRO's argument about market-driven solutions, reducing it to a 'regressive tax' oversimplification."
+        },
+        "rebuttal_effectiveness": {
+          "score": 13,
+          "max": 15,
+          "justification": "CON successfully critiques Brindlewick's scalability and exemption mechanisms, but their rebuttal to PRO's focus on rural renewable investment lacks depth.",
+          "hit_ledger": [
+            {
+              "point": "Brindlewick's example is exceptional",
+              "status": "rebutted"
+            },
+            {
+              "point": "Exemptions for corporations are a policy choice",
+              "status": "rebutted"
+            }
+          ],
+          "hit_ledger_reported": true
+        },
+        "clarity": {
+          "score": 8,
+          "max": 10,
+          "justification": "CON's arguments are clear but occasionally repetitive (e.g., emphasis on leakage) and less structured in addressing PRO's rebuttals."
+        }
+      },
+      "total": 88
+    }
+  ],
+  "winner": "pro",
+  "winner_reason": "total",
+  "fact_check": {
+    "checked_against": "recorded_evidence",
+    "claims": [
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "A carbon tax puts the cost of emissions where it belongs, on the people choosing to emit. The town of Brindlewick cut household emissions by 14 percent in two years after adopting one.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-1"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "Revenue returned as a flat dividend more than covers higher energy bills for the poorest households, which turns a regressive tax into a progressive transfer.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-3"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 0,
+        "claim": "Economists across the spectrum prefer a tax to regulation because it lets each firm decide where abatement is cheapest, rather than having a rule-writer guess.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "ds-1"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "A carbon tax is regressive before any rebate arrives. The household spending the largest share of its income on fuel pays first and is reimbursed last, if at all.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-4"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "Rural drivers have no substitute for the trip to work. A price signal only changes behaviour where an alternative exists, and for them it does not.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-7"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "Taxing emissions at home while trading partners do not simply moves the factory, and with it the emissions. The Ferncastle smelter closed and reopened across the border within a year.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-5"
+        ]
+      },
+      {
+        "phase_index": 1,
+        "side_index": 1,
+        "claim": "Every carbon tax passed so far has arrived with exemptions for the largest emitters, which is how a broad-based tax becomes a narrow one on households.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "ds-2"
+        ]
+      },
+      {
+        "phase_index": 2,
+        "side_index": 1,
+        "claim": "The absence of functional border adjustments and rampant exemptions for corporations (as seen in every enacted tax) ensures the policy disproportionately burdens low-income households while shielding polluters—[a violation of cost-benefit neutrality].",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-4",
+          "ds-2"
+        ]
+      },
+      {
+        "phase_index": 2,
+        "side_index": 1,
+        "claim": "Rural communities, where substitutes for fossil fuels are nonexistent, remain unaffected, rendering the tax ineffectual in critical sectors.",
+        "verdict": "supported",
+        "evidence_ids": [
+          "am-7"
+        ]
+      },
+      {
+        "phase_index": 2,
+        "side_index": 0,
+        "claim": "Brindlewick’s success is an exception, not a model for national implementation.",
+        "verdict": "not_checkable",
+        "evidence_ids": []
+      },
+      {
+        "phase_index": 2,
+        "side_index": 0,
+        "claim": "The tax can incentivize rural renewable energy investment, not just penalize fossil fuel dependence.",
+        "verdict": "not_checkable",
+        "evidence_ids": []
+      },
+      {
+        "phase_index": 2,
+        "side_index": 0,
+        "claim": "Exemptions for corporations are a policy choice, not an inherent flaw; the tax’s equity lies in its revenue-sharing mechanism, which neutralizes regressive impacts.",
+        "verdict": "not_checkable",
+        "evidence_ids": []
+      },
+      {
+        "phase_index": 2,
+        "side_index": 0,
+        "claim": "The CON’s focus on 'leakage' overlooks the urgency of action: without market signals, we risk irreversible climate harm.",
+        "verdict": "not_checkable",
+        "evidence_ids": []
+      }
+    ]
+  }
+}

@@ -383,10 +383,17 @@ would save.
   (revalidated against everything accepted since, and adding the args-me/
   DebateSum license check that draft never did). See item 10 above.
 
-- **Resolved 2026-09-11 — backed up.** This folder is a git repo, with `origin` at
-  `box:Projects/DebateBench.git` via `box-backup-init.sh`. Push regularly; it's
-  the backup. When the public GitHub repo is created, the helper keeps `box` as
-  a second remote. On 2026-09-11:
+- **Resolved 2026-09-11 — backed up; extended 2026-09-16.** This folder is a git
+  repo. **`origin` is now GitHub** —
+  <https://github.com/robert-e-roy/debatebench>, public, MIT — and **`box` is the
+  second remote** (`box:Projects/DebateBench.git`), which is the arrangement the
+  workspace convention describes for a published package. Push both; box is the
+  backup. On 2026-09-16 a second scrub was needed before publishing: the mirror
+  probe transcripts carried an absolute home path in their `team_file` field
+  across 14 commits, rewritten out of all 83 with `git filter-repo` and
+  force-pushed (a verified pre-rewrite bundle was kept outside the repo). A
+  full-history scan afterwards found no home paths, no hostname, no private
+  addresses and no credentials. On 2026-09-11:
   - `probe/b0/` was scrubbed of local paths and the running-process list;
   - `RESULTS.md` was generalized, with no app names or hostname;
   - history was squashed into one clean commit and force-pushed, so no earlier

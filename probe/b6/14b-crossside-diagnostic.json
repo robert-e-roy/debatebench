@@ -1,0 +1,10 @@
+{
+  "bare_pair": {
+    "content": "NO. Passage A discusses the effect of returning revenue as a flat dividend, making the tax progressive, while Passage B refers to the regressive nature of a carbon tax before any rebate is applied, focusing on different scenarios.",
+    "reasoning_chars": 1504
+  },
+  "audit_vocab": {
+    "content": "Supported. The recorded passage implies that a carbon tax is regressive before revenue is returned as a flat dividend, as it notes that returning the revenue \"turns a regressive tax into a progressive transfer,\" aligning with the debater's claim.",
+    "reasoning_chars": 1789
+  }
+}
