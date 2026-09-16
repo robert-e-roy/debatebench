@@ -355,6 +355,45 @@ as part of the API surface, which it must be for the point of it to hold.
 Not urgent. It is additive, so doing it later costs nothing that doing it now
 would save.
 
+### 16. "The record" means two different things, and a `contradicted` citation cannot be checked
+
+**Blocks:** B6's exit gate, clause (2). Raised 2026-09-16 by the `qwen3:14b`
+investigation (`probe/b6/README.md`).
+
+ADR-015 §2 defines what the fact-check judges against as "the passages each side
+retrieved, **and what either side said**" — turns included. B6's gate clause (2)
+asks for something narrower: "a side asserts something that the *opponent's
+recorded evidence* contradicts — verdict `contradicted`, **pointing at the
+opponent's passage**".
+
+Measured: adding the opponent's turn text to a passage flips three of four
+model/pair cells from NO to YES, with reasons that name the turn ("the record
+*argues* that…"). Asked about the passage alone, all four models reject two of
+the three contradictions `qwen3:8b` reports in its audit — including `qwen3:8b`
+itself.
+
+So a contradiction can legitimately come from a **turn**, while
+`_evidence_citations` refuses `contradicted` without ids and only ids of
+**passages** exist. The model borrows a topically-related passage id, and nothing
+verifies that the cited passage is what contradicted. That citation is
+unfalsifiable, which is the exact thing that function's own comment says the pass
+exists to avoid.
+
+Three ways out, none chosen:
+
+1. **Narrow the record for `contradicted`** to retrieved passages only, making
+   the gate and the definition agree. Costs the finding where a side's own
+   *argument* refutes another — which may be worth catching.
+2. **Let a turn be citable**, giving turns stable ids in the transcript so
+   `evidence_ids` can name one. Touches ADR-005's shape and the score file.
+3. **Distinguish the two in the verdict vocabulary** — e.g. `contradicted` for a
+   passage and something else for a turn. Touches ADR-015 §2, ADR-019 and
+   `VERDICTS`, and would be a `schema_version` question.
+
+Whichever is chosen, **B6 clause (2)'s "met and reproducible" status
+(2026-09-14) rests on evidence that does not demonstrate the clause as written**,
+and should be treated as unsettled until this is decided.
+
 ## Recorded elsewhere — index
 
 | Where | Open question |

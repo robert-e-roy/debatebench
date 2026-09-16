@@ -381,6 +381,22 @@ the PRO's Brindlewick claim to the **CON**, because the CON restated it in
 order to rebut it. A side quoting its opponent to attack them is not
 asserting the thing.
 
+**Status 2026-09-16 (later) — clause (2)'s evidence is challenged, and the
+investigation meant to fix `qwen3:14b` ended by questioning `qwen3:8b`.** Two
+clean negatives first: 14b reproduces byte-for-byte a day on, and **budget is
+inert on it** — warm at 16,000 is byte-identical to warm at 6,000, so
+OPEN-QUESTIONS 13 is not the cause. Then the passages. Asked about the cited
+passage alone, all four models tested, **`qwen3:8b` included**, reject two of
+the three contradictions 8b reports in its own audit. Adding the opponent's
+**turn text** flips three of four cells to YES. The verdicts are driven by what
+the opponent *argued*; the citation names a *passage*, because only passages
+have ids; nothing verifies the two are the same thing. Clause (2) asks for "the
+*opponent's recorded evidence*… pointing at the opponent's passage", so **its
+2026-09-14 "met and reproducible" status should be treated as unsettled** until
+OPEN-QUESTIONS 16 is decided. Not a prompt problem: ADR-019's `CONTRADICTION
+WINS` block flips nothing, six of six. Full account and caveats in
+`probe/b6/README.md`.
+
 **Status 2026-09-16 — clause (3) is closed as unreachable on `qwen3:8b`, and
 the gate's best remaining route changes model.** Three conditions have now
 attacked the checkability question through three independent channels, and all

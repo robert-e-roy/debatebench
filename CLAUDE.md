@@ -119,6 +119,20 @@ code. See ADR-002 for full scope.
   20 claims — 15 `supported`, 3 `contradicted`, 2 `unsupported` — all three
   contradictions cross-side, including the con's own `am-4` claim contradicted
   by the pro's `am-3`.
+  **That "met and reproducible" status is now UNSETTLED (2026-09-16,
+  OPEN-QUESTIONS 16).** Asked about the *cited passage alone*, all four models
+  tested — **including `qwen3:8b` itself** — say two of those three are not
+  contradictions; `am-3` reads "turns **a regressive tax** into a progressive
+  transfer", which presupposes the regressivity the claim asserts. Adding the
+  opponent's **turn text** flips three of four cells to YES, with reasons that
+  name it ("the record *argues* that…"). So these verdicts are driven by what
+  the opponent **argued**, while the citation must name a **passage** — only
+  passages have ids, and `_evidence_citations` refuses `contradicted` without
+  one — and nothing checks that the cited passage is what contradicted. ADR-015
+  §2's record includes turns; the gate clause asks for the opponent's
+  *evidence*, cited. The two do not agree, which is a decision to make rather
+  than a bug to fix. Not ADR-019's emphasis block: prepending `CONTRADICTION
+  WINS` verbatim flips nothing, six of six.
   **"Reproducibly" needed a condition that was not known when it was written.**
   Seventeen runs on that one saved transcript have produced exactly **two**
   outputs, byte-identical within each group, and a pre-registered test

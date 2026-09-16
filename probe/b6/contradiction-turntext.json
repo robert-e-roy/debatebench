@@ -1,0 +1,34 @@
+{
+  "1_regressive_before_rebate": {
+    "claim": "A carbon tax is regressive before any rebate arrives",
+    "passage_id": "am-3",
+    "answers": {
+      "qwen3:8b": {
+        "passage_only": "NO",
+        "passage_plus_turns": "NO",
+        "text": "NO  \nThe record acknowledges the carbon tax is regressive before rebates but argues revenue recycling makes it progressive, thus not contradicting the assertion."
+      },
+      "qwen3:14b": {
+        "passage_only": "NO",
+        "passage_plus_turns": "YES",
+        "text": "YES. The record explicitly acknowledges that a carbon tax is regressive before revenue recycling (e.g., \"turns a regressive tax into a progressive transfer\"), directly supporting the assertion."
+      }
+    }
+  },
+  "2_brindlewick_not_scalable": {
+    "claim": "Brindlewick's success is exceptional and not scalable",
+    "passage_id": "am-1",
+    "answers": {
+      "qwen3:8b": {
+        "passage_only": "NO",
+        "passage_plus_turns": "YES",
+        "text": "YES  \nThe record directly contradicts the assertion by presenting Brindlewick's success as a demonstrable model for scaling carbon taxes nationally, emphasizing that its outcomes show potential when paired with revenue recycling and federal design, not as an exceptional, unscaleable case."
+      },
+      "qwen3:14b": {
+        "passage_only": "NO",
+        "passage_plus_turns": "YES",
+        "text": "YES  \nThe record argues that Brindlewick\u2019s success demonstrates the *potential* of a carbon tax when paired with federal design, directly contradicting the assertion that it is \u201cexceptional and not scalable.\u201d"
+      }
+    }
+  }
+}

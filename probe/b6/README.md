@@ -359,6 +359,87 @@ same prompt. That asymmetry is recorded rather than normalised away: it is
 OPEN-QUESTIONS 13 (budget counts thinking) landing on the newest generation, and
 it means a budget tuned for one generation silently starves the next.
 
+## Clause (2)'s evidence does not show what clause (2) asks for
+
+2026-09-16, investigating why `qwen3:14b` finds no contradictions. It ended by
+questioning `qwen3:8b`'s.
+
+**First, two clean negatives on 14b.** Both baselines reproduce byte-for-byte a
+day later (cold 12 claims `d39899c15418cd71`, warm 13 `62f09bc321324861`). And
+**budget is inert**: warm at 16,000 is byte-identical to warm at 6,000, same
+hash. 14b is not being squeezed for thinking room, so OPEN-QUESTIONS 13 is not
+the cause — a contrast with `qwen3:32b`, where changing the budget demonstrably
+changed the reply.
+
+**Then the passages themselves.** Each of 8b warm's three contradictions, put to
+four models as a single pair with no debate framing and no audit context
+(`contradiction-spread.json`):
+
+| pair | 4b | 8b | 14b | 3.5:4b |
+|---|---|---|---|---|
+| 1. "regressive before any rebate arrives" vs `am-3` | NO | **NO** | NO | NO |
+| 2. "Brindlewick's success is exceptional and not scalable" vs `am-1` | NO | **NO** | NO | NO |
+| 3. "carbon taxes create regressive burdens" vs `am-3` | NO | NO | YES | YES |
+
+**`qwen3:8b` rejects, in isolation, two of the three contradictions it reports
+inside the audit.** On pair 1 the text is on its side: `am-3` reads "turns **a
+regressive tax** into a progressive transfer", which presupposes the very
+regressivity the claim asserts. On pair 2, `am-1` reports that Brindlewick
+succeeded and says nothing about scalability.
+
+**It is not ADR-019's emphasis block** (`contradiction-winsblock.json`). Prepending
+`CONTRADICTION WINS` verbatim flips nothing — six of six stay NO, several quoting
+the block's own "a passage that agrees does not contradict" back.
+
+### What actually produces them: the record includes the opponent's turns
+
+ADR-015 §2 defines the record as "the passages each side retrieved, **and what
+either side said**". The probe above supplied only a passage, so it asked a
+narrower question than the audit does. Adding the opposing side's **turn text**
+(`contradiction-turntext.json`):
+
+| pair | model | passage only | passage + opponent's turns |
+|---|---|---|---|
+| 2. Brindlewick | `qwen3:8b` | NO | **YES** |
+| 2. Brindlewick | `qwen3:14b` | NO | **YES** |
+| 1. regressive | `qwen3:14b` | NO | **YES** |
+| 1. regressive | `qwen3:8b` | NO | NO |
+
+Three of four flip, and the reasons name the mechanism outright — 8b: "the record
+**argues** that Brindlewick's success demonstrates the potential of a carbon tax…
+directly contradicting the assertion". That is the opponent's *argument*, not a
+retrieved passage.
+
+### The structural gap this exposes
+
+A turn-driven contradiction still has to be cited, because `_evidence_citations`
+refuses `contradicted` with no ids. So the model borrows a topically-related
+**passage** id for a contradiction that came from a **turn**, and nothing checks
+that the cited passage is what did the contradicting. The code comment on that
+function says a citation that cannot be checked is "exactly what this pass exists
+to avoid"; this is that, arriving through a door the validator does not watch.
+
+**So the verdicts are not obviously wrong under ADR-015 §2** — the record does
+include turns, and the opponent's turns do oppose these claims. What is wrong is
+the **citation**, and therefore the gate. B6 clause (2) asks for "a side asserts
+something that the *opponent's recorded evidence* contradicts — verdict
+`contradicted`, **pointing at the opponent's passage**". Two of the three
+verdicts point at a passage that four models, including the one that produced the
+verdict, agree does not contradict the claim.
+
+**Clause (2) has been recorded as "met and reproducible" since 2026-09-14 on this
+evidence.** That status is now in question — not because the model misbehaved,
+but because "the record" means one thing in ADR-015 §2 and a narrower thing in
+the gate, and nothing reconciles them. That is a decision to be made, not a bug to
+fix, and it is logged as OPEN-QUESTIONS 16.
+
+**What this does not establish.** A single pair in isolation is an easier task
+than producing a 20-claim ledger, and the two prompts are not the same prompt.
+Every cell here is one draw with load state uncontrolled across the probe, and the
+flip test is four cells. Pair 3 splits 2-2 and may well be a legitimate
+contradiction. None of this shows 14b is *right* to return zero — only that the
+reason it was called wrong does not hold up.
+
 ## ADR-030: the schema attempt, and the third failure through a third channel
 
 `ADR-024 §2 as schema` — the option this page named as the one left — was built

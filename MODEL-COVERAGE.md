@@ -253,6 +253,19 @@ independent channels and all three were measured and reverted:
 | C | user-turn framing | 0 | **5** | — |
 | ADR-030 | required `factual` field in the reply schema | 0 | **16** | **0** |
 
+**`qwen3:14b` is not budget-limited.** Warm at 16,000 is **byte-identical** to
+warm at 6,000 — a 2.7x increase changing nothing. That is the opposite of
+`qwen3:32b`, where changing the budget demonstrably changed the reply, and it
+rules out OPEN-QUESTIONS 13 as the reason 14b returns no contradictions.
+
+**And clause (2) itself is now in question** (2026-09-16, OPEN-QUESTIONS 16).
+Asked about the cited passage alone, all four models — including `qwen3:8b`
+itself — reject two of the three contradictions `qwen3:8b` reports in its audit.
+Adding the opponent's *turn text* flips three of four cells to YES. So those
+verdicts are driven by what the opponent **argued**, not by the passage they
+cite, and B6 clause (2) asks specifically for the opponent's *evidence* with a
+citation pointing at it. Treat "clause (2) met" as unsettled.
+
 **Read this before attributing a fact-check result to a prompt.** Every attempt
 to make `qwen3:8b` answer the checkability question costs clause (2) and shrinks
 the ledger. `qwen3:4b` and `qwen3:14b` produce clause (3) unprompted on the same
