@@ -433,6 +433,43 @@ but because "the record" means one thing in ADR-015 §2 and a narrower thing in
 the gate, and nothing reconciles them. That is a decision to be made, not a bug to
 fix, and it is logged as OPEN-QUESTIONS 16.
 
+### The citation requirement is not what suppresses 14b — hypothesis falsified
+
+A hypothesis worth stating because it was good and it is wrong. 14b cites the
+*backing* passage and says `supported` on both halves of the pair. ADR-019 §2
+requires a `contradicted` verdict to cite the **contradicting passage**, and for
+a turn-driven contradiction none exists. So perhaps 14b sees the contradiction,
+finds no legal citation, and falls back to `supported` — while 8b, looser,
+borrows a topically-related id. That would have explained both models at once,
+and it would have justified an ADR making turns citable.
+
+Tested directly (`citation-cost.json`): same framing as the turn-text probe, plus
+the audit's own constraint — "if contradicted you MUST cite the id of the passage
+that contradicts it".
+
+| pair | model | no citation asked | citation required |
+|---|---|---|---|
+| 2. Brindlewick | `qwen3:14b` | YES | **`contradicted`, cites `ds-2`** |
+| 2. Brindlewick | `qwen3:8b` | YES | `contradicted`, cites `am-1` |
+| 1. regressive | `qwen3:14b` | YES | `supported` |
+| 1. regressive | `qwen3:8b` | NO | `supported` |
+
+**14b is not suppressed.** Forced to cite, it names a passage as readily as 8b —
+and names a *different* one, `ds-2`, while its own reason says "the **rebuttal**
+explicitly argues…". It is citing a passage for a contradiction it located in a
+turn, which is the borrowed-citation problem again and confirms it is general
+rather than 8b-specific.
+
+So **making turns citable would not make 14b report contradictions**, and the ADR
+that hypothesis would have justified is not worth writing. OPEN-QUESTIONS 16's
+option 2 remains defensible on citation-honesty grounds; it is now known not to
+be a route to the gate.
+
+Three explanations for 14b's zero have now been ruled out cheaply — budget
+(byte-identically inert), passage adjacency, and citation strictness. What
+remains is something about producing a full ledger in the audit context, and that
+has not been tested.
+
 **What this does not establish.** A single pair in isolation is an easier task
 than producing a 20-claim ledger, and the two prompts are not the same prompt.
 Every cell here is one draw with load state uncontrolled across the probe, and the

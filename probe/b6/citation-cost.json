@@ -1,0 +1,34 @@
+{
+  "1_regressive_before_rebate": {
+    "claim": "A carbon tax is regressive before any rebate arrives",
+    "passage_id": "am-3",
+    "answers": {
+      "qwen3:14b": {
+        "no_citation_required": "YES",
+        "citation_required": "supported",
+        "text": "supported | am-3 | The passage explicitly states that a carbon tax is regressive before revenue is returned as a flat dividend, aligning with the assertion."
+      },
+      "qwen3:8b": {
+        "no_citation_required": "NO",
+        "citation_required": "supported",
+        "text": "supported | am-3 | The passage explicitly acknowledges that a carbon tax is regressive before revenue recycling, which aligns with the assertion."
+      }
+    }
+  },
+  "2_brindlewick_not_scalable": {
+    "claim": "Brindlewick's success is exceptional and not scalable",
+    "passage_id": "am-1",
+    "answers": {
+      "qwen3:14b": {
+        "no_citation_required": "YES",
+        "citation_required": "contradicted",
+        "text": "contradicted | ds-2 | The rebuttal explicitly argues that Brindlewick\u2019s success demonstrates the potential of a carbon tax when paired with federal design, directly countering the claim that it is not scalable."
+      },
+      "qwen3:8b": {
+        "no_citation_required": "YES",
+        "citation_required": "contradicted",
+        "text": "contradicted | am-1 | The passage am-1 directly cites Brindlewick's 14% emissions reduction as a real-world example of a carbon tax's effectiveness, contradicting the assertion that its success is exceptional and not scalable."
+      }
+    }
+  }
+}

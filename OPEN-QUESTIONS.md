@@ -386,6 +386,15 @@ Three ways out, none chosen:
    *argument* refutes another — which may be worth catching.
 2. **Let a turn be citable**, giving turns stable ids in the transcript so
    `evidence_ids` can name one. Touches ADR-005's shape and the score file.
+   **Measured 2026-09-16 and it is not a route to the gate.** The hypothesis was
+   that a model strict about citations sees a turn-driven contradiction, finds no
+   legal passage to cite, and falls back to `supported` — which would explain
+   `qwen3:14b`'s zero. Tested with the audit's citation constraint added
+   (`probe/b6/citation-cost.json`): 14b still answers `contradicted` and names a
+   passage, just a different one from 8b's, while its reason cites *the rebuttal*.
+   It is not suppressed. The option stays defensible for making citations
+   checkable, which is worth something on its own; it will not change what 14b
+   reports.
 3. **Distinguish the two in the verdict vocabulary** — e.g. `contradicted` for a
    passage and something else for a turn. Touches ADR-015 §2, ADR-019 and
    `VERDICTS`, and would be a `schema_version` question.
