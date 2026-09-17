@@ -31,6 +31,10 @@ class GenerationRequest:
     messages: tuple[Message, ...]
     max_completion_tokens: int  # the per-phase budget
     seed: int | None = None  # the run's seed, sent with every request (ADR-009)
+    # ADR-032 §1: a JSON schema the server should constrain the reply to. Only
+    # the judge sets it — a debate turn is prose. Unset means the request is
+    # byte-identical to what it was before this field existed.
+    response_schema: dict | None = None
 
 
 @dataclass(frozen=True)

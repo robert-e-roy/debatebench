@@ -66,6 +66,19 @@ class OpenAICompatibleBackend:
         }
         if request.seed is not None:
             body["seed"] = request.seed
+        if request.response_schema is not None:
+            # ADR-032: Ollama constrains decoding to this, so a markdown fence, a
+            # stray sentence or an off-enum value becomes unemittable rather than
+            # merely discouraged. A server that ignores the field is unaffected;
+            # mlx_lm is why this is opt-in (BACKEND-PROBE-RESULTS).
+            body["response_format"] = {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "debatebench_reply",
+                    "strict": True,
+                    "schema": request.response_schema,
+                },
+            }
         started = time.monotonic()
         try:
             response = await self._client.post(self._url, json=body)

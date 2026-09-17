@@ -62,6 +62,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_false",
         help="score only, skipping the second call",
     )
+    # ADR-032: off by default — mlx_lm does not honour response_format, and the
+    # ledger comparison in §5 has to be run before the default can move.
+    parser.add_argument(
+        "--strict-json",
+        dest="strict_json",
+        action="store_true",
+        default=None,
+        help="ask the server to constrain the reply to the schema (Ollama honours this)",
+    )
+    parser.add_argument(
+        "--no-strict-json", dest="strict_json", action="store_false",
+        help="let the model format the reply itself (the default)",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -79,6 +92,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         settings.fact_check,
         settings.timeout,
     )
+    args.strict_json = settings.strict_json
 
     if args.timeout < 1:
         _log(f"--timeout must be at least 1 second, got {args.timeout}")
@@ -110,6 +124,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 base_url=args.base_url,
                 fact_check=args.fact_check,
                 timeout=args.timeout,
+                strict_json=args.strict_json,
             )
         )
     except JudgeError as e:
@@ -166,6 +181,8 @@ def _settings(args: argparse.Namespace) -> tuple[Path, JudgeConfig]:
         budget=pick(args.budget, "budget", "--budget"),
         output=Path(pick(args.output, "output", "--output")).expanduser(),
         fact_check=_fact_check(args.fact_check, block),
+        strict_json=(args.strict_json if args.strict_json is not None
+                     else (block.strict_json if block is not None else False)),
         # ADR-025 §2: flag, else the block's, else the default. Unlike the four
         # above it is never required — a transcript run with no block still has one.
         timeout=args.timeout if args.timeout is not None

@@ -28,7 +28,8 @@ DEFAULT_LENGTH = "medium"  # what a bare non-prep entry asks for (ADR-022 §1)
 
 _RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output", "judge", "timeout"}
 _FORMAT_KEYS = {"phases"}
-_JUDGE_KEYS = {"transcript", "model", "base_url", "budget", "output", "fact_check", "timeout"}
+_JUDGE_KEYS = {"transcript", "model", "base_url", "budget", "output", "fact_check", "timeout",
+               "strict_json"}
 _SIDE_KEYS = {"team", "side", "model", "base_url", "budget", "prep_budget"}
 _TEAM_KEYS = {"id", "name", "voice", "stance", "values", "corpus"}
 
@@ -94,6 +95,9 @@ class JudgeConfig:
     output: Path
     fact_check: bool
     timeout: int  # seconds to wait for a reply; ADR-025, default 600
+    # ADR-032 §4: ask the server to constrain the reply to the schema. Off by
+    # default — not every backend honours response_format (BACKEND-PROBE-RESULTS).
+    strict_json: bool = False
 
 
 @dataclass(frozen=True)
@@ -241,6 +245,7 @@ def _judge(run_path: Path, data: dict[str, Any], transcript: Path) -> JudgeConfi
         budget=_int(run_path, block, "budget", "judge.budget", minimum=1),
         output=output,
         fact_check=_opt_bool(run_path, block, "fact_check", "judge.fact_check", default=True),
+        strict_json=_opt_bool(run_path, block, "strict_json", "judge.strict_json", default=False),
         timeout=_opt_int(run_path, block, "timeout", "judge.timeout", minimum=1)
         or DEFAULT_READ_TIMEOUT,
     )

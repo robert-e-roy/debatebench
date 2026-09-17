@@ -120,9 +120,10 @@ async def score_debate(
     model: str,
     budget: int,
     fact_check_enabled: bool = False,
+    strict_json: bool = False,
 ) -> ScoreSheet:
     """One backend call, both sides, five dimensions each (ADR-013 §2)."""
-    request = build_request(transcript, budget)
+    request = build_request(transcript, budget, strict_json=strict_json)
     try:
         result = await backend.generate(request)
     except BackendError as e:
@@ -183,7 +184,9 @@ def _dimension(side: SideScore, name: str) -> DimensionScore:
 # --- what the judge is asked ------------------------------------------------
 
 
-def build_request(transcript: Transcript, budget: int) -> GenerationRequest:
+def build_request(
+    transcript: Transcript, budget: int, *, strict_json: bool = False
+) -> GenerationRequest:
     """The one scoring call: the whole debate, both sides, one JSON object back."""
     lines = [
         "You are judging a formal debate against a fixed rubric. Score each side "
@@ -222,6 +225,7 @@ def build_request(transcript: Transcript, budget: int) -> GenerationRequest:
         max_completion_tokens=budget,
         # The debate's own seed, so re-judging one transcript is reproducible (ADR-017 §6).
         seed=transcript.run.seed,
+        response_schema=score_schema() if strict_json else None,
     )
 
 
@@ -239,6 +243,101 @@ _WIRE_SHAPE = """{
     { "side_index": 1, "...": "the same five dimensions" }
   ]
 }"""
+
+
+def score_schema() -> dict:
+    """The score reply, as a JSON schema (ADR-032 §3).
+
+    Names every dimension and constrains `hit_ledger[].status` to ADR-017 §3's
+    four values — the vocabulary `mistral-nemo` invented `partially rebutted`
+    for. `parse_reply` still checks all of this; the schema only stops the
+    sampler producing it (ADR-032 §6).
+    """
+    dimension = {
+        "type": "object",
+        "properties": {
+            "score": {"type": "integer"},
+            "justification": {"type": "string"},
+        },
+        "required": ["score", "justification"],
+        "additionalProperties": False,
+    }
+    rebuttal = {
+        "type": "object",
+        "properties": {
+            "score": {"type": "integer"},
+            "justification": {"type": "string"},
+            "hit_ledger": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "point": {"type": "string"},
+                        "status": {"type": "string", "enum": list(HIT_STATUSES)},
+                    },
+                    "required": ["point", "status"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+        "required": ["score", "justification", "hit_ledger"],
+        "additionalProperties": False,
+    }
+    side = {
+        "type": "object",
+        "properties": {
+            "side_index": {"type": "integer"},
+            **{name: dimension for name, _ in DIMENSIONS if name != "rebuttal_effectiveness"},
+            "rebuttal_effectiveness": rebuttal,
+        },
+        "required": ["side_index", *(name for name, _ in DIMENSIONS)],
+        "additionalProperties": False,
+    }
+    return {
+        "type": "object",
+        "properties": {"sides": {"type": "array", "items": side}},
+        "required": ["sides"],
+        "additionalProperties": False,
+    }
+
+
+def claims_schema(transcript: Transcript) -> dict:
+    """The claims reply, as a JSON schema closed over THIS transcript (ADR-032 §3).
+
+    `verdict` is ADR-015 §2's four values. `evidence_ids` is an enum of the ids
+    this transcript actually recorded — so `am-255`, which `phi4-mini` invented,
+    is not a token the sampler may emit. A whole class of validation error stops
+    being possible rather than being caught.
+    """
+    known = sorted(_evidence_ids(transcript))
+    # With no prep there is nothing to cite, and an empty enum is not a legal
+    # schema — so the array is simply constrained to be empty (ADR-015 §2's
+    # degradation path, where every verdict is not_checkable anyway).
+    ids = {"type": "array", "items": {"type": "string", "enum": known}} if known else {
+        "type": "array", "maxItems": 0, "items": {"type": "string"}
+    }
+    return {
+        "type": "object",
+        "properties": {
+            "claims": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "turn": {"type": "integer", "minimum": 1,
+                                 "maximum": max(len(transcript.turns), 1)},
+                        "claim": {"type": "string"},
+                        "verdict": {"type": "string", "enum": list(VERDICTS)},
+                        "evidence_ids": ids,
+                    },
+                    "required": ["turn", "claim", "verdict", "evidence_ids"],
+                    "additionalProperties": False,
+                },
+            }
+        },
+        "required": ["claims"],
+        "additionalProperties": False,
+    }
 
 
 def render(transcript: Transcript) -> str:
@@ -466,7 +565,9 @@ _NO_EVIDENCE_NOTE = (
 )
 
 
-async def fact_check_debate(transcript: Transcript, backend: Backend, *, budget: int) -> FactCheck:
+async def fact_check_debate(
+    transcript: Transcript, backend: Backend, *, budget: int, strict_json: bool = False
+) -> FactCheck:
     """The second call: each turn's factual claims, judged against the record (ADR-015 §3).
 
     Never against the model's own knowledge — that is used only to tell a factual
@@ -474,7 +575,7 @@ async def fact_check_debate(transcript: Transcript, backend: Backend, *, budget:
     claims listed, all ``not_checkable``, with a note saying why (ADR-015 §2).
     """
     known = _evidence_ids(transcript)
-    request = build_fact_check_request(transcript, budget)
+    request = build_fact_check_request(transcript, budget, strict_json=strict_json)
     try:
         result = await backend.generate(request)
     except BackendError as e:
@@ -495,7 +596,9 @@ async def fact_check_debate(transcript: Transcript, backend: Backend, *, budget:
     return FactCheck(CHECKED_AGAINST, claims)
 
 
-def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationRequest:
+def build_fact_check_request(
+    transcript: Transcript, budget: int, *, strict_json: bool = False
+) -> GenerationRequest:
     known = sorted(_evidence_ids(transcript))
     available = (
         f"The recorded passage ids you may cite: {', '.join(known)}."
@@ -561,6 +664,7 @@ def build_fact_check_request(transcript: Transcript, budget: int) -> GenerationR
         ),
         max_completion_tokens=budget,
         seed=transcript.run.seed,
+        response_schema=claims_schema(transcript) if strict_json else None,
     )
 
 
