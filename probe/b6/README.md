@@ -477,6 +477,43 @@ flip test is four cells. Pair 3 splits 2-2 and may well be a legitimate
 contradiction. None of this shows 14b is *right* to return zero — only that the
 reason it was called wrong does not hold up.
 
+## ADR-032: constrained decoding, and two families that produce all three clauses
+
+2026-09-17. Not a prompt change — a *grammar* change. The judge sends a JSON
+schema with the request and Ollama constrains decoding to it, so an off-enum
+verdict or a malformed object is unemittable rather than refused after the fact.
+
+Measured under ADR-026 §3's pre-registered shape, three judges x three
+transcripts both ways: **parse failures 5 of 9 → 0 of 9, and the ledgers grew
+rather than thinned** (15→16, 11→12, 9→12, 17→36). The trade that killed
+conditions B, C and ADR-030 — winning a metric by writing less — did not happen.
+
+**All four verdicts in one ledger:**
+
+| judge | unconstrained | constrained |
+|---|---|---|
+| `phi4:14b` | 0 of 1 | **3 of 3** |
+| `mistral-nemo:12b` | 0 of 0 | **2 of 3** |
+| `qwen3:8b` | 0 of 3 | **0 of 3** |
+
+So B6's three clauses *do* appear together, reliably, on two families — the thing
+this page recorded as never having happened. And **`qwen3:8b` still never emits
+`not_checkable` even when the grammar permits nothing else to be wrong**, which
+is the fourth independent channel agreeing that clause (3) is a property of that
+judge. Verdict-list order, user-turn framing, a required `factual` field, and now
+constrained decoding: four channels, four failures, one conclusion.
+
+**This does not make the verdicts right.** The isolation test above was run on
+`phi4:14b`'s cross-side contradictions and returned one confirmed by four models,
+one contested, one false positive. `phi4:14b` also marks more than half its
+claims `not_checkable` (24 of 44, 24 of 36) — plausibly a distortion mirroring
+`qwen3:8b`'s zero rather than a correction of it.
+
+**What it means for ADR-031.** That ADR closed B6 on "no judge tested produces
+all three clauses", and named a judge that does, with citations surviving
+isolation, as the reopening condition. Half of that is now met and half is not.
+The gate stays closed; the finding belongs here and in `MODEL-COVERAGE.md`.
+
 ## ADR-030: the schema attempt, and the third failure through a third channel
 
 `ADR-024 §2 as schema` — the option this page named as the one left — was built

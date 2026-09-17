@@ -430,6 +430,19 @@ the PRO's Brindlewick claim to the **CON**, because the CON restated it in
 order to rebut it. A side quoting its opponent to attack them is not
 asserting the thing.
 
+**Status 2026-09-17 — constrained decoding produces all three clauses on two
+other families, and confirms clause (3) is a `qwen3:8b` property.** ADR-032 lets
+the judge send a JSON schema; Ollama constrains decoding to it. Measured both
+ways on three judges x three transcripts: **parse failures 5 of 9 → 0 of 9 with
+the ledgers growing, not thinning**. Under constraint `phi4:14b` produced all
+four verdicts in 3 of 3 ledgers and `mistral-nemo` in 2 of 3, against 0 for both
+unconstrained — so the three clauses B6 asked for do co-occur, on families this
+project had never judged with. **`qwen3:8b` still never emits `not_checkable`,
+0 of 3 even constrained**, a fourth channel agreeing with the status below.
+The gate stays closed: ADR-031's reopening condition also requires citations that
+survive the isolation test, and `phi4:14b`'s came back one confirmed, one
+contested, one false positive. Full account in `probe/b6/README.md`.
+
 **Status 2026-09-16 (later) — clause (2)'s evidence is challenged, and the
 investigation meant to fix `qwen3:14b` ended by questioning `qwen3:8b`.** Two
 clean negatives first: 14b reproduces byte-for-byte a day on, and **budget is

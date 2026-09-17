@@ -279,6 +279,62 @@ ADR-019's precedence rule failing on a model ADR-019 was never measured on — a
 since 14b already has clause (3) in both states, it is the shortest remaining
 route to a passing gate.
 
+## Judges outside the qwen3 family, 2026-09-17
+
+Every judging result before this date came from `qwen3:8b` judging `qwen3`
+debaters — same family, which is the bias an LLM judge is most prone to. Four
+more judges were run against the same transcripts. **Each family broke a
+different part of the reply contract**, and none broke the same part twice:
+
+| judge | size | family | failure mode | usable |
+|---|---|---|---|---|
+| `qwen3:8b` | 8B | qwen3 | malformed JSON on richer debates (3 of 6) | mostly |
+| `gemma4:12b` | 11.9B | gemma4 | **32,076 chars of reasoning, no answer**, 14 min | **no** |
+| `phi4-mini` | 3.8B | phi3 | invents evidence ids (`am-255`, never recorded) | scores only |
+| `mistral-nemo:12b` | 12B | llama | invents hit-ledger statuses (`partially rebutted`) | 2 of 6 |
+| `phi4:14b` | 14.7B | phi3 | doubled quotes inside justifications (4 of 10) | best unconstrained |
+
+`gemma4`'s failure is **not** a grammar problem and `--strict-json` does not fix
+it: it never reaches an answer at all. That needs `reasoning_effort`, which is
+OPEN-QUESTIONS 13's unwired half.
+
+### `--strict-json` (ADR-032) changes this picture completely
+
+Constraining the reply to a JSON schema, measured across three judges and three
+transcripts both ways:
+
+- **parse failures 5 of 9 → 0 of 9**;
+- **ledgers grew rather than thinned** (15→16, 11→12, 9→12, 17→36);
+- **two families then produce all four verdicts in one ledger** — `phi4:14b`
+  3 of 3, `mistral-nemo` 2 of 3 — where unconstrained neither ever did.
+
+**`qwen3:8b` still never emits `not_checkable`, even constrained (0 of 3).** That
+is a fourth independent channel confirming ADR-031: clause (3) is a property of
+that model, not of the request.
+
+Labels appearing reliably is not labels being correct. An isolation test on
+`phi4:14b`'s cross-side contradictions found one confirmed by four models, one
+contested and one false positive; and `phi4:14b` marks over half its claims
+`not_checkable` (24 of 44), which may be a distortion in the other direction from
+`qwen3:8b`'s zero.
+
+### Ollama's context default is a bigger memory hazard than parameter count
+
+Measured on this machine (34.4 GB) while selecting judges:
+
+| model | file | trained context | resident |
+|---|---|---|---|
+| `mistral-nemo:12b` | 7.1 GB | **1,024,000** | **51.8 GB** |
+| `mistral-nemo:12b-8k` | 7.1 GB | 8,192 | 8.3 GB |
+| `qwen3:4b` | 2.5 GB | 262,144 | ~43 GB |
+| `qwen3:32b` | 20.2 GB | 40,960 | 24 GB |
+| `phi4:14b` | 9.1 GB | 16,384 | fits as shipped |
+
+A **7.1 GB model wanted 51.8 GB** — more than the 20 GB `qwen3:32b`. One
+`PARAMETER num_ctx` line takes it to 8.3 GB with identical weights. **Check
+`trained_ctx` before pulling a model into a memory-constrained comparison**; it
+varies by family and predicts footprint better than size does.
+
 ## The gaps, in the order they matter
 
 1. **No model produces all three fact-check clauses.** This is now B6's whole
