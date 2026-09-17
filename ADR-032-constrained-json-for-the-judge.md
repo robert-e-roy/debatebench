@@ -1,6 +1,7 @@
 # ADR-032: The Judge May Ask the Server to Constrain Its Reply to the Schema
 
-**Status:** Accepted
+**Status:** Accepted. **§5 measured 2026-09-17 — see "Measured" below.**
+The default stays off, for a reason §5 did not touch.
 **Date:** 2026-09-17
 **Depends on:** ADR-009 (the backend request type), ADR-017 §3 (the hit-ledger
 vocabulary), ADR-015 §2 (the four verdicts), ADR-018 (Ollama honours
@@ -129,6 +130,76 @@ often there is anything to fail about.
   `reasoning_effort`, which is OPEN-QUESTIONS 13's unwired half and not this ADR.
 - **A non-Ollama backend is unaffected** unless the flag is passed.
 - **OPEN-QUESTIONS 14 closes** once §5 is measured, whichever way it falls.
+
+## Measured, 2026-09-17 — §5's comparison
+
+Three judges x three transcripts, each run both ways. Two of the transcripts
+already worked unconstrained, so a regression on the working case would be
+visible rather than hidden behind a fix to the broken one.
+
+| judge | transcript | off | on |
+|---|---|---|---|
+| `phi4:14b` | healthcare 14b-pro | **FAILED** | 44 claims `8/9/3/24` |
+| `phi4:14b` | healthcare 0.6b-pro | **FAILED** | 21 claims `9/2/4/6` |
+| `phi4:14b` | medicaid 14b-pro | 17 claims `2/0/7/8` | 36 claims `4/3/5/24` |
+| `mistral-nemo` | healthcare 14b-pro | **FAILED** | 10 claims `4/3/1/2` |
+| `mistral-nemo` | healthcare 0.6b-pro | **FAILED** | 6 claims `3/1/0/2` |
+| `mistral-nemo` | medicaid 14b-pro | **FAILED** | 6 claims `2/1/2/1` |
+| `qwen3:8b` | healthcare 14b-pro | 15 claims `13/2/0/0` | 16 claims `14/2/0/0` |
+| `qwen3:8b` | healthcare 0.6b-pro | 11 claims `7/2/2/0` | 12 claims `9/3/0/0` |
+| `qwen3:8b` | medicaid 14b-pro | 9 claims `1/4/4/0` | 12 claims `4/4/4/0` |
+
+(counts are supported/contradicted/unsupported/not_checkable)
+
+**1. Parse-failure rate: 5 of 9 → 0 of 9.** Every failure was eliminated, across
+three families and three distinct failure modes.
+
+**2. The ledgers got bigger, not thinner** — which is the regression §5 existed
+to catch and it did not happen. Every directly comparable pair grew: 15→16,
+11→12, 9→12, 17→36. Constrained decoding did not buy parseability by writing
+less.
+
+**So §5 is satisfied on both criteria.** The quality question ADR-026 §3 raised
+is answered: this is a fix, not a trade.
+
+### The finding §5 did not go looking for
+
+**Under constraint, two families produce all four verdicts in one ledger,
+repeatedly:**
+
+| judge | strict off | strict on |
+|---|---|---|
+| `phi4:14b` | 0 of 1 | **3 of 3** |
+| `mistral-nemo` | 0 of 0 | **2 of 3** |
+| `qwen3:8b` | 0 of 3 | **0 of 3** |
+
+B6's gate asked for three clauses in one ledger and ADR-031 closed the session
+because nothing produced them. Two families now do, reliably.
+
+**And `qwen3:8b` still never emits `not_checkable` — 0 of 3 even constrained.**
+That is a fourth independent channel confirming ADR-031's conclusion: clause (3)
+is not reachable on that model by changing what we ask for. It is a property of
+the judge, and constraining the grammar does not touch it.
+
+**Not a claim that the verdicts are right.** The isolation test on `phi4:14b`'s
+earlier contradictions found one confirmed by four models, one contested, and one
+false positive. Labels appearing reliably is a different thing from labels being
+correct, and §5 measured only the former. Note also that `phi4:14b` marks more
+than half its claims `not_checkable` (24 of 44, 24 of 36), which may be its own
+distortion.
+
+### Why the default still does not move
+
+§4 gave two reasons. The second — "the measurement has not been run" — is now
+discharged. **The first stands untouched:** `mlx_lm.server` does not honour
+`response_format` (`BACKEND-PROBE-RESULTS`), and whether it *ignores* the field
+or *rejects* it has never been tested. Ignoring is harmless; rejecting would turn
+a working judge into a failing one for every AFM and `mlx_lm` user.
+
+So the default stays off, and the thing that would flip it is small and named:
+**send a constrained request to `fm serve` and to `mlx_lm.server` and record
+which of the two they do.** Until then `--strict-json` is strongly recommended
+for Ollama and silent for everyone else.
 
 ## Open questions this doesn't resolve
 

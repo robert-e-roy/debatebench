@@ -63,7 +63,14 @@ code. See ADR-002 for full scope.
   here; a bad release is yanked and superseded, never re-uploaded, because PyPI
   forbids reusing a version; `0.1.0` claims the commands and the three file
   formats are stable within 0.1.x, **not** that B6's gate is met) — accepted;
-  together they are the spec. **`ADR-031`** (B6 closes on a re-specified gate:
+  together they are the spec. **`ADR-032`** (the judge may send a JSON schema as
+  `response_format`, constraining the reply: `GenerationRequest` gains an
+  optional `response_schema`, the schemas are built from the transcript so
+  `evidence_ids` is an enum of ids it actually recorded, and `--strict-json`
+  is opt-in. **Measured: parse failures 5/9 → 0/9 with ledgers growing not
+  thinning**, which resolves OPEN-QUESTIONS 14's last option. Two families then
+  produce all four verdicts in one ledger — and `qwen3:8b` still never emits
+  `not_checkable`, a fourth channel confirming ADR-031). **`ADR-031`** (B6 closes on a re-specified gate:
   one testable condition — a well-formed, structurally checkable ledger — with
   verdict *accuracy* moved to the validation track under OPEN-QUESTIONS 6, and
   the old three-clause conjunction retired along with both its protocols; §4

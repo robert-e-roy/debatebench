@@ -340,6 +340,14 @@ shape specified in ADR-026 §3 — compare the parse-failure rate **and the ledg
 themselves**, since constrained decoding can change what a model writes, not
 merely whether it parses.
 
+**RESOLVED 2026-09-17 by ADR-032, and this item now closes.** Option 4 was
+implemented and measured exactly as specified. Three judges x three transcripts,
+both ways: **parse failures 5 of 9 → 0 of 9**, and the ledgers **grew** rather
+than thinned (15→16, 11→12, 9→12, 17→36), so the trade ADR-026 §3 warned about
+did not occur. `--strict-json` is opt-in; the default stays off only because
+`mlx_lm` does not honour `response_format` and nobody has tested whether it
+ignores or rejects it (ADR-032, "Why the default still does not move").
+
 ### 15. The public API's six exceptions have no common base
 
 **Blocks:** nothing. Raised by ADR-028, which created the surface that makes it
