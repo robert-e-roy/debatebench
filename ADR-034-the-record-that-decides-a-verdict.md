@@ -128,6 +128,52 @@ since ADR-002, in a vocabulary chosen for it.
 - **Measured before believed**, per this project's standing practice: the
   artifacts are committed before any verdict is written into this ADR.
 
+## Measured 2026-09-18 — the effect lands, one prediction was wrong, one cost is unexplained
+
+`qwen3:8b`, four transcripts, cold, `--strict-json` on **both** arms so the only
+difference is this ADR's prompt. (A first comparison used the pre-ADR-032 scores
+and was discarded: those are unconstrained, which would have confounded two
+changes at once.)
+
+| | broad (ADR-015 §2) | narrow (ADR-034) | |
+|---|---|---|---|
+| **contradicted** | 9 | **2** | **−7** |
+| unsupported | 4 | 4 | 0 |
+| supported | 27 | 24 | −3 |
+| **total claims** | 40 | **30** | **−10 (−25%)** |
+
+**The intended effect landed.** Seven of nine `contradicted` verdicts
+disappeared — the turn-driven ones this ADR exists to remove, and the ones the
+isolation test had already shown were not contradictions of fact.
+
+**The prediction in "Consequences" was wrong.** It said to expect *more*
+`unsupported`. `unsupported` did not move at all. A claim whose only opposition
+was an opposing turn did not become "factual, no passage bears on it" — it left
+the ledger.
+
+**And the ledger shrank 25%, which is unexplained.** That is the shape that
+falsified conditions B, C and ADR-030: winning a metric by writing less. Two
+things stop it being a straight regression, and neither excuses it:
+
+- The verdicts removed were **demonstrably wrong** on independent evidence,
+  which was never true of B, C or ADR-030.
+- **Claim-level tracing across runs is unreliable**, discovered here: the judge
+  paraphrases the same assertion differently between runs — "undermines care
+  quality by overburdening providers" one run, "would overwhelm providers,
+  degrade care quality" the next. So a before/after diff of claim *texts* cannot
+  distinguish "dropped" from "reworded", and only the counts are trustworthy.
+
+**§1 stands; the wording that implements it is suspect.** The decision is about
+what may justify a verdict and nothing measured bears on whether it is right.
+But this prompt states the restriction three times over, emphatically — and
+conditions B and C also added emphasis and also shrank ledgers. The next thing
+to try is stating the rule **once**, plainly, and measuring the same comparison:
+if `contradicted` stays near 2 while the ledger returns toward 40, the shrinkage
+was tone rather than substance.
+
+Recorded rather than reverted, because the effect it was built for is real and
+the cost is a suspicion about phrasing, not about the decision.
+
 ## Open questions this doesn't resolve
 
 - Whether `rebuttal_effectiveness`'s hit ledger is *good* at what it is now

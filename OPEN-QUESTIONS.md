@@ -470,6 +470,12 @@ mechanisms doing one job.
 Option 2 stays measured-and-rejected as a route to the gate. Option 3 is
 unnecessary once the fact-check is evidence-only.
 
+**Measured**: `contradicted` fell 9 → 2 across three transcripts with the
+prompt as the only variable — the intended effect. But `unsupported` did not
+rise as predicted, and the ledger shrank 25%, which is unexplained and is the
+shape that falsified three earlier changes. ADR-034's decision stands; its
+prompt *wording* is suspect and a lighter phrasing is the named next test.
+
 **B6 clause (2)'s "met and reproducible" status is withdrawn** for the saved gate
 transcript, not merely unsettled: under ADR-034 a `contradicted` whose cited
 passage does not contradict the claim is simply wrong, and two of `qwen3:8b`'s
