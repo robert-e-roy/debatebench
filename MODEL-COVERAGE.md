@@ -335,6 +335,54 @@ A **7.1 GB model wanted 51.8 GB** — more than the 20 GB `qwen3:32b`. One
 `trained_ctx` before pulling a model into a memory-constrained comparison**; it
 varies by family and predicts footprint better than size does.
 
+## Purpose-built judges exist, and run locally as GGUF
+
+Ollama runs GGUF straight from Hugging Face (`ollama pull hf.co/{repo}`), which
+reaches a much larger pool than its own library — including models **trained to
+be judges** rather than general instruct models:
+
+| model | base | licence | note |
+|---|---|---|---|
+| **`AtlaAI/Selene-1-Mini-Llama-3.1-8B-Q4_K_M-GGUF`** | Llama-3.1-8B | llama3.1 | **tested, below** — also the only Llama-family model this project has run |
+| `prometheus-eval/prometheus-7b-v2.0-GGUF` | Mistral-7B | apache-2.0 | rubric-and-reference evaluator; untested |
+| `flowaicom/Flow-Judge-v0.1-GGUF` | Phi-3.5-mini | apache-2.0 | untested; same family as phi4-mini, so a controlled judge-tuned-vs-not comparison |
+| `mradermacher/Selene-1-Llama-3.3-70B-i1-GGUF` | Llama-3.3-70B | — | too large for this machine |
+
+### Selene-1-Mini, measured 2026-09-18
+
+**The context hazard, a fourth time:** `trained_ctx` is 131,072 and the 4.9 GB
+model sat at **22.5 GB resident**. Capped to 16k (`selene:8b-16k`) it is 7.3 GB.
+Checking `trained_ctx` before use has now paid for itself four times.
+
+No reasoning tax (0 chars thinking, 1.5 s). It **scores** cleanly and is the most
+*discriminating* judge tested that does not look broken — it separated the two
+sides on `argument_quality` 24 vs 17 and `steelman_fidelity` 19 vs 12, where
+`qwen3:8b` compresses everything near the top.
+
+**But it fails the fact-check with a sixth distinct failure mode**, and this one
+is outside ADR-032's reach: `claims[0] is supported but cites no passage`. That
+is a **semantic** violation — a cross-field rule ("supported implies a citation")
+that JSON Schema can only express with conditionals, which llama.cpp's
+constrained decoding does not enforce. Constrained decoding closed four failure
+modes; it cannot close this one, and `_evidence_citations` catching it is
+ADR-032 §6 earning its keep.
+
+### Four families agree on the winner and disagree wildly on the margin
+
+Same transcript, `healthcare-14b-pro`, 14b pro against 0.6b con:
+
+| judge | family | pro | con | gap |
+|---|---|---|---|---|
+| `qwen3:8b` | qwen3 | 91 | 86 | **+5** |
+| `phi4-mini` | phi3 | 80 | 76 | **+4** |
+| `selene:8b-16k` | llama3.1 | 83 | 63 | **+20** |
+| `gemma4:12b` | gemma4 | 93 | 44 | **+49** |
+
+**Every judge picks the same winner; the margin ranges from +4 to +49.** So an
+ordering is worth quoting and a *margin* is not — it is a statement about the
+judge. This is `JUDGE-VALIDATION`'s "only its ordering passes" generalising to
+every judge here, and it is the single most reusable result on this page.
+
 ## Families worth testing next, and what to check before pulling one
 
 Five families have been run here (`qwen3`, `qwen3.5`, `gemma4`, `phi3` via
