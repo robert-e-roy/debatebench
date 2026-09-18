@@ -76,6 +76,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         "--no-strict-json", dest="strict_json", action="store_false",
         help="let the model format the reply itself, unconstrained",
     )
+    # ADR-033: opt-in, because AFM returns HTTP 400 on the field this sends.
+    parser.add_argument(
+        "--no-thinking", dest="thinking", action="store_false", default=None,
+        help="ask the judge not to think, so the budget buys an answer "
+             "(Ollama and mlx_lm; NOT AFM, which rejects it)",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -94,6 +100,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         settings.timeout,
     )
     args.strict_json = settings.strict_json
+    args.thinking = settings.thinking
 
     if args.timeout < 1:
         _log(f"--timeout must be at least 1 second, got {args.timeout}")
@@ -126,6 +133,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 fact_check=args.fact_check,
                 timeout=args.timeout,
                 strict_json=args.strict_json,
+                thinking=args.thinking,
             )
         )
     except JudgeError as e:
@@ -184,6 +192,8 @@ def _settings(args: argparse.Namespace) -> tuple[Path, JudgeConfig]:
         fact_check=_fact_check(args.fact_check, block),
         strict_json=(args.strict_json if args.strict_json is not None
                      else (block.strict_json if block is not None else True)),
+        thinking=(args.thinking if args.thinking is not None
+                  else (block.thinking if block is not None else True)),
         # ADR-025 §2: flag, else the block's, else the default. Unlike the four
         # above it is never required — a transcript run with no block still has one.
         timeout=args.timeout if args.timeout is not None

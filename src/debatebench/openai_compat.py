@@ -79,6 +79,15 @@ class OpenAICompatibleBackend:
                     "schema": request.response_schema,
                 },
             }
+        if not request.thinking:
+            # ADR-033 §2: no single field works everywhere, the same problem
+            # ADR-018 §4 solved for budgets. Ollama reads reasoning_effort and
+            # ignores the other; mlx_lm reads chat_template_kwargs and ignores
+            # this one. Measured 2026-09-18, both ways, on both servers.
+            # AFM rejects reasoning_effort outright, which is why ADR-033 §3
+            # makes this opt-in where ADR-032 could default its field on.
+            body["reasoning_effort"] = "none"
+            body["chat_template_kwargs"] = {"enable_thinking": False}
         started = time.monotonic()
         try:
             response = await self._client.post(self._url, json=body)

@@ -59,6 +59,7 @@ def build_request(
         ),
         max_completion_tokens=side.budget,
         seed=seed,
+        thinking=side.thinking,   # ADR-033, per side
     )
 
 

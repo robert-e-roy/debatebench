@@ -121,9 +121,10 @@ async def score_debate(
     budget: int,
     fact_check_enabled: bool = False,
     strict_json: bool = True,
+    thinking: bool = True,
 ) -> ScoreSheet:
     """One backend call, both sides, five dimensions each (ADR-013 §2)."""
-    request = build_request(transcript, budget, strict_json=strict_json)
+    request = build_request(transcript, budget, strict_json=strict_json, thinking=thinking)
     try:
         result = await backend.generate(request)
     except BackendError as e:
@@ -185,7 +186,7 @@ def _dimension(side: SideScore, name: str) -> DimensionScore:
 
 
 def build_request(
-    transcript: Transcript, budget: int, *, strict_json: bool = True
+    transcript: Transcript, budget: int, *, strict_json: bool = True, thinking: bool = True
 ) -> GenerationRequest:
     """The one scoring call: the whole debate, both sides, one JSON object back."""
     lines = [
@@ -226,6 +227,7 @@ def build_request(
         # The debate's own seed, so re-judging one transcript is reproducible (ADR-017 §6).
         seed=transcript.run.seed,
         response_schema=score_schema() if strict_json else None,
+        thinking=thinking,
     )
 
 
@@ -566,7 +568,8 @@ _NO_EVIDENCE_NOTE = (
 
 
 async def fact_check_debate(
-    transcript: Transcript, backend: Backend, *, budget: int, strict_json: bool = True
+    transcript: Transcript, backend: Backend, *, budget: int, strict_json: bool = True,
+    thinking: bool = True
 ) -> FactCheck:
     """The second call: each turn's factual claims, judged against the record (ADR-015 §3).
 
@@ -575,7 +578,8 @@ async def fact_check_debate(
     claims listed, all ``not_checkable``, with a note saying why (ADR-015 §2).
     """
     known = _evidence_ids(transcript)
-    request = build_fact_check_request(transcript, budget, strict_json=strict_json)
+    request = build_fact_check_request(transcript, budget, strict_json=strict_json,
+                                       thinking=thinking)
     try:
         result = await backend.generate(request)
     except BackendError as e:
@@ -597,7 +601,7 @@ async def fact_check_debate(
 
 
 def build_fact_check_request(
-    transcript: Transcript, budget: int, *, strict_json: bool = True
+    transcript: Transcript, budget: int, *, strict_json: bool = True, thinking: bool = True
 ) -> GenerationRequest:
     known = sorted(_evidence_ids(transcript))
     available = (
@@ -665,6 +669,7 @@ def build_fact_check_request(
         max_completion_tokens=budget,
         seed=transcript.run.seed,
         response_schema=claims_schema(transcript) if strict_json else None,
+        thinking=thinking,
     )
 
 

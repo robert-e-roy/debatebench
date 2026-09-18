@@ -178,6 +178,7 @@ async def judge(
     backend: Backend | None = None,
     fact_check: bool = True,
     strict_json: bool = True,
+    thinking: bool = True,
     timeout: int | None = None,
 ) -> ScoreSheet:
     """Score a transcript, and audit its claims unless ``fact_check=False``.
@@ -209,7 +210,8 @@ async def judge(
                 "your backend brings its own. Set the timeout on that backend instead"
             )
         return await _score(transcript, backend, model=model, budget=budget,
-                            fact_check=fact_check, strict_json=strict_json)
+                            fact_check=fact_check, strict_json=strict_json,
+                            thinking=thinking)
     if base_url is None:
         raise ValueError(
             "judge() has nowhere to send the call: pass base_url= to use the built-in "
@@ -219,22 +221,23 @@ async def judge(
     async with open_client(DEFAULT_READ_TIMEOUT if timeout is None else timeout) as client:
         adapter = OpenAICompatibleBackend(client, base_url, model)
         return await _score(transcript, adapter, model=model, budget=budget,
-                            fact_check=fact_check, strict_json=strict_json)
+                            fact_check=fact_check, strict_json=strict_json,
+                            thinking=thinking)
 
 
 async def _score(
     transcript: Transcript, backend: Backend, *, model: str, budget: int,
-    fact_check: bool, strict_json: bool = True
+    fact_check: bool, strict_json: bool = True, thinking: bool = True
 ) -> ScoreSheet:
     """The scoring call, then the fact-check call when it's on (ADR-015 §3)."""
     sheet = await _score_debate(
         transcript, backend, model=model, budget=budget, fact_check_enabled=fact_check,
-        strict_json=strict_json,
+        strict_json=strict_json, thinking=thinking,
     )
     if not fact_check:
         return sheet
     checked = await _fact_check_debate(transcript, backend, budget=budget,
-                                       strict_json=strict_json)
+                                       strict_json=strict_json, thinking=thinking)
     return _replace(sheet, fact_check=checked)
 
 

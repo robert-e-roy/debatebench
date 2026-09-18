@@ -35,6 +35,10 @@ class GenerationRequest:
     # the judge sets it — a debate turn is prose. Unset means the request is
     # byte-identical to what it was before this field existed.
     response_schema: dict | None = None
+    # ADR-033: False asks the model not to think. Default True keeps every
+    # existing request byte-identical — and AFM returns HTTP 400 on the field
+    # this sends, so it must never be on by default.
+    thinking: bool = True
 
 
 @dataclass(frozen=True)

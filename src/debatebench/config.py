@@ -29,8 +29,8 @@ DEFAULT_LENGTH = "medium"  # what a bare non-prep entry asks for (ADR-022 §1)
 _RUN_KEYS = {"topic", "format", "teams", "sources", "seed", "output", "judge", "timeout"}
 _FORMAT_KEYS = {"phases"}
 _JUDGE_KEYS = {"transcript", "model", "base_url", "budget", "output", "fact_check", "timeout",
-               "strict_json"}
-_SIDE_KEYS = {"team", "side", "model", "base_url", "budget", "prep_budget"}
+               "strict_json", "thinking"}
+_SIDE_KEYS = {"team", "side", "model", "base_url", "budget", "prep_budget", "thinking"}
 _TEAM_KEYS = {"id", "name", "voice", "stance", "values", "corpus"}
 
 # Keys ADR-007 removed, with what replaced them. ADR-020 gave judge: back a
@@ -82,6 +82,10 @@ class Side:
     base_url: str
     budget: int
     prep_budget: int | None  # set exactly when phases include prep (ADR-007 §2)
+    # ADR-033: False asks this side's model not to think, so its budget buys
+    # argument rather than monologue. Never set it on an AFM side — AFM returns
+    # HTTP 400 on the field it sends (ADR-033 §3).
+    thinking: bool = True
 
 
 @dataclass(frozen=True)
@@ -98,6 +102,8 @@ class JudgeConfig:
     # ADR-032, amended 2026-09-18: ON by default. AFM and Ollama both honour
     # response_format; mlx_lm accepts and ignores it. No tested server rejects it.
     strict_json: bool = True
+    # ADR-033; see Side.thinking. gemma4:12b needs this to answer at all.
+    thinking: bool = True
 
 
 @dataclass(frozen=True)
@@ -246,6 +252,7 @@ def _judge(run_path: Path, data: dict[str, Any], transcript: Path) -> JudgeConfi
         output=output,
         fact_check=_opt_bool(run_path, block, "fact_check", "judge.fact_check", default=True),
         strict_json=_opt_bool(run_path, block, "strict_json", "judge.strict_json", default=True),
+        thinking=_opt_bool(run_path, block, "thinking", "judge.thinking", default=True),
         timeout=_opt_int(run_path, block, "timeout", "judge.timeout", minimum=1)
         or DEFAULT_READ_TIMEOUT,
     )
@@ -368,6 +375,7 @@ def _side(run_path: Path, entry: Any, index: int, has_prep: bool) -> Side:
         base_url=base_url,
         budget=budget,
         prep_budget=prep_budget,
+        thinking=_opt_bool(run_path, entry, "thinking", f"{where}.thinking", default=True),
     )
 
 
