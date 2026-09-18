@@ -335,6 +335,45 @@ A **7.1 GB model wanted 51.8 GB** — more than the 20 GB `qwen3:32b`. One
 `trained_ctx` before pulling a model into a memory-constrained comparison**; it
 varies by family and predicts footprint better than size does.
 
+## Families worth testing next, and what to check before pulling one
+
+Five families have been run here (`qwen3`, `qwen3.5`, `gemma4`, `phi3` via
+phi4-mini and phi4:14b, and `llama` via mistral-nemo). **Notably absent: Meta's
+own Llama**, the most widely used open family, which nothing here has ever
+touched.
+
+Selection criteria, learned the hard way this week rather than assumed:
+
+1. **Reasoning or not.** A reasoning model spends `budget` on thinking, which is
+   OPEN-QUESTIONS 13. `thinking: false` (ADR-033) now fixes it on Ollama and
+   `mlx_lm` — but **not on AFM, which rejects the field** — so a non-reasoning
+   model is still the simpler citizen.
+2. **`trained_ctx`, checked before pulling.** This predicted memory footprint
+   better than parameter count did: `mistral-nemo` is a 7.1 GB model that wanted
+   **51.8 GB** resident. Check it, and cap with `num_ctx` if it is large.
+3. **Structured-output reliability** matters much less since ADR-032 — constrained
+   decoding took parse failures from 5 of 9 to 0 of 9 — but a model that needed
+   constraining to be usable is worth noting as such.
+4. **Lineage distance from the debaters**, which is the whole point of a
+   cross-family judge.
+
+| candidate | size | why it is interesting | notes |
+|---|---|---|---|
+| **`llama3.1:8b`** | 4.9 GB | **The biggest gap.** Meta's family is untested here and is the most widely deployed open model; non-reasoning | start here |
+| `gemma2:9b` | 5.4 GB | Google's **pre-reasoning** generation — controls generation *within* a vendor, the way `qwen3:4b` vs `qwen3.5:4b` did | pairs with `gemma4:12b` |
+| `granite3.3:8b` | 4.9 GB | IBM, explicitly tuned for enterprise structured output | may be the most schema-reliable |
+| `command-r:35b` | 18.7 GB | Cohere, **trained for grounded RAG with citations** — which is exactly what the fact-check pass does | large; check memory |
+| `olmo2:13b` | 8.4 GB | AI2, fully open training data — a genuinely different data distribution | |
+| `mistral-small:24b` | 14.3 GB | Mistral proper, where `mistral-nemo` is an NVIDIA collaboration | |
+| `deepseek-r1:14b` | 9.0 GB | Reasoning-first; was removed for disk earlier, and ADR-033 now makes it testable | reasoning |
+
+**The two most valuable, for different reasons:** `llama3.1:8b` because its
+absence is the largest hole in the cross-family evidence, and `command-r:35b`
+because it is the only candidate specifically trained for the thing the
+fact-check is bad at — grounding a claim in a cited passage. That would test
+whether OPEN-QUESTIONS 16's borrowed-citation problem is a general LLM failing
+or a property of models not trained for it.
+
 ## The gaps, in the order they matter
 
 1. **No model produces all three fact-check clauses.** This is now B6's whole
