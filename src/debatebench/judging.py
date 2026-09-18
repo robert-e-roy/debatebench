@@ -619,10 +619,18 @@ def build_fact_check_request(
         "assertion that turns out not to be factual is still listed, and its verdict "
         "is not_checkable.",
         "",
-        "Judge each assertion ONLY against what the transcript records: the passages "
-        "each side retrieved, and what either side said. Never treat your own "
-        "knowledge as proof that a claim is true or false; use it only to tell a "
-        "factual claim from an opinion.",
+        # ADR-034 §1-2: turns tell you what the claim IS; passages decide the
+        # verdict. Admitting a turn as grounds for `contradicted` makes the
+        # verdict vacuous — in an adversarial debate the opponent always argued
+        # against it — and produces a citation nobody can check, because only
+        # passages have ids. Argument-versus-argument lives in the hit ledger.
+        "A VERDICT IS DECIDED ONLY BY THE RETRIEVED PASSAGES. Read the turns to "
+        "understand what each side is claiming, but a claim counts as supported or "
+        "contradicted only when a listed PASSAGE backs or contradicts it. That the "
+        "opposing side argued against a claim is not a contradiction — in a debate "
+        "both sides always argue against each other, so it tells you nothing. Never "
+        "treat your own knowledge as proof that a claim is true or false; use it "
+        "only to tell a factual claim from an opinion.",
         "",
         "Before settling on any verdict, read every listed passage from BOTH sides. A "
         "claim one side makes is often contradicted by a passage the other side "
@@ -641,10 +649,13 @@ def build_fact_check_request(
         # comparison are in probe/b6/README.md. This is the baseline order.
         "- supported: a recorded passage backs the claim AND no recorded passage "
         "contradicts it. Cite the backing id.",
-        "- contradicted: a recorded passage contradicts it, including one the "
-        "opponent retrieved. Cite the contradicting id, not the backing one.",
-        "- unsupported: it is a factual claim, but nothing recorded bears on it "
-        "either way. Cite nothing.",
+        "- contradicted: a recorded PASSAGE contradicts it, including one the "
+        "opponent retrieved. Cite the contradicting id, not the backing one. The "
+        "cited passage must be the one that contradicts the claim — not merely a "
+        "passage on the same subject.",
+        "- unsupported: it is a factual claim, but no PASSAGE bears on it either "
+        "way. A claim the other side merely argued against, with no passage "
+        "against it, is unsupported — not contradicted. Cite nothing.",
         "- not_checkable: an opinion, a prediction or a value judgement rather than a "
         "factual claim. Cite nothing.",
         "",

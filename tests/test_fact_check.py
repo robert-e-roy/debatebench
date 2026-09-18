@@ -248,3 +248,59 @@ def test_a_note_is_written_when_there_was_nothing_to_check(run_dir: Path):
     document = json.loads(output.read_text(encoding="utf-8"))
 
     assert document["fact_check"]["note"] == "nothing recorded"
+
+
+# --- ADR-034: passages decide the verdict, turns are context ------------------
+
+
+def test_the_prompt_says_passages_decide_the_verdict(run_dir: Path, prepared_sources):
+    """ADR-034 §1. Only passages have ids, so only a passage yields a citation a
+    reader can check."""
+    _, transcript, _ = prep_debate(run_dir)
+    system = build_fact_check_request(transcript, budget=4000).messages[0].content
+    assert "A VERDICT IS DECIDED ONLY BY THE RETRIEVED PASSAGES" in system
+
+
+def test_the_prompt_says_an_opposing_argument_is_not_a_contradiction(
+    run_dir: Path, prepared_sources
+):
+    """The argument that decides ADR-034.
+
+    In an adversarial debate the opponent always argued against the claim, so
+    admitting a turn as grounds makes `contradicted` vacuous — every assertion
+    on a contested motion would earn it.
+    """
+    _, transcript, _ = prep_debate(run_dir)
+    system = build_fact_check_request(transcript, budget=4000).messages[0].content
+    assert "is not a contradiction" in system
+    assert "both sides always argue against each other" in system
+
+
+def test_unsupported_is_named_as_the_verdict_for_an_argued_against_claim(
+    run_dir: Path, prepared_sources
+):
+    # ADR-034 §1: the direction the change is expected to move verdicts.
+    _, transcript, _ = prep_debate(run_dir)
+    system = build_fact_check_request(transcript, budget=4000).messages[0].content
+    assert "unsupported — not contradicted" in system
+
+
+def test_turns_are_still_read(run_dir: Path, prepared_sources):
+    """ADR-034 §2: a narrowing of what may JUSTIFY a verdict, not of what is read.
+
+    The judge still needs every turn to know what a claim means and which turn
+    made it.
+    """
+    _, transcript, _ = prep_debate(run_dir)
+    request = build_fact_check_request(transcript, budget=4000)
+    rendered = request.messages[1].content
+    for turn in transcript.turns:
+        if turn.text.strip():
+            assert turn.text.strip()[:40] in rendered
+
+
+def test_adr_019_precedence_survives(run_dir: Path, prepared_sources):
+    # ADR-034 narrows the range ADR-019 operates over; it does not touch the rule.
+    _, transcript, _ = prep_debate(run_dir)
+    system = build_fact_check_request(transcript, budget=4000).messages[0].content
+    assert "CONTRADICTION WINS" in system

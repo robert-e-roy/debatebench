@@ -453,9 +453,28 @@ Three ways out, none chosen:
    passage and something else for a turn. Touches ADR-015 §2, ADR-019 and
    `VERDICTS`, and would be a `schema_version` question.
 
-Whichever is chosen, **B6 clause (2)'s "met and reproducible" status
-(2026-09-14) rests on evidence that does not demonstrate the clause as written**,
-and should be treated as unsettled until this is decided.
+**RESOLVED 2026-09-18 by ADR-034 — option 1, and this item closes.** A verdict
+is decided against the retrieved passages; turns remain context the judge reads
+but not grounds for a verdict.
+
+Two arguments settled it, neither of which was in the three options above.
+**In an adversarial debate "the opponent's turn contradicts this" is true by
+construction** — the tool exists to produce opposing turns — so admitting turns
+makes `contradicted` vacuous on any contested motion, which is exactly why the
+isolation test rejected those verdicts. And **what narrowing would lose already
+has a better home**: ADR-002's structured hit ledger
+(`open`/`conceded`/`rebutted`/`dodged`) has recorded argument-versus-argument
+engagement since the beginning, inside `rebuttal_effectiveness`. Item 16 was two
+mechanisms doing one job.
+
+Option 2 stays measured-and-rejected as a route to the gate. Option 3 is
+unnecessary once the fact-check is evidence-only.
+
+**B6 clause (2)'s "met and reproducible" status is withdrawn** for the saved gate
+transcript, not merely unsettled: under ADR-034 a `contradicted` whose cited
+passage does not contradict the claim is simply wrong, and two of `qwen3:8b`'s
+three fail that check. This does not reopen B6 — ADR-031 already stopped claiming
+the verdicts are correct.
 
 ## Recorded elsewhere — index
 

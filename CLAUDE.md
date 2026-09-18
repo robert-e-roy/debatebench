@@ -63,7 +63,17 @@ code. See ADR-002 for full scope.
   here; a bad release is yanked and superseded, never re-uploaded, because PyPI
   forbids reusing a version; `0.1.0` claims the commands and the three file
   formats are stable within 0.1.x, **not** that B6's gate is met) — accepted;
-  together they are the spec. **`ADR-032`** (the judge may send a JSON schema as
+  together they are the spec. **`ADR-034`** (a verdict is decided against the
+  retrieved **passages**; turns are context the judge reads but not grounds for a
+  verdict — because in an adversarial debate "the opponent argued against it" is
+  true by construction and so vacuous, and because argument-versus-argument
+  already lives in ADR-002's hit ledger. Amends ADR-015 §2's "and what either
+  side said" for verdict-deciding only; no `schema_version` change; resolves
+  OPEN-QUESTIONS 16 and withdraws B6 clause (2)'s "met" status on the saved gate
+  transcript). **`ADR-033`** (`thinking: false` sends both `reasoning_effort:
+  none` and `chat_template_kwargs`, opt-in because **AFM returns HTTP 400** on
+  the first — measured; recovers `gemma4:12b`, which previously produced 32,076
+  characters of reasoning and no answer). **`ADR-032`** (the judge may send a JSON schema as
   `response_format`, constraining the reply: `GenerationRequest` gains an
   optional `response_schema`, the schemas are built from the transcript so
   `evidence_ids` is an enum of ids it actually recorded, and `--strict-json`
