@@ -367,13 +367,13 @@ model's own knowledge of the world. Verdicts are `supported`, `contradicted`,
 > contradictions on that transcript. Treat `contradicted` as "the record
 > somewhere opposes this", not as "this passage refutes it".
 >
-> **`--strict-json` helps a lot, on Ollama.** It asks the server to constrain the
-> reply to the expected schema, so a markdown fence, malformed JSON, an invented
-> verdict or a citation to a passage that does not exist all become unemittable
-> rather than merely refused. Measured across three judges and three
-> transcripts: **parse failures fell from 5 of 9 to 0 of 9, and the ledgers got
-> bigger rather than thinner.** It is off by default only because `mlx_lm` does
-> not honour `response_format`; if you are on Ollama, use it.
+> **The reply is schema-constrained by default.** `judge` asks the server to
+> constrain its reply, so a markdown fence, malformed JSON, an invented verdict
+> or a citation to a passage that does not exist become unemittable rather than
+> merely refused. Measured across three judges and three transcripts: **parse
+> failures fell from 5 of 9 to 0 of 9, and the ledgers got bigger rather than
+> thinner.** Ollama and Apple Foundation Models both honour it; `mlx_lm` accepts
+> and ignores it; no tested server rejects it. `--no-strict-json` turns it off.
 >
 > `supported` verdicts, which cite the claimant's own passage, have been the
 > most reliable in practice. `--no-fact-check` skips the second call entirely.

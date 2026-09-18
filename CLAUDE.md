@@ -67,8 +67,9 @@ code. See ADR-002 for full scope.
   `response_format`, constraining the reply: `GenerationRequest` gains an
   optional `response_schema`, the schemas are built from the transcript so
   `evidence_ids` is an enum of ids it actually recorded, and `--strict-json`
-  is opt-in. **Measured: parse failures 5/9 → 0/9 with ledgers growing not
-  thinning**, which resolves OPEN-QUESTIONS 14's last option. Two families then
+  defaults **on** since 2026-09-18. **Measured: parse failures 5/9 → 0/9 with
+  ledgers growing not thinning**, and a backend probe found AFM *honours* the
+  field, `mlx_lm` accepts and ignores it, nothing rejects it, which resolves OPEN-QUESTIONS 14's last option. Two families then
   produce all four verdicts in one ledger — and `qwen3:8b` still never emits
   `not_checkable`, a fourth channel confirming ADR-031). **`ADR-031`** (B6 closes on a re-specified gate:
   one testable condition — a well-formed, structurally checkable ledger — with

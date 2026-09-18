@@ -20,11 +20,24 @@ from test_judging import debated, judge_reply, side
 from test_prep import prep_debate
 
 
-def test_off_by_default_the_request_is_unchanged(run_dir: Path):
-    """ADR-032 §4: every existing caller keeps the request it had."""
+def test_on_by_default_since_no_tested_server_rejects_it(run_dir: Path):
+    """ADR-032, amended 2026-09-18.
+
+    It shipped off, because mlx_lm might have *rejected* the field rather than
+    ignoring it — which would have turned a working judge into a failing one.
+    Probed directly: Ollama and AFM both honour it, mlx_lm returns 200 and
+    ignores it. Nothing rejects it, so the default moved.
+    """
     _, transcript = debated(run_dir)
-    assert build_request(transcript, 4000).response_schema is None
-    assert build_fact_check_request(transcript, 4000).response_schema is None
+    assert build_request(transcript, 4000).response_schema is not None
+    assert build_fact_check_request(transcript, 4000).response_schema is not None
+
+
+def test_it_can_still_be_turned_off(run_dir: Path):
+    # --no-strict-json, for a backend nobody has probed yet.
+    _, transcript = debated(run_dir)
+    assert build_request(transcript, 4000, strict_json=False).response_schema is None
+    assert build_fact_check_request(transcript, 4000, strict_json=False).response_schema is None
 
 
 def test_a_debate_turn_never_carries_a_schema(run_dir: Path):

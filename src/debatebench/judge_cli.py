@@ -62,18 +62,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_false",
         help="score only, skipping the second call",
     )
-    # ADR-032: off by default — mlx_lm does not honour response_format, and the
-    # ledger comparison in §5 has to be run before the default can move.
+    # ADR-032, amended 2026-09-18: ON by default. §5 measured the ledgers (they
+    # grew) and the backend probe found no server that rejects the field — AFM
+    # and Ollama honour it, mlx_lm accepts and ignores it.
     parser.add_argument(
         "--strict-json",
         dest="strict_json",
         action="store_true",
         default=None,
-        help="ask the server to constrain the reply to the schema (Ollama honours this)",
+        help="constrain the reply to the schema (the default; Ollama and AFM honour it)",
     )
     parser.add_argument(
         "--no-strict-json", dest="strict_json", action="store_false",
-        help="let the model format the reply itself (the default)",
+        help="let the model format the reply itself, unconstrained",
     )
     args = parser.parse_args(argv)
 
@@ -182,7 +183,7 @@ def _settings(args: argparse.Namespace) -> tuple[Path, JudgeConfig]:
         output=Path(pick(args.output, "output", "--output")).expanduser(),
         fact_check=_fact_check(args.fact_check, block),
         strict_json=(args.strict_json if args.strict_json is not None
-                     else (block.strict_json if block is not None else False)),
+                     else (block.strict_json if block is not None else True)),
         # ADR-025 §2: flag, else the block's, else the default. Unlike the four
         # above it is never required — a transcript run with no block still has one.
         timeout=args.timeout if args.timeout is not None

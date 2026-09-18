@@ -95,9 +95,9 @@ class JudgeConfig:
     output: Path
     fact_check: bool
     timeout: int  # seconds to wait for a reply; ADR-025, default 600
-    # ADR-032 §4: ask the server to constrain the reply to the schema. Off by
-    # default — not every backend honours response_format (BACKEND-PROBE-RESULTS).
-    strict_json: bool = False
+    # ADR-032, amended 2026-09-18: ON by default. AFM and Ollama both honour
+    # response_format; mlx_lm accepts and ignores it. No tested server rejects it.
+    strict_json: bool = True
 
 
 @dataclass(frozen=True)
@@ -245,7 +245,7 @@ def _judge(run_path: Path, data: dict[str, Any], transcript: Path) -> JudgeConfi
         budget=_int(run_path, block, "budget", "judge.budget", minimum=1),
         output=output,
         fact_check=_opt_bool(run_path, block, "fact_check", "judge.fact_check", default=True),
-        strict_json=_opt_bool(run_path, block, "strict_json", "judge.strict_json", default=False),
+        strict_json=_opt_bool(run_path, block, "strict_json", "judge.strict_json", default=True),
         timeout=_opt_int(run_path, block, "timeout", "judge.timeout", minimum=1)
         or DEFAULT_READ_TIMEOUT,
     )

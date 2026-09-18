@@ -1,7 +1,7 @@
 # ADR-032: The Judge May Ask the Server to Constrain Its Reply to the Schema
 
-**Status:** Accepted. **§5 measured 2026-09-17 — see "Measured" below.**
-The default stays off, for a reason §5 did not touch.
+**Status:** Accepted. §5 measured 2026-09-17; **the default flipped ON on
+2026-09-18** after the backend probe named below came back clean.
 **Date:** 2026-09-17
 **Depends on:** ADR-009 (the backend request type), ADR-017 §3 (the hit-ledger
 vocabulary), ADR-015 §2 (the four verdicts), ADR-018 (Ollama honours
@@ -198,8 +198,34 @@ a working judge into a failing one for every AFM and `mlx_lm` user.
 
 So the default stays off, and the thing that would flip it is small and named:
 **send a constrained request to `fm serve` and to `mlx_lm.server` and record
-which of the two they do.** Until then `--strict-json` is strongly recommended
-for Ollama and silent for everyone else.
+which of the two they do.**
+
+### Probed 2026-09-18 — nothing rejects it, and the default flips ON
+
+Each server started on a free port, one plain request as a control and one
+carrying the schema:
+
+| server | plain | with `response_format` | verdict |
+|---|---|---|---|
+| Ollama | invalid JSON | schema-valid | **honours** |
+| **AFM** via `fm serve` | ```` ```json ```` fence, off-enum `"approved"` | `{"verdict": "unsupported"}` | **honours** |
+| **`mlx_lm.server`** | HTTP 200 | HTTP 200, identical | **ignores — harmless** |
+
+AFM does better than this ADR assumed: it does not merely tolerate the field, it
+**constrains on it**. `mlx_lm` returned empty content *both* ways, which is its
+known reasoning-field behaviour (OPEN-QUESTIONS 13) and not caused by the schema
+— the control proves that. What matters is that it answers 200 rather than
+erroring.
+
+**No tested server rejects `response_format`**, so §4's remaining reason is
+discharged and `strict_json` now defaults to **on** — in `judge`, in the
+`judge:` block, and in `api.judge`. `--no-strict-json` turns it off for a
+backend nobody has probed.
+
+The control request earned its place: the first AFM attempt failed on both arms
+because the model is named `system`, not `afm`. Without a plain control that
+would have been recorded as "AFM rejects response_format" — the opposite of the
+truth, and the exact wrong conclusion to build a default on.
 
 ## Open questions this doesn't resolve
 

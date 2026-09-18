@@ -120,7 +120,7 @@ async def score_debate(
     model: str,
     budget: int,
     fact_check_enabled: bool = False,
-    strict_json: bool = False,
+    strict_json: bool = True,
 ) -> ScoreSheet:
     """One backend call, both sides, five dimensions each (ADR-013 §2)."""
     request = build_request(transcript, budget, strict_json=strict_json)
@@ -185,7 +185,7 @@ def _dimension(side: SideScore, name: str) -> DimensionScore:
 
 
 def build_request(
-    transcript: Transcript, budget: int, *, strict_json: bool = False
+    transcript: Transcript, budget: int, *, strict_json: bool = True
 ) -> GenerationRequest:
     """The one scoring call: the whole debate, both sides, one JSON object back."""
     lines = [
@@ -566,7 +566,7 @@ _NO_EVIDENCE_NOTE = (
 
 
 async def fact_check_debate(
-    transcript: Transcript, backend: Backend, *, budget: int, strict_json: bool = False
+    transcript: Transcript, backend: Backend, *, budget: int, strict_json: bool = True
 ) -> FactCheck:
     """The second call: each turn's factual claims, judged against the record (ADR-015 §3).
 
@@ -597,7 +597,7 @@ async def fact_check_debate(
 
 
 def build_fact_check_request(
-    transcript: Transcript, budget: int, *, strict_json: bool = False
+    transcript: Transcript, budget: int, *, strict_json: bool = True
 ) -> GenerationRequest:
     known = sorted(_evidence_ids(transcript))
     available = (

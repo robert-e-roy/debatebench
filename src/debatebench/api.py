@@ -177,7 +177,7 @@ async def judge(
     base_url: str | None = None,
     backend: Backend | None = None,
     fact_check: bool = True,
-    strict_json: bool = False,
+    strict_json: bool = True,
     timeout: int | None = None,
 ) -> ScoreSheet:
     """Score a transcript, and audit its claims unless ``fact_check=False``.
@@ -224,7 +224,7 @@ async def judge(
 
 async def _score(
     transcript: Transcript, backend: Backend, *, model: str, budget: int,
-    fact_check: bool, strict_json: bool = False
+    fact_check: bool, strict_json: bool = True
 ) -> ScoreSheet:
     """The scoring call, then the fact-check call when it's on (ADR-015 §3)."""
     sheet = await _score_debate(
