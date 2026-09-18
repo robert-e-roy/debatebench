@@ -367,6 +367,48 @@ constrained decoding does not enforce. Constrained decoding closed four failure
 modes; it cannot close this one, and `_evidence_citations` catching it is
 ADR-032 §6 earning its keep.
 
+### `llama3.1:8b` and `command-r:35b`, 2026-09-18
+
+Both needed capping — `trained_ctx` 131,072 each. Capped: `llama3.1:8b-16k`
+7.0 GB, `command-r:35b-8k` 20.3 GB. Neither was loaded uncapped: a 32B model
+with a 131k window would very likely have exceeded this 34 GB machine, and two
+memory kills this week were enough. Both are clean of reasoning tax.
+
+**`llama3.1:8b` fails identically to Selene — and Selene is judge-tuned
+Llama-3.1-8B.** Both return `claims[0] is supported but cites no passage`. That
+is an accidental but clean controlled comparison: **Atla's judge tuning did not
+fix the failure mode its own base model has.** Whatever Selene gained, schema
+discipline on this contract was not it.
+
+**`command-r:35b` is the opposite extreme from `qwen3:8b`.** It is the one
+candidate trained for grounded generation with citations, and on the same
+transcript:
+
+| judge | supported | contradicted | not_checkable |
+|---|---|---|---|
+| `qwen3:8b` | 13 | 2 | **0** |
+| `command-r:35b` | 2 | 0 | **25 of 27 (93%)** |
+
+`qwen3:8b` never declines to judge; `command-r` declines almost always. A model
+trained to ground claims in citations, given a real corpus, refuses to certify
+25 of 27 claims as checkable — which is either admirable calibration or a refusal
+to engage, and this evidence cannot tell which. It is the strongest argument yet
+that **`not_checkable` counts say more about the judge than about the debate.**
+
+### Six judges on one transcript
+
+`healthcare-14b-pro`, 14b pro against 0.6b con:
+
+| judge | family | pro | con | gap |
+|---|---|---|---|---|
+| `phi4-mini` | phi3 | 80 | 76 | **+4** |
+| `qwen3:8b` | qwen3 | 91 | 86 | **+5** |
+| `selene:8b-16k` | llama3.1 | 83 | 63 | **+20** |
+| `command-r:35b-8k` | command-r | 97 | 77 | **+20** |
+| `gemma4:12b` | gemma4 | 93 | 44 | **+49** |
+
+**Five judges, five families, same winner every time — margin from +4 to +49.**
+
 ### Four families agree on the winner and disagree wildly on the margin
 
 Same transcript, `healthcare-14b-pro`, 14b pro against 0.6b con:
