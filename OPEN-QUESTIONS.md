@@ -168,6 +168,21 @@ ADR-007 "CLI invocation" for why. The `judge:` block is dropped from
   sides. Swapping is a one-line edit: flip each team's `side:` in `run.yaml`
   (ADR-007 §7). A built-in sweep would be new scope, needing an ADR.
 - **Blocks:** interpreting any model comparison. Nothing in B0–B7 strictly.
+- **The minimum fix was exercised 2026-09-17/18 and it works — item stays open.**
+  Three unequal pairings were run mirrored, each side swapped, on three motions.
+  It earned its cost twice over:
+  - **`qwen3:4b` vs `qwen3:14b`** looked like a clean small-model upset in one
+    orientation. Mirrored, and then re-judged across families, it split 2-2 and
+    the result was **withdrawn**. A single run would have published it.
+  - **`qwen3:0.6b` swung +16 by side alone** (75 as con, 91 as pro) where 14b
+    swung +8 and 4b +4. The position effect is real, model-dependent, and
+    **topic-specific**: it favoured con by +5.0 on the earlier mirror probe and
+    pro by +16 here, so it is not a fixed property of the rubric.
+  - Judge family moves winners too: across eight transcripts four judges agreed
+    on only 5 of 7 comparable runs.
+  What is still missing is the other half of the fix — **varying the order the
+  judge sees the sides**, which nothing has tested. And this remains a protocol
+  followed by hand, not a feature; a built-in sweep still needs its own ADR.
 
 ### 10. `sources` vs `corpus`, and how Prep retrieves — FULLY RESOLVED by ADR-012 (amended 2026-09-12)
 
@@ -230,6 +245,25 @@ what every unsuffixed run gets.
   The same budget therefore buys a reasoning model far less argument than a
   non-reasoning one, which confounds the very model comparison this tool exists
   to make (see item 9).
+- **2026-09-17: the sharpest case yet, and it makes a judge unusable.**
+  `gemma4:12b` on a full judge prompt returned **32,076 characters of reasoning
+  and no answer at all**, after 14 minutes — failing the run rather than scoring
+  it. Raising the budget does not reliably help, because it only helps if it
+  clears the *whole* thinking length. `mlx_lm.server` showed the same shape in
+  the ADR-032 backend probe: empty `content` on both a plain and a constrained
+  request. So this is not one model's quirk; it is the reason a whole family
+  cannot judge here.
+- **The fix is known and measured, and still unwired.** Ollama honours
+  `reasoning_effort: "none"` (measured on `gemma4:12b`: 99 tokens → 6);
+  `chat_template_kwargs` and `think: false` do **not** work there. debatebench
+  sends none of them. `ADR-032` added `response_schema` to `GenerationRequest`
+  and established the pattern an optional request field follows, so the
+  remaining work is small and has a template — but it is a different field with
+  a different question attached (does it belong in `run.yaml` per side, or only
+  on the judge?), so it needs its own ADR rather than an amendment.
+- **Note the interaction with item 9.** A budget that buys one model an argument
+  and another model a monologue is exactly the confound item 9 describes, and
+  the two should be read together.
 - **Also observed 2026-09-14, `gemma4:12b` through Ollama** — a second model on
   a second backend, and the failure is worse there. Ollama reports thinking in
   `reasoning`, the same as `mlx_lm.server`, but returns `content` as `""`
