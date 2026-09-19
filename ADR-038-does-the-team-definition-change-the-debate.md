@@ -213,3 +213,36 @@ did not change what was argued from at all.**
 - The cheapest next test is the same three runs on a second motion. If pro is
   again persona-proof and con is not, that is a finding about sides. If it
   flips, it is a finding about corpora.
+
+
+## Motion 2, predicted before the runs — 2026-09-19
+
+Motion 1 left one question sharply posed: **is the pro side persona-proof because
+of the side, or because of that motion's passages?** Three team files selected the
+identical five ids there, Jaccard 1.00, while con moved by one or two.
+
+The test holds the personas fixed and changes only the motion, to
+**"The United States should adopt Medicaid for All."** — deliberately the
+*weak-retrieval* one: **45% of its passages are on topic against 100%** for the
+healthcare motion, because "united states" swamps "medicaid" and pulls in
+marijuana and prison debates. Same teams, same models, same seed, same budgets,
+same floor.
+
+**Prediction.** If pro was persona-proof because its ten passages were strongly
+on-point and effectively self-selecting, then a noisier set gives a persona room
+to tilt, and **the pro cells should come back with Jaccard < 1.00**. If pro is
+still persona-proof on a 45%-on-topic corpus, the insensitivity belongs to the
+**side** and not to the passages.
+
+I expect the first: **pro breaks, Jaccard between 0.5 and 0.9.** The mechanism I
+am proposing is that a clean corpus decides for you and a noisy one does not.
+
+**What would make me wrong in the more interesting way:** pro at Jaccard 1.00
+again. That would mean something about arguing *for* a motion — rather than
+about the evidence available — makes the persona inert, and would be a finding
+about sides that nothing here predicts.
+
+**A third outcome worth naming in advance:** both sides moving a lot. That would
+say the effect is corpus *quality*, not side, and would put motion 1's clean
+pro/con asymmetry down to the corpus being good rather than to the sides being
+different.
