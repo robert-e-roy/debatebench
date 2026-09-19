@@ -107,3 +107,96 @@ shipping them interacts with notarization and update size. Those are app-shape
 questions rather than sizing ones — see Axiom `axiom-macos`
 (`skills/sandbox-and-file-access.md` for where a downloaded model may live,
 `skills/direct-distribution.md` for Developer ID and Sparkle).
+
+
+---
+
+# The audience table: every Apple Silicon Mac, and what it can run
+
+Apple Silicon only — Intel Macs cannot run any of this usefully and are out of
+scope. **The minimum column is what matters**, because it is the machine a buyer
+gets without choosing an upgrade, and therefore the machine the app must assume.
+
+## Minimum unified memory, by generation
+
+| chip | year | **Mac minimum** | Pro min | Max min | Ultra min |
+|---|---|---|---|---|---|
+| **M1** | 2020 | **8 GB** | 16 GB | 32 GB | 64 GB |
+| **M2** | 2022 | **8 GB** | 16 GB | 32 GB | 64 GB |
+| **M3** | 2023 | **8 GB** | 18 GB | 36 GB | 96 GB |
+| **M4** | 2024 | **16 GB** | 24 GB | 36 GB | — |
+| **M5** | 2025 | **16 GB** | — | — | — |
+| **M6** | 2026 | **16 GB** | — | — | — |
+
+**M4 is the inflection.** Apple raised the Mac floor from 8 GB to 16 GB with the
+M4 generation — the 8 GB and 12 GB M4 configurations exist only on iPad. Every
+Mac from M4 onward ships with at least 16 GB.
+
+*Confidence: M1–M4 are settled. M5 and M6 base configurations were checked
+against Apple's newsroom and tech-specs pages in September 2026 — the M6 Mac mini
+starts at $899 with 16 GB, and both M5 and M6 top out at 32 GB on the base chip.
+The Pro/Max/Ultra minimums for M5 and M6 are left blank rather than guessed;
+their maximums are 64 GB, 128 GB and 512 GB respectively.*
+
+## What each memory size can hold
+
+Weights plus KV cache at a 16k context, from the measured rates:
+
+| model | weights | KiB/token | at 16k | measured? |
+|---|---|---|---|---|
+| **AFM** | system process | — | **+1.8 GiB** | **yes** — B0, `fm serve` |
+| 4B 4-bit | 2.5 GiB | ~72 | **3.6 GiB** | weights only; KV scaled |
+| **Qwen3-8B 4-bit** | 4.8 GiB | **144** | **7.0 GiB** | **yes, both** — B0, `mlx_lm` |
+| 14B 4-bit | 9.3 GiB | ~185 | **12.2 GiB** | KV back-computed from Ollama |
+| **Mistral-24B 4-bit** | 13.0 GiB | **160** | **15.5 GiB** | **yes, both** — B0, `mlx_lm` |
+
+## The recommendation
+
+| Mac | model | debate | judge | note |
+|---|---|---|---|---|
+| **8 GB** — M1/M2/M3 base | **AFM** | ✅ | ❌ | AFM's ~4,096-token session cannot hold a transcript. A 4B judge fits at 3.6 GiB but is **unvalidated**. |
+| **16 GB** — M4/M5/M6 base, M1/M2 Pro | **Qwen3-8B** | ✅ | ✅ | 7.0 GiB leaves ~3 GiB of headroom. The full pipeline, one model, both roles. |
+| **18–24 GB** — M3 Pro, M4 Pro | **Qwen3-8B**, or 14B on a quiet machine | ✅ | ✅ | 14B at 12.2 GiB fits the arithmetic; it has not been measured on MLX. |
+| **32 GB+** — Max, Ultra | 14B comfortably; **24B unproven** | ✅ | ⚠️ | See the warning below. |
+
+### Where arithmetic and measurement disagree, believe the measurement
+
+Naive sizing says a 24B model at 15.5 GiB fits in 24 GB. **B0 measured that it
+does not, on a 32 GB machine**, because the real baseline was **14.8 GiB** — a
+browser at ~5 GiB, an IDE, a chat app, the window server. 14.8 + 15.5 = 30.3 GiB
+against 32 installed, with nothing left for a second model or for growth.
+
+So the honest rule is **installed − 15 GiB** for a machine in ordinary use, not
+installed − 6. On that basis:
+
+| installed | usable in real use | largest model |
+|---|---|---|
+| 8 GB | ~0 | AFM only |
+| 16 GB | ~4 GiB | 4B, or AFM |
+| 24 GB | ~9 GiB | **8B** |
+| 32 GB | ~17 GiB | 14B |
+| 48 GB+ | ~33 GiB | 24B — **and it has never produced a token here** |
+
+**Both tables are true and they answer different questions.** The first is "what
+fits if the app is what the machine is doing"; the second is "what fits while
+someone works". A shipping app should size for the second and let the user opt
+into the first.
+
+## What this means for the product
+
+1. **From M4 onward, every Mac can judge.** That is the single most useful line
+   here: the 16 GB floor and the 7.0 GiB judge line up, so the whole pipeline
+   runs on the base configuration of every current Mac.
+2. **Before M4, base Macs debate but cannot judge locally.** M1, M2 and M3 base
+   machines are a large installed base and they are stuck at AFM, whose session
+   ceiling is a hard limit rather than a quality one.
+3. **No configuration at any price has been shown to run a 24B model here.**
+   Buying more memory does not currently buy a better judge — it buys headroom.
+   The best judge measured is 8B-class, and the only one with validated ordering
+   is `qwen3:8b`.
+
+**Sources for the M5/M6 rows:** [Apple Newsroom — M6 and M5 Ultra](https://www.apple.com/newsroom/2026/08/apple-introduces-m6-and-m5-ultra-for-a-big-leap-in-performance-and-ai-compute/),
+[MacBook Air (13-inch, M5) Tech Specs](https://support.apple.com/en-us/126320),
+[Apple M5 — Wikipedia](https://en.wikipedia.org/wiki/Apple_M5),
+[Apple M6 — Wikipedia](https://en.wikipedia.org/wiki/Apple_M6),
+[Apple M4 — Wikipedia](https://en.wikipedia.org/wiki/Apple_M4).
