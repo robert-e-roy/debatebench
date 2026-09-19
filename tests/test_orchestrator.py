@@ -247,7 +247,7 @@ def test_transcript_snapshots_the_run(run_dir: Path):
     config = configure(run_dir, ("opening",))
     transcript = debate(config, fakes())
 
-    assert transcript.schema_version == 2  # 2 since ADR-016 added per-turn length
+    assert transcript.schema_version == 3  # 3 since ADR-037 added the prompt record
     assert transcript.run.topic == config.topic
     assert transcript.run.seed == 42
     assert transcript.run.budget_tolerance == BUDGET_TOLERANCE

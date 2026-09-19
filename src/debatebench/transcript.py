@@ -22,8 +22,11 @@ if TYPE_CHECKING:  # only for annotations: importing config here would pull in P
 
 # 2 adds each turn's optional `length` (ADR-016 §6). A v1 file migrates forward
 # by doing nothing — it simply has no length fields — so both are readable.
-SCHEMA_VERSION = 2
-READABLE_VERSIONS = (1, 2)
+# 3 adds ADR-037's record of what shaped the output: run.prompt, run.sources and
+# each side's `thinking`. Earlier files migrate forward the same way: they carry
+# no such keys, and a reader that finds none knows only that it was not recorded.
+SCHEMA_VERSION = 3
+READABLE_VERSIONS = (1, 2, 3)
 
 
 def utc_now() -> str:
@@ -87,6 +90,41 @@ class Turn:
 
 
 @dataclass(frozen=True)
+class PromptRecord:
+    """What debatebench itself put in the prompt, and a digest of it (ADR-037).
+
+    ``system`` is the prompt as a template — every config value replaced by its
+    ``{slot}`` — so what remains is exactly this package's contribution. The
+    values themselves are already recorded in ``TeamSnapshot`` and ``topic``;
+    repeating them here would say nothing new and would make the digest move
+    with the motion.
+    """
+
+    fingerprint: str
+    system: str
+    phases: tuple[tuple[str, str], ...]  # (phase:length, the instruction sent)
+
+
+@dataclass(frozen=True)
+class SourceRecord:
+    """Which pool prep drew from, and whether it is still the same pool (ADR-037).
+
+    Recorded only for a run that actually retrieved. ``fingerprint`` is over the
+    file's bytes: the pools are rebuildable, and two runs on one machine can read
+    different ones through ``DEBATEBENCH_SOURCES_DIR``.
+
+    ``name`` is the shared pool's ``sources:`` name as run.yaml wrote it
+    (``args-me``), or a team corpus's file name (``liberal-climate-corpus.jsonl``).
+    The two are told apart by that extension, which is enough because a
+    ``sources:`` entry never carries one (ADR-012 §5 appends it).
+    """
+
+    name: str
+    rows: int
+    fingerprint: str
+
+
+@dataclass(frozen=True)
 class TeamSnapshot:
     """A team file's contents, so a transcript stays readable after the file changes."""
 
@@ -108,6 +146,10 @@ class SideSnapshot:
     base_url: str
     budget: int
     prep_budget: int | None
+    # ADR-037: part of the request shape, not of the config's prose. ADR-033
+    # measured this turning 2,254 characters of reasoning into none, so two runs
+    # that differ only here are two different runs.
+    thinking: bool = True
 
 
 @dataclass(frozen=True)
@@ -117,6 +159,9 @@ class RunSnapshot:
     budget_tolerance: int
     phases: tuple[str, ...]
     sides: tuple[SideSnapshot, ...]
+    # Both ADR-037, both optional so a v1 or v2 file still loads into this type.
+    prompt: PromptRecord | None = None
+    sources: tuple[SourceRecord, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -142,9 +187,24 @@ def as_json_dict(transcript: Transcript) -> dict:
         "debatebench_version": transcript.debatebench_version,
         "started_at": transcript.started_at,
         "finished_at": transcript.finished_at,
-        "run": asdict(transcript.run),
+        "run": _run_dict(transcript.run),
         "turns": [_turn_dict(turn) for turn in transcript.turns],
     }
+
+
+def _run_dict(run: RunSnapshot) -> dict:
+    """The run snapshot as written. ADR-037's keys are absent when there is
+    nothing to say: a run judged from a v2 file recorded no prompt, and a run
+    without prep read no pool. Absent says that; an empty object would not."""
+    document = asdict(run)
+    if run.prompt is None:
+        del document["prompt"]
+    else:
+        # An object, not a list of pairs: the label is the key a reader looks up.
+        document["prompt"]["phases"] = dict(run.prompt.phases)
+    if not run.sources:
+        del document["sources"]
+    return document
 
 
 def _turn_dict(turn: Turn) -> dict:
@@ -240,6 +300,10 @@ def load_transcript(path: Path) -> Transcript:
                 base_url=need(side, "base_url", str, where),
                 budget=need(side, "budget", int, where),
                 prep_budget=side.get("prep_budget"),
+                # ADR-037, absent in every v1 and v2 file. True is what those runs
+                # actually sent (ADR-033 made it opt-in), so the default is the
+                # historical fact rather than a guess.
+                thinking=bool(side.get("thinking", True)),
             )
         )
 
@@ -282,6 +346,16 @@ def load_transcript(path: Path) -> Transcript:
             budget_tolerance=need(run, "budget_tolerance", int, "run."),
             phases=tuple(need(run, "phases", list, "run.")),
             sides=tuple(sides),
+            prompt=_prompt_record(run.get("prompt")),
+            sources=tuple(
+                SourceRecord(
+                    name=str(item.get("name", "")),
+                    rows=int(item.get("rows", 0)),
+                    fingerprint=str(item.get("fingerprint", "")),
+                )
+                for item in run.get("sources", ())
+                if isinstance(item, dict)
+            ),
         ),
         turns=tuple(turns),
         started_at=need(document, "started_at", str, ""),
@@ -291,13 +365,38 @@ def load_transcript(path: Path) -> Transcript:
     )
 
 
-def snapshot(config: RunConfig, budget_tolerance: int) -> RunSnapshot:
-    """Freeze the resolved config into the run snapshot (ADR-005)."""
+def _prompt_record(value: object) -> PromptRecord | None:
+    """ADR-037's prompt block, or None for a file written before it existed."""
+    if not isinstance(value, dict):
+        return None
+    phases = value.get("phases")
+    return PromptRecord(
+        fingerprint=str(value.get("fingerprint", "")),
+        system=str(value.get("system", "")),
+        phases=tuple(phases.items()) if isinstance(phases, dict) else (),
+    )
+
+
+def snapshot(
+    config: RunConfig,
+    budget_tolerance: int,
+    *,
+    prompt: PromptRecord | None = None,
+    sources: tuple[SourceRecord, ...] = (),
+) -> RunSnapshot:
+    """Freeze the resolved config into the run snapshot (ADR-005, ADR-037).
+
+    ``prompt`` and ``sources`` are passed in rather than derived here: this
+    module is imported *by* ``prompts`` and ``retrieval``, so building them here
+    would make the import circular.
+    """
     return RunSnapshot(
         topic=config.topic,
         seed=config.seed,
         budget_tolerance=budget_tolerance,
         phases=config.phases,
+        prompt=prompt,
+        sources=sources,
         sides=tuple(
             SideSnapshot(
                 index=side.index,
@@ -315,6 +414,7 @@ def snapshot(config: RunConfig, budget_tolerance: int) -> RunSnapshot:
                 base_url=redact_url(side.base_url),
                 budget=side.budget,
                 prep_budget=side.prep_budget,
+                thinking=side.thinking,
             )
             for side in config.sides
         ),

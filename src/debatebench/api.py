@@ -56,7 +56,9 @@ from .judging import (
     write_scores,
 )
 from .judging import fact_check_debate as _fact_check_debate
+from .judging import fact_check_prompt as _fact_check_prompt
 from .judging import score_debate as _score_debate
+from .prompts import fingerprint as _fingerprint
 from .judging import as_json_dict as scores_json
 from .openai_compat import OpenAICompatibleBackend, open_client
 from .orchestrator import DebateError
@@ -238,7 +240,19 @@ async def _score(
         return sheet
     checked = await _fact_check_debate(transcript, backend, budget=budget,
                                        strict_json=strict_json, thinking=thinking)
-    return _replace(sheet, fact_check=checked)
+    # ADR-037: the audit's own prompt joins the record, and the fingerprint now
+    # covers both calls — two runs differing in either one are distinguishable.
+    audit_system = _fact_check_prompt(
+        transcript, budget, strict_json=strict_json, thinking=thinking
+    )
+    prompt = sheet.prompt
+    if prompt is not None:
+        prompt = _replace(
+            prompt,
+            fingerprint=_fingerprint(prompt.score_system, audit_system),
+            fact_check_system=audit_system,
+        )
+    return _replace(sheet, fact_check=checked, prompt=prompt)
 
 
 def _check_backends(backends: _Sequence[Backend], config: RunConfig) -> None:

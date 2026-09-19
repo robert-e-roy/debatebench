@@ -134,6 +134,27 @@ Two things it cannot know before a run, and says so rather than inventing them:
 the text of turns not yet spoken (it names which turns will be there, in order),
 and the passages `prep` will retrieve (it runs no retrieval).
 
+### What a finished run records
+
+Every output file says what produced it (ADR-037). A transcript carries, beside
+the config snapshot it always had:
+
+- `run.prompt` — the system prompt as a template (`You are {name}, a debater.
+  Your outlook: {stance}. …`), every phase's instruction verbatim under its
+  `phase:length` label, and a `fingerprint` over both;
+- `run.sources` — each pool prep read, with its row count and a digest of its
+  contents, so two runs cannot silently draw from different corpora;
+- `thinking` per side.
+
+A score file carries `prompt` (both judge system messages verbatim), plus
+`strict_json` and `thinking`.
+
+The fingerprint covers only what `debatebench` contributes, so it is the same
+across two runs on different motions and different from a run whose prompt was
+edited — which is the question you actually want answered when comparing
+results. Files written by older versions still load; they simply carry none of
+this, and a reader can tell "not recorded" from "recorded as empty".
+
 `judge` takes either the same `run.yaml`, reading its optional `judge:` block
 and taking the transcript from `output:`, or a transcript plus flags. The two
 are told apart by extension. Flags override the block, so a one-off comparison

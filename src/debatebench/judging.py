@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from .backend import Backend, BackendError, GenerationRequest, Message
+from .prompts import fingerprint
 from .transcript import Transcript, package_version, utc_now, write_json
 
 __all__ = [
@@ -27,7 +28,10 @@ __all__ = [
 ]
 
 # 2 adds the optional fact_check section (ADR-015 §4).
-SCORE_SCHEMA_VERSION = 2
+# 3 adds ADR-037's record of what produced the scores: the prompt block, and the
+# `strict_json` and `thinking` request settings. Both demonstrably change the
+# ledger, and neither was written down before.
+SCORE_SCHEMA_VERSION = 3
 
 # What a fact-check verdict may be (ADR-015 §2). Checked against the record —
 # both sides' evidence and turns — never against the model's own knowledge.
@@ -100,6 +104,23 @@ class SideScore:
 
 
 @dataclass(frozen=True)
+class JudgePrompt:
+    """The system messages that produced a score file (ADR-037).
+
+    Recorded verbatim rather than as a template, because both of these *branch*:
+    the scoring prompt's `evidence_grounding` line differs on whether the
+    transcript has prep, and the audit's passage-id line differs on whether any
+    ids were recorded. A template would record a string that was never sent.
+    Safe to record whole: the transcript travels in the *user* message, so
+    neither string carries per-run content.
+    """
+
+    fingerprint: str
+    score_system: str
+    fact_check_system: str | None = None  # None when --no-fact-check
+
+
+@dataclass(frozen=True)
 class ScoreSheet:
     judged_at: str
     judge_model: str
@@ -111,6 +132,11 @@ class ScoreSheet:
     schema_version: int = SCORE_SCHEMA_VERSION
     debatebench_version: str = ""
     fact_check: FactCheck | None = None  # absent, not empty, when disabled (ADR-015 §4)
+    # ADR-037. Defaults keep every existing constructor call valid; the CLI and
+    # api.judge always set them, so a file this build writes always has them.
+    prompt: JudgePrompt | None = None
+    strict_json: bool = True
+    thinking: bool = True
 
 
 async def score_debate(
@@ -155,6 +181,14 @@ async def score_debate(
         winner=winner,
         winner_reason=reason,
         debatebench_version=package_version(),
+        # The message that was actually sent, taken from the request itself
+        # rather than rebuilt — a second construction could differ from it.
+        prompt=JudgePrompt(
+            fingerprint=fingerprint(request.messages[0].content),
+            score_system=request.messages[0].content,
+        ),
+        strict_json=strict_json,
+        thinking=thinking,
     )
 
 
@@ -600,6 +634,21 @@ async def fact_check_debate(
     return FactCheck(CHECKED_AGAINST, claims)
 
 
+def fact_check_prompt(
+    transcript: Transcript, budget: int, *, strict_json: bool, thinking: bool
+) -> str:
+    """The audit's system message, for the score file's record (ADR-037).
+
+    The same builder, called with the same arguments, so this is the string the
+    audit was given — ``tests/test_record.py`` checks it against what the backend
+    actually received rather than trusting that sentence.
+    """
+    request = build_fact_check_request(
+        transcript, budget, strict_json=strict_json, thinking=thinking
+    )
+    return request.messages[0].content
+
+
 def build_fact_check_request(
     transcript: Transcript, budget: int, *, strict_json: bool = True, thinking: bool = True
 ) -> GenerationRequest:
@@ -778,6 +827,15 @@ def _evidence_ids(transcript: Transcript) -> frozenset[str]:
 # --- writing the score file --------------------------------------------------
 
 
+def _prompt_dict(prompt: JudgePrompt) -> dict:
+    """ADR-037's prompt block. ``fact_check_system`` is absent, not null, when the
+    audit did not run — the same rule ``fact_check`` itself follows (ADR-015 §4)."""
+    document = {"fingerprint": prompt.fingerprint, "score_system": prompt.score_system}
+    if prompt.fact_check_system is not None:
+        document["fact_check_system"] = prompt.fact_check_system
+    return document
+
+
 def as_json_dict(sheet: ScoreSheet) -> dict:
     """The score file ADR-013 §5 specifies, with its keys in that order."""
     return {
@@ -787,6 +845,11 @@ def as_json_dict(sheet: ScoreSheet) -> dict:
         "judge_model": sheet.judge_model,
         "judge_budget": sheet.judge_budget,
         "fact_check_enabled": sheet.fact_check_enabled,
+        # ADR-037: the request shape, beside the model and budget that were
+        # already here. Both of these change the ledger and neither was recorded.
+        "strict_json": sheet.strict_json,
+        "thinking": sheet.thinking,
+        **({} if sheet.prompt is None else {"prompt": _prompt_dict(sheet.prompt)}),
         "sides": [
             {
                 "side_index": side.side_index,

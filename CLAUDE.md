@@ -108,6 +108,21 @@ code. See ADR-002 for full scope.
   **authoring-time** half of prompt visibility; the recording half is still owed,
   and `thinking` missing from `SideSnapshot` is the same defect as `strict_json`
   missing from the score file).
+  **`ADR-037`** (a run records what shaped its output — the recording half of
+  ADR-036, and the **only** `schema_version` bump since ADR-016: transcript
+  **2→3**, score **2→3**, both readers still accepting every earlier version.
+  The transcript gains `run.prompt` (the system prompt as a `{slot}` template,
+  every phase's instruction verbatim under its `phase:length` label, and a
+  fingerprint), `run.sources` (each pool's name, row count and content digest,
+  **only when prep ran**), and each side's `thinking`. The score file gains
+  `prompt` (**both judge system messages verbatim**, because they *branch* —
+  on `_prep_grounded` and on whether any ids exist — so a template would record
+  a string never sent), plus `strict_json` and `thinking`. The fingerprint
+  covers only debatebench's own contribution: invariant to topic, team, model
+  and turns, moving when a prompt is edited — including an edit that never
+  reaches a version number. `sources:` was previously recorded **nowhere**, which
+  was the worst of the three gaps and the one a user raised. Team wording was
+  already covered by `TeamSnapshot`).
 - `MODEL-COVERAGE.md` — which models have actually been run, at what size, as
   debater or judge, with the artifact behind each. **No large (24B+) model has
   ever produced a token here**; every quality finding in this repo comes from

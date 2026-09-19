@@ -155,7 +155,7 @@ def test_every_written_debate_turn_names_its_length(run_dir: Path):
     write_transcript(transcript, config.output)
     document = json.loads(config.output.read_text(encoding="utf-8"))
 
-    assert document["schema_version"] == 2
+    assert document["schema_version"] == 3
     assert document["run"]["phases"] == ["opening", "rebuttal"]  # bare names, still
     written = {t["phase"]: t.get("length") for t in document["turns"]}
     assert written == {"opening": "short", "rebuttal": "medium"}

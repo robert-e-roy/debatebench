@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 
 from .backend import Backend, BackendError
 from .events import DebateEvent, EventBus, EventType
-from .prompts import build_prep_request, build_request
-from .retrieval import RetrievalError, retrieve
+from .prompts import build_prep_request, build_request, prompt_record
+from .retrieval import RetrievalError, describe_sources, retrieve
 from .transcript import Evidence, Transcript, Turn, Usage, snapshot, utc_now
 
 __all__ = ["BUDGET_TOLERANCE", "DebateError", "Transcript", "run_debate", "speaking_order"]
@@ -51,7 +51,22 @@ async def run_debate(
         raise
 
     transcript = Transcript(
-        run=snapshot(config, BUDGET_TOLERANCE),
+        # ADR-037: what shaped this output, alongside the config that asked for
+        # it. Pools are described only when prep ran — a run that retrieved
+        # nothing must not record a corpus it never opened.
+        run=snapshot(
+            config,
+            BUDGET_TOLERANCE,
+            prompt=prompt_record(config.topic, config.sides[0], config.phases, config.lengths),
+            sources=(
+                describe_sources(
+                    config.sources,
+                    [s.team.corpus_path for s in config.sides if s.team.corpus_path is not None],
+                )
+                if "prep" in config.phases
+                else ()
+            ),
+        ),
         turns=tuple(turns),
         started_at=started_at,
         finished_at=utc_now(),

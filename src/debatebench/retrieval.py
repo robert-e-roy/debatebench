@@ -14,13 +14,14 @@ buys is the one synthesis call that reads what this module returns.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 from collections.abc import Sequence
 from functools import lru_cache
 from pathlib import Path
 
-from .transcript import Evidence
+from .transcript import Evidence, SourceRecord
 
 __all__ = ["RetrievalError", "SOURCES", "TOP_K", "retrieve", "sources_dir"]
 
@@ -54,6 +55,42 @@ def sources_dir() -> Path:
     """Where the prepared JSONL files live (ADR-012 §5, ADR-014 §5)."""
     override = os.environ.get(SOURCES_DIR_VARIABLE)
     return Path(override).expanduser() if override else DEFAULT_SOURCES_DIR
+
+
+def describe_sources(
+    sources: Sequence[str], corpora: Sequence[Path]
+) -> tuple[SourceRecord, ...]:
+    """Which pools a run read, and a digest of each one (ADR-037).
+
+    Hashing the file rather than trusting its name: the pools are rebuildable,
+    ``DEBATEBENCH_SOURCES_DIR`` can point two runs at different copies, and a
+    passage set that changed underneath a comparison is exactly the kind of
+    thing this project keeps discovering after the fact. A pool that cannot be
+    read is recorded as unreadable rather than skipped — a silent gap here would
+    say the run used no corpus, which is a different and false claim.
+    """
+    paths = [(name, sources_dir() / f"{name}.jsonl") for name in sources]
+    paths += [(path.name, path) for path in corpora]
+    records = []
+    for name, path in paths:
+        records.append(_describe(name, path))
+    return tuple(records)
+
+
+def _describe(name: str, path: Path) -> SourceRecord:
+    digest = hashlib.blake2b(digest_size=8)
+    rows = 0
+    try:
+        with path.open("rb") as handle:
+            for line in handle:
+                digest.update(line)
+                if line.strip():
+                    rows += 1
+    except OSError:
+        # Never raised: retrieve() already fails loudly on a missing pool, and a
+        # description must not be the thing that ends a finished run.
+        return SourceRecord(name=name, rows=0, fingerprint="unreadable")
+    return SourceRecord(name=name, rows=rows, fingerprint=digest.hexdigest())
 
 
 def retrieve(

@@ -10,12 +10,13 @@ Standard library only (ADR-008).
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .backend import GenerationRequest, Message
-from .transcript import Evidence, Turn
+from .transcript import Evidence, PromptRecord, Turn
 
 if TYPE_CHECKING:  # only for annotations: importing config here would pull in PyYAML
     from .config import Side
@@ -53,9 +54,36 @@ class Segment:
 
     text: str
     origin: str
+    # ADR-037: the name this fragment fills when the prompt is read as a template.
+    # None for text this module supplies, which is the same in every run — so
+    # replacing every named slot leaves exactly debatebench's own contribution.
+    slot: str | None = None
 
 
 BUILT_IN = "built in"
+
+
+def template(segments: Sequence[Segment]) -> str:
+    """The prompt with every config value replaced by its ``{slot}`` (ADR-037).
+
+    What is left is what ``debatebench`` supplies and a run cannot change, which
+    is both what the fingerprint covers and what a tunable prompt file would hold.
+    """
+    return "".join(f"{{{s.slot}}}" if s.slot else s.text for s in segments)
+
+
+def fingerprint(*parts: str) -> str:
+    """A short digest over the prompt text this package contributes (ADR-037).
+
+    Deliberately not a hash of the whole request: the debate so far differs
+    between any two runs by construction, so that digest would always differ and
+    could never answer "were these given the same instructions?".
+    """
+    digest = hashlib.blake2b(digest_size=8)
+    for part in parts:
+        digest.update(part.encode())
+        digest.update(b"\0")  # so ("ab", "c") and ("a", "bc") cannot collide
+    return digest.hexdigest()
 
 
 def system_prompt_segments(topic: str, side: Side) -> tuple[Segment, ...]:
@@ -64,18 +92,22 @@ def system_prompt_segments(topic: str, side: Side) -> tuple[Segment, ...]:
     where = side.team_file
     return (
         Segment("You are ", BUILT_IN),
-        Segment(team.name, f"{where}  name:"),
+        Segment(team.name, f"{where}  name:", slot="name"),
         Segment(", a debater. Your outlook: ", BUILT_IN),
-        Segment(team.stance, f"{where}  stance:"),
+        Segment(team.stance, f"{where}  stance:", slot="stance"),
         Segment(". Your voice: ", BUILT_IN),
-        Segment(team.voice, f"{where}  voice:"),
+        Segment(team.voice, f"{where}  voice:", slot="voice"),
         Segment(". What you value: ", BUILT_IN),
-        Segment(", ".join(team.values), f"{where}  values:"),
+        Segment(", ".join(team.values), f"{where}  values:", slot="values"),
         Segment(".\n\nThe motion is: ", BUILT_IN),
-        Segment(topic, "run.yaml  topic:"),
+        Segment(topic, "run.yaml  topic:", slot="topic"),
         Segment("\nYou argue ", BUILT_IN),
         # Not a setting: run.yaml says pro or con, and this module decides the word.
-        Segment("for" if side.side == "pro" else "against", f"{BUILT_IN}, from run.yaml side: {side.side}"),
+        Segment(
+            "for" if side.side == "pro" else "against",
+            f"{BUILT_IN}, from run.yaml side: {side.side}",
+            slot="position",
+        ),
         Segment(" the motion, whatever your own view.", BUILT_IN),
     )
 
@@ -101,6 +133,29 @@ def instruction_segments(phase: str, length: str | None) -> tuple[Segment, ...]:
 
 def joined(segments: Sequence[Segment]) -> str:
     return "".join(segment.text for segment in segments)
+
+
+def prompt_record(
+    topic: str, side: Side, phases: Sequence[str], lengths: Sequence[str | None]
+) -> PromptRecord:
+    """What this module contributed to a run's prompts, for the transcript (ADR-037).
+
+    ``side`` only supplies the shape: every value it carries is a ``{slot}`` in
+    the template, so either side of a run yields the same record. A repeated
+    phase label collapses to one entry, correctly — the same label is the same
+    instruction.
+    """
+    system = template(system_prompt_segments(topic, side))
+    instructions: dict[str, str] = {}
+    for phase, length in zip(phases, lengths):
+        label = phase if length is None else f"{phase}:{length}"
+        instructions[label] = joined(instruction_segments(phase, length))
+    ordered = tuple(instructions.items())
+    return PromptRecord(
+        fingerprint=fingerprint(system, *(f"{k}\n{v}" for k, v in ordered)),
+        system=system,
+        phases=ordered,
+    )
 
 
 def build_request(

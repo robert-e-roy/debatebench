@@ -229,7 +229,7 @@ def test_the_section_is_written_beside_the_scores(run_dir: Path, prepared_source
     write_scores(replace(sheet, fact_check=audit, fact_check_enabled=True), output)
     document = json.loads(output.read_text(encoding="utf-8"))
 
-    assert document["schema_version"] == 2
+    assert document["schema_version"] == 3
     assert document["fact_check"]["checked_against"] == "recorded_evidence"
     (entry,) = document["fact_check"]["claims"]
     assert entry["verdict"] == "supported" and entry["evidence_ids"] == ["am-1"]
