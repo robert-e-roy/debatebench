@@ -89,6 +89,15 @@ code. See ADR-002 for full scope.
   implemented, measured and **reverted** the same day — §9 carries the result and
   is the part worth reading; ADR-024 §4 stands unamended because the code
   enforcement that would have justified amending it is gone with the revert).
+  **`ADR-035`** (`phi4:14b` is the standing judge for the prompt track, with
+  `--strict-json` on; `qwen3:8b` is kept as back-reference and keeps every
+  ordering claim and ADR-034's closing test. The reason is not that `phi4:14b`
+  is better — it has no Tau-C — but that **all five data points in the emphasis
+  finding are `qwen3:8b`**, so that model cannot falsify a hypothesis built on
+  it. Measured: on the three prep transcripts `phi4:14b` returns 2–3× the claims
+  and **all four verdicts on 3 of 3**, where `qwen3:8b` emits zero
+  `not_checkable` on all three; and two draws 3 h 53 m apart were
+  byte-identical. §"What this costs" is the part worth reading).
 - `MODEL-COVERAGE.md` — which models have actually been run, at what size, as
   debater or judge, with the artifact behind each. **No large (24B+) model has
   ever produced a token here**; every quality finding in this repo comes from

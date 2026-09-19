@@ -425,6 +425,69 @@ ordering is worth quoting and a *margin* is not — it is a statement about the
 judge. This is `JUDGE-VALIDATION`'s "only its ordering passes" generalising to
 every judge here, and it is the single most reusable result on this page.
 
+## The judge chosen as the prompt-track instrument, 2026-09-19 (ADR-035)
+
+Picking a judge to *run debates through* and picking one to **hold fixed while
+the prompt varies** are different problems, and the second one has a
+disqualifying criterion the first does not: the instrument must not be the model
+the hypothesis was built on.
+
+All five data points in the emphasis finding — ADR-019's emphasis block,
+condition B, condition C, ADR-030, ADR-034 — are `qwen3:8b`. So `qwen3:8b`
+cannot test whether "foregrounding a question shrinks the ledger" is a fact about
+prompts or a fact about `qwen3:8b`. **ADR-035 makes `phi4:14b` the standing
+judge for that track**, with `qwen3:8b` kept as back-reference.
+
+Measured on the three prep transcripts, `--strict-json` on:
+
+| transcript | `qwen3:8b` claims / labels | `phi4:14b` claims / labels |
+|---|---|---|
+| `healthcare-0.6b-pro` | 12 / 2 | **21 / 4** |
+| `healthcare-14b-pro` | 16 / 2 | **44 / 4** |
+| `medicaid-14b-pro` | 12 / 3 | **36 / 4** |
+
+`phi4:14b` returns 2–3× the claims and uses **all four verdicts on 3 of 3**;
+`qwen3:8b` emits **zero `not_checkable` on all three**, so a quarter of the space
+a prompt change could move a verdict into is dead on it.
+
+**`phi4:14b` reproduces.** Two independent draws on `medicaid-14b-pro`,
+`judged_at` 16:19:59Z and 20:12:34Z on 2026-09-17 — **three hours fifty-three
+minutes apart**, other models loaded in between — gave a byte-identical
+`fact_check` object, `68d29c1aba455515`. Load state was *not* controlled, so this
+is not the cold/warm result `qwen3:8b` has; B6's two-draws-per-state protocol
+should be run on it before the first A/B is quoted.
+
+It is also the only judge tested this week that needed **no `num_ctx` capping** —
+`trained_ctx` 16,384, 9.1 GB, fits as shipped — against four that did.
+
+**What it does not have:** a Tau-C. Ordering claims stay `qwen3:8b`'s. And its
+24-of-44 `not_checkable` on `healthcare-14b-pro` leans the same way
+`command-r:35b` does, with one of its cross-side contradictions already shown to
+be a false positive.
+
+### `qwen3:8b`'s frozen baselines, so ADR-034's closing test has a target
+
+`--strict-json` on, before and after ADR-034:
+
+| transcript | claims | `contradicted` |
+|---|---|---|
+| `healthcare-0.6b-pro` | 12 → 7 | 3 → **0** |
+| `healthcare-14b-pro` | 16 → 13 | 2 → 2 |
+| `medicaid-14b-pro` | 12 → 10 | 4 → **0** |
+| **total** | **40 → 30** | **9 → 2** |
+
+The recorded headline was the ledger, 40 → 30. The sharper number is the second
+column: **ADR-034 cost seven of nine `contradicted` verdicts.**
+
+### The score file cannot tell you which arm produced it
+
+Recovering the two columns above meant reading **filenames**. A score file stores
+`judge_model`, `judge_budget` and `fact_check_enabled` — and records neither
+`strict_json` nor the prompt, both of which demonstrably move the ledger
+(ADR-032: parse failures 5 of 9 → 0 of 9, ledgers growing). This is the confound
+that spoiled ADR-034's first measurement, and it is why the prompt track starts
+by recording the **request shape**, not the prompt alone.
+
 ## Families worth testing next, and what to check before pulling one
 
 Five families have been run here (`qwen3`, `qwen3.5`, `gemma4`, `phi3` via
