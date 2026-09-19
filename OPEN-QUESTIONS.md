@@ -482,6 +482,44 @@ passage does not contradict the claim is simply wrong, and two of `qwen3:8b`'s
 three fail that check. This does not reopen B6 — ADR-031 already stopped claiming
 the verdicts are correct.
 
+### 17. `steelman_fidelity` is always scored, but only `rebuttal` asks for it
+
+**Blocks:** nothing yet. **Latent, not fired** — all 16 run.yamls in use include
+a `rebuttal` phase, so no measurement taken so far is affected. Recorded now
+because `debate --show-prompt` (ADR-036) made it visible and it is cheaper to
+decide before a run without `rebuttal` is configured than after.
+
+The steelman ask exists in exactly one place: `PHASE_INSTRUCTIONS["rebuttal"]` —
+*"First state the other side's strongest argument fairly, in terms they would
+accept."* No other phase instruction mentions it.
+
+Meanwhile the judge scores `steelman_fidelity` out of 20 in **every** run
+(`judging.py:42`), and it is **the tiebreak**: ADR-013 §3 resolves an equal total
+by steelman fidelity before falling to ADR-023's coin toss
+(`judging.py:172-174`).
+
+So a phase list of `[opening, retort, conclusion]` asks neither side to steelman,
+and a tie is still broken on how well they did it. The dimension that decides the
+closest debates is driven by a sentence the config cannot request, cannot see and
+can silently omit.
+
+Four shapes, none chosen:
+
+1. **Leave it.** Steelmanning is a debating virtue whether or not it was asked
+   for, and rewarding it unprompted is defensible. Then say so in ADR-013.
+2. **Warn at load** when no phase asks for a steelman, per "a failure must carry
+   what's needed to fix it" — the run still happens, the reader is told.
+3. **Score it only when a phase asked for it**, and change the tiebreak when it
+   is absent. Touches ADR-013 §3 and ADR-023.
+4. **Make the ask explicit in the config** rather than implied by a phase name —
+   which is really the tunable-prompts question (ADR-036's consequences), arriving
+   from a different direction.
+
+The measurement that would inform this: run one transcript with and without a
+`rebuttal` phase and compare `steelman_fidelity`. If it barely moves, the
+dimension is not measuring the instruction and (1) is wrong for a different
+reason than it looks.
+
 ## Recorded elsewhere — index
 
 | Where | Open question |

@@ -112,6 +112,28 @@ The override changes the config before the run, so the transcript records the
 model that actually spoke. There is no `--output` and no `--seed`: see ADR-021
 §6 for why each is deliberate.
 
+### Seeing what your config becomes
+
+A team file gives a debater four values and `run.yaml` gives a phase a word.
+The sentences around them come from `debatebench`, and until you look at the
+source there is no way to know that `stance: progressive` lands after *"Your
+outlook:"*, that `rebuttal` quietly asks each side to steelman the opponent, or
+that `medium` means *"about 5 sentences"*.
+
+```bash
+debate run.yaml --show-prompt
+```
+
+prints the exact system prompt and phase instruction each side would receive,
+with every fragment labelled by the file and key it came from — or as `built
+in`, meaning `debatebench` supplies it and no config file can currently change
+it. It calls no model and writes no file, so it is safe to run against any
+config, and it applies `--model` / `--budget` first so you see what *would* run.
+
+Two things it cannot know before a run, and says so rather than inventing them:
+the text of turns not yet spoken (it names which turns will be there, in order),
+and the passages `prep` will retrieve (it runs no retrieval).
+
 `judge` takes either the same `run.yaml`, reading its optional `judge:` block
 and taking the transcript from `output:`, or a transcript plus flags. The two
 are told apart by extension. Flags override the block, so a one-off comparison

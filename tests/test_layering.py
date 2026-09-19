@@ -19,6 +19,9 @@ CASES = [
     # ADR-027: the stream is stdlib json, and a consumer importing it must not
     # drag in HTTP or YAML.
     ("debatebench.event_stream", {"httpx", "yaml"}),
+    # ADR-036: --show-prompt renders a config it never loads itself, so the
+    # preview stays importable without the YAML or HTTP layers.
+    ("debatebench.preview", {"httpx", "yaml"}),
     # debatebench.api is deliberately absent, not overlooked: ADR-028 §1 makes it
     # the one module allowed both, because composing a run needs the config loader
     # and the HTTP adapter together. Adding a case for it would fail by design.

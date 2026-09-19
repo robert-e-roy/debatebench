@@ -29,6 +29,7 @@ from .config import ConfigError, RunConfig, Side, load_run
 from .event_stream import make_event_writer
 from .events import DebateEvent, EventBus, EventType, Listener
 from .orchestrator import DebateError
+from .preview import render as render_prompts
 from .transcript import write_transcript
 
 
@@ -57,6 +58,13 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="stream one JSON object per event to stdout, for another program to read",
     )
+    # ADR-036: not an override (ADR-021) — it runs nothing, so it can change nothing.
+    parser.add_argument(
+        "--show-prompt",
+        action="store_true",
+        help="print the prompts this run would send, with each piece's origin, and exit "
+        "without calling a model or writing a file",
+    )
     return parser
 
 
@@ -77,6 +85,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         _log(line)
     if config.seed_generated:
         _log(f"run.yaml sets no seed; generated seed {config.seed}")
+
+    if args.show_prompt:
+        # After the overrides, so the preview is of what would actually run, and
+        # before the output-directory check, which is about writing a transcript
+        # this path never writes (ADR-036 §3).
+        if args.events:
+            _log(
+                "--show-prompt and --events cannot be combined: --show-prompt runs no "
+                "debate, so there are no events to stream, and both write to stdout. "
+                "Drop --events to see the prompts, or --show-prompt to run"
+            )
+            return 1
+        _log("--show-prompt: rendering only; no model is called and no file is written")
+        print(render_prompts(config))
+        return 0
+
     # Checked before the debate, so a missing directory can't waste a whole run.
     if not config.output.parent.is_dir():
         _log(f"config error: the output directory does not exist: {config.output.parent}")

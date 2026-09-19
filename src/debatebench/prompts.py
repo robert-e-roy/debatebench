@@ -11,6 +11,7 @@ Standard library only (ADR-008).
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .backend import GenerationRequest, Message
@@ -39,6 +40,69 @@ PHASE_INSTRUCTIONS = {
 LENGTH_SENTENCES = {"short": 2, "medium": 5, "long": 10}
 
 
+@dataclass(frozen=True)
+class Segment:
+    """One fragment of a prompt and where it came from (ADR-036 §2).
+
+    ``origin`` is for a human reading ``--show-prompt``: the file and key a
+    fragment was written in, or ``built in`` for the sentences this module
+    supplies. Joining every ``text`` reproduces the prompt **exactly** — that is
+    what keeps the preview from drifting away from what is sent, and
+    ``tests/test_show_prompt.py`` asserts it rather than trusting it.
+    """
+
+    text: str
+    origin: str
+
+
+BUILT_IN = "built in"
+
+
+def system_prompt_segments(topic: str, side: Side) -> tuple[Segment, ...]:
+    """``system_prompt`` broken at every boundary between config and this module."""
+    team = side.team
+    where = side.team_file
+    return (
+        Segment("You are ", BUILT_IN),
+        Segment(team.name, f"{where}  name:"),
+        Segment(", a debater. Your outlook: ", BUILT_IN),
+        Segment(team.stance, f"{where}  stance:"),
+        Segment(". Your voice: ", BUILT_IN),
+        Segment(team.voice, f"{where}  voice:"),
+        Segment(". What you value: ", BUILT_IN),
+        Segment(", ".join(team.values), f"{where}  values:"),
+        Segment(".\n\nThe motion is: ", BUILT_IN),
+        Segment(topic, "run.yaml  topic:"),
+        Segment("\nYou argue ", BUILT_IN),
+        # Not a setting: run.yaml says pro or con, and this module decides the word.
+        Segment("for" if side.side == "pro" else "against", f"{BUILT_IN}, from run.yaml side: {side.side}"),
+        Segment(" the motion, whatever your own view.", BUILT_IN),
+    )
+
+
+def instruction_segments(phase: str, length: str | None) -> tuple[Segment, ...]:
+    """The ask at the end of a turn's user message, fragment by fragment.
+
+    Nothing here comes from a config file. A run.yaml chooses a phase *name* and
+    a length *word*; both sentences below, and the number, are this module's.
+    """
+    segments = [Segment(PHASE_INSTRUCTIONS[phase], f'{BUILT_IN}: PHASE_INSTRUCTIONS["{phase}"]')]
+    if length is not None:
+        sentences = LENGTH_SENTENCES[length]
+        segments.append(
+            Segment(
+                f" Answer in about {sentences} sentences.",
+                f'{BUILT_IN}: LENGTH_SENTENCES["{length}"] = {sentences}, '
+                f"asked for by the :{length} suffix",
+            )
+        )
+    return tuple(segments)
+
+
+def joined(segments: Sequence[Segment]) -> str:
+    return "".join(segment.text for segment in segments)
+
+
 def build_request(
     topic: str,
     side: Side,
@@ -48,10 +112,10 @@ def build_request(
     seed: int | None = None,
     length: str | None = None,
 ) -> GenerationRequest:
-    instruction = PHASE_INSTRUCTIONS[phase]
-    if length is not None:
-        # Both sides get the same target for the same phase (ADR-016 §1).
-        instruction += f" Answer in about {LENGTH_SENTENCES[length]} sentences."
+    # Built from the same segments --show-prompt renders, so the preview cannot
+    # describe a prompt this function does not send (ADR-036 §1). Both sides get
+    # the same target for the same phase (ADR-016 §1).
+    instruction = joined(instruction_segments(phase, length))
     return GenerationRequest(
         messages=(
             Message("system", system_prompt(topic, side)),
@@ -86,7 +150,8 @@ def build_prep_request(
             Message(
                 "user",
                 f"Your research, {len(passages)} passages:\n\n{rendered}\n\n"
-                f"{PHASE_INSTRUCTIONS['prep']}",
+                # Same segments --show-prompt renders; prep takes no length (ADR-016 §4).
+                f"{joined(instruction_segments('prep', None))}",
             ),
         ),
         max_completion_tokens=side.prep_budget,
@@ -96,14 +161,7 @@ def build_prep_request(
 
 def system_prompt(topic: str, side: Side) -> str:
     """Who this side is and which way it argues — the same in every phase."""
-    position = "for" if side.side == "pro" else "against"
-    team = side.team
-    return (
-        f"You are {team.name}, a debater. Your outlook: {team.stance}. "
-        f"Your voice: {team.voice}. What you value: {', '.join(team.values)}.\n\n"
-        f"The motion is: {topic}\n"
-        f"You argue {position} the motion, whatever your own view."
-    )
+    return joined(system_prompt_segments(topic, side))
 
 
 def render_debate(sides: tuple[Side, ...], turns: list[Turn], viewer_index: int) -> str:

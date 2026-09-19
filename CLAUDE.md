@@ -98,6 +98,16 @@ code. See ADR-002 for full scope.
   and **all four verdicts on 3 of 3**, where `qwen3:8b` emits zero
   `not_checkable` on all three; and two draws 3 h 53 m apart were
   byte-identical. §"What this costs" is the part worth reading).
+  **`ADR-036`** (`debate --show-prompt` renders what a run.yaml becomes and runs
+  nothing: the exact system prompt and phase instruction per side, each fragment
+  labelled with the file and key it came from or as `built in`. Rendered from
+  `prompts.py`'s own segment functions, so a preview cannot describe a prompt
+  `build_request` would not send — pinned by a test that rejoins the segments and
+  compares. What cannot be known before a run — the turns already spoken, prep's
+  retrieved passages — is named as a slot, never invented. This is the
+  **authoring-time** half of prompt visibility; the recording half is still owed,
+  and `thinking` missing from `SideSnapshot` is the same defect as `strict_json`
+  missing from the score file).
 - `MODEL-COVERAGE.md` — which models have actually been run, at what size, as
   debater or judge, with the artifact behind each. **No large (24B+) model has
   ever produced a token here**; every quality finding in this repo comes from
@@ -444,7 +454,13 @@ error — there is no precedence rule. **Nothing else is overridable**: no
 `--output` (Hard Rule 7 names its absence), no `--seed` (omit `seed:` and one is
 generated and recorded), no `--base_url`, `--topic` or `--phases` (those make it
 a different debate). An override changes the loaded config before the run, so
-ADR-005's snapshot records what actually spoke. `judge` takes **either** that same `run.yaml`, reading its
+ADR-005's snapshot records what actually spoke. **`--show-prompt` (ADR-036) is
+not an override** — it renders the prompts the run *would* send, with every
+fragment's origin, then exits without calling a model or writing a file. Use it
+to see what a config becomes: the frame sentences, the `pro`→"for" mapping, the
+phase instruction and `medium` meaning five sentences are all in `prompts.py`
+and appear in no file a user writes. It refuses `--events` (no run, no events,
+and both use stdout). `judge` takes **either** that same `run.yaml`, reading its
 `judge:` block and taking the transcript from `output:`, **or** a transcript
 path plus `--model`, `--base-url`, `--budget` and `--output`, with
 `--fact-check` / `--no-fact-check` (default on). The two are told apart by
