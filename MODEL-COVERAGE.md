@@ -5,8 +5,75 @@ is **which models it has actually been run against**. This file is that ledger.
 Every row points at the artifact or the ADR that measured it; anything with no
 pointer is not a result.
 
+The **What to use** section below is the answer most readers want; the ledger
+after it is the evidence. The `debater` column was ground-truthed against the
+run store on 2026-09-19 — four rows said `untried` and were wrong.
+
 Compiled 2026-09-15 from `RESULTS.md` (B0), `BACKEND-PROBE-RESULTS.md`,
 `JUDGE-VALIDATION.md`, `probe/b6/`, `probe/mirror/` and `probe/scale/`.
+
+## What to use — the short answer, 2026-09-19
+
+**Debating and judging are different jobs and the evidence for them is
+different.** A model that argues well has not been shown to score well, and the
+reverse. Pick per role.
+
+### As a debater
+
+| class | pick | measured | why |
+|---|---|---|---|
+| small | **`qwen3:4b-16k`** | 2.5 GB file; **cap required** | The floor for a real debate. `0.6b` and `1.7b` run but lose by 17–20 points on a factual motion once anything can check their claims. 4b won its mirror. |
+| medium | **`qwen3:14b-16k`** | 9.3 GB file, **12.2 GB resident at 16k** | The current workhorse: 18 side-appearances, finishes a prep note in ~1,350–2,100 tokens, no budget surprises once sized properly. |
+| large | **none** | — | See below. Nothing in this class has earned a recommendation. |
+
+### As a judge
+
+| class | pick | measured | why |
+|---|---|---|---|
+| small | **none for fact-check** | — | `phi4-mini` produces a parseable *score* sheet and a broken *audit*; `qwen3:4b` gives a full ledger but is unvalidated. Use small models to exercise the pipeline, not to grade. |
+| medium, for **ordering** | **`qwen3:8b`** | 5.2 GB, 33.9 tok/s | **The only judge here validated against human ratings at all** — Tau-C **+0.547** over 631 speeches, 631/631 parsed (`JUDGE-VALIDATION.md`). Only its *ordering* passes; its absolute numbers are 0.95–1.52 low on machine text. |
+| medium, for **fact-check** | **`phi4:14b`** with `--strict-json` | 9.1 GB, `trained_ctx` 16,384 — **fits as shipped** | The only judge that uses all four verdicts on the same ledger (3 of 3 transcripts), and lineage-distant from qwen3 debaters. **Fails outright on ~1 transcript in 3** — expect a failed cell. |
+| large | **none** | — | See below. |
+
+### Why there is no large-model pick
+
+Every 24B+ candidate has been tried and each failed differently:
+
+| model | what happened |
+|---|---|
+| `qwen3:32b-16k` | fits at 24 GB, 100% GPU — **unparseable JSON on all four attempts** |
+| `command-r:35b-8k` | ran, but marked **25 of 27 claims `not_checkable`** — declines to judge |
+| `deepseek-r1:32b-16k` | answers at **7.4 tok/s**, ~1 hour per judged transcript, thinking cannot be switched off |
+| `Mistral-Small-24B-4bit` | **never produced a token** — aborted at load (B0) |
+
+**No large model has produced a usable ledger or a single debate turn here.**
+That is a statement about this 34 GB machine and these four models, not about
+large models in general — but it is the state of the evidence, and the intended
+8B-against-24B pairing that motivated this tool has still never run.
+
+### Three operational rules that matter more than the pick
+
+1. **Cap `num_ctx` before running anything.** Earned five times now. The disk
+   size tells you nothing about the resident size: `mistral-nemo` is a 7.1 GB
+   file that wanted **51.8 GB**; `qwen3:4b` wanted ~43 GB; `qwen3:14b` took the
+   machine to 0 GiB free at its default 40,960 context and **12.2 GB at 16k**.
+   Capping is **output-neutral** — verified, 8/8 turns byte-identical across a
+   capped/uncapped pair. Check `ollama ps` for `SIZE` and `CONTEXT`.
+2. **Size `prep_budget` for the largest model in the run, not the smallest.**
+   `prep_budget: 1500` truncated `qwen3:14b` in 8 of 11 prep turns and never
+   touched `qwen3:0.6b`, so every mixed run handicapped the *larger* model.
+   See `debates/PREP-BUDGET.md`. 6000 is the current derived value.
+3. **Check `hit_budget` before reading any result.** It is in every turn of
+   every transcript and always has been. A truncated prep once produced an
+   apparent persona effect that was entirely the token cap.
+
+### The gap a reader should know about
+
+**Only `qwen3` models have ever debated in the run store.** `gemma4:12b` debated
+five times in `probe/mirror/` and AFM carried the B1–B4 gates; nothing else has
+argued at all. So every claim on this page about *debate* quality is a claim
+about one family, and the judge picks above are the only place cross-family
+evidence exists.
 
 ## The ladder, and the honest summary
 
@@ -21,14 +88,14 @@ would each need their own 631-speech run.
 | class | model | gen | params | on disk | debater | judge | verdict |
 |---|---|---|---|---|---|---|---|
 | small | **AFM** via `fm serve` | — | ~3B on-device | n/a | ✅ B1–B4 gates | ❌ **cannot** | plumbing only; ~4,096-token ceiling |
-| small | **qwen3:0.6b** | 3 | 0.6B | 522 MB | untried | ❌ 1 claim | below the floor |
-| small | **qwen3:1.7b** | 3 | 1.7B | 1.4 GB | untried | ❌ 1 claim | below the floor |
+| small | **qwen3:0.6b** | 3 | 0.6B | 522 MB | ✅ 10 appearances | ❌ 1 claim | debates, but loses 17–20 once claims are checkable |
+| small | **qwen3:1.7b** | 3 | 1.7B | 1.4 GB | ✅ 2 appearances | ❌ 1 claim | below the floor as a judge |
 | small | **phi4-mini** | — | ~3.8B | 2.5 GB | ✅ probe | ⚠️ scores, audit breaks | weakest usable |
-| small | **qwen3:4b** | 3 | 4B | 2.5 GB | untried | ✅ clauses (1)+(3) | cheapest working judge |
+| small | **qwen3:4b** | 3 | 4B | 2.5 GB | ✅ 4 appearances | ✅ clauses (1)+(3) | **the small pick**; cap `num_ctx` |
 | small | **qwen3.5:4b** | **3.5** | 4B | 3.4 GB | untried | ✅ clauses (1)+(2) | needs ~5× the budget |
 | medium | **qwen3:8b** | 3 | 8B | 5.2 GB | ✅ extensively | ✅ **validated for ordering** | the workhorse; state-sensitive |
 | medium | **gemma4:12b** | — | 12B | 7.6 GB | ✅ 5 debates | ⚠️ works, slow, hungry | judged the mirror runs |
-| medium | **qwen3:14b** | 3 | 14B | 9.3 GB | untried | ✅ clauses (1)+(3) | state-**in**sensitive |
+| medium | **qwen3:14b** | 3 | 14B | 9.3 GB | ✅ 24 appearances | ✅ clauses (1)+(3) | **the medium debater pick**; 12.2 GB at 16k |
 | large | **qwen3:32b-16k** | 3 | 32B | 20 GB | ❌ never | ❌ **unparseable ×4** | fits at 24 GB, 100% GPU; cannot emit the format |
 | large | **Mistral-Small-24B-4bit** | — | 24B | ~13 GB | ❌ **never ran** | ❌ never ran | aborted at load (B0) |
 | large | **deepseek-r1:32b** | — | 32B | *removed* | ❌ never | ❌ never | 7.4 tok/s; thinking not disableable |
