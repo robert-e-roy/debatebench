@@ -387,7 +387,9 @@ contested and one false positive; and `phi4:14b` marks over half its claims
 
 ### Ollama's context default is a bigger memory hazard than parameter count
 
-Measured on this machine (34.4 GB) while selecting judges:
+Measured on this machine (**32.0 GiB M2 Pro** — an earlier revision of this
+line said 34.4 GB, which was B0's *demand* arithmetic, 14.8 baseline + 19.6 for
+the pair, not the installed memory) while selecting judges:
 
 | model | file | trained context | resident |
 |---|---|---|---|
