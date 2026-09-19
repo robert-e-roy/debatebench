@@ -1,6 +1,6 @@
 # ADR-038: Does the Team Definition Change the Debate?
 
-**Status:** Accepted — protocol fixed, **predictions recorded, runs not yet made**
+**Status:** Accepted — **run 2026-09-19; results and the prediction scorecard in §Results**
 **Date:** 2026-09-19
 **Depends on:** ADR-006 (team files are identity, never run-time settings),
 ADR-012/ADR-014 (retrieval by topic and side), ADR-035 (`phi4:14b` is the
@@ -118,3 +118,98 @@ large variable fixed — worth more than the result itself.
 - The field-by-field ablation (`voice` alone, `values` alone) is **deliberately
   not in this pass.** Full versus floor carries the whole question; if the floor
   debates identically, there is nothing left to ablate.
+
+
+## Results, 2026-09-19 — generation 2 (`prep_budget: 6000`, `qwen3:14b-16k`)
+
+Generation 1 was discarded: 4 of its 6 prep turns hit the token cap, so it
+measured where the cap fell. See `debates/PREP-BUDGET.md`, which is the more
+important output of this session. Everything below passed a truncation gate —
+all six preps finished, 1338–2126 tokens of 6000.
+
+ADR-037's recording earned itself here: **all three runs record the same prompt
+fingerprint `ac1725e3ed914781` and the same corpus digest `93adf200b6751ecf`**,
+so "only the team file differed" is verified rather than asserted.
+
+### The prediction scorecard
+
+| # | prediction | outcome |
+|---|---|---|
+| 1 | ≥3 of 4 cells differ in evidence selection, Jaccard ≥ 0.4 | **half.** 2 of 4 differed; where they did, Jaccard was 0.75 and 0.83 — above the floor, but the count was wrong |
+| 2 | both full orientations won by the same **side**, not persona | **held.** pro won both, +6 and +9, with a different persona in the pro slot each time |
+| 3 | ledger within ±25% between full and floor | **falsified.** 15 against 23 claims is −35%, and the *composition* moved far more than the count |
+
+### 1. Evidence selection: nothing on pro, a little on con
+
+Each side is handed the same ten passages (retrieval never sees the persona), so
+this is judge-free and deterministic.
+
+| | Universal Coverage Advocate | Fiscal Skeptic | blank `Debater` |
+|---|---|---|---|
+| as **pro** | 5 ids | 5 ids | 5 ids — **identical, Jaccard 1.00** |
+| as **con** | 5 ids | 8 ids | 6 ids — Jaccard 0.83 / 0.75 |
+
+**On the pro side three very different team files select the same five
+passages.** On con the persona moves one or two of six to eight, and the
+direction is coherent: the skeptic arguing con — aligned — takes up **two more**
+than the blank; the advocate arguing con — arguing against its own stance —
+takes up **one fewer**.
+
+### 2. Scores: one persona is worth points, the other is worth nothing
+
+| run | pro | con | gap | winner |
+|---|---|---|---|---|
+| advocate as pro | **89** | 83 | +6 | pro |
+| skeptic as pro | **81** | 72 | +9 | pro |
+| blank | 81 | 83 | −2 | con |
+
+Read down the persona rather than across the run:
+
+- **Universal Coverage Advocate: 89 arguing pro, 72 arguing con** — against the
+  blank's 81 and 83. So roughly **+8 when aligned with its side and −11 when
+  arguing against its own stance.**
+- **Fiscal Skeptic: 81 as pro, 83 as con — the blank's scores exactly.** On
+  totals this persona is indistinguishable from having none. (The *components*
+  differ by 1–2 points, so the totals coinciding is a coincidence of sums, not
+  the same debate: the three debate digests are `011b873f`, `471261b1`,
+  `abf19db8`.)
+
+### 3. The ledger moves far more than the score
+
+| run | claims | supported | contradicted | not_checkable |
+|---|---|---|---|---|
+| advocate as pro | 15 | **1** | **9 (60%)** | 5 |
+| skeptic as pro | 23 | 18 | 5 | **0** |
+| blank | 23 | 14 | 3 | 5 |
+
+Same motion, same model both sides, same judge, same passages. One team-file
+swap takes `contradicted` from 13% to 60% of the ledger.
+
+## How much of this to believe
+
+**The evidence-selection result is solid.** It is judge-free, the received set is
+a verified constant, the prep turns reproduce byte-for-byte across days and
+directories, and the truncation control shows the clean cells were unchanged by
+the budget fix.
+
+**The score results are suggestive at best, and this project's own evidence says
+so.** `MODEL-COVERAGE` records five judges on one transcript agreeing on the
+winner while their margins ranged **+4 to +49**. A +6 or +9 gap sits inside that
+spread. `phi4:14b` has no Tau-C, and it failed outright on 1 of 3 transcripts the
+day before. The −2 in the blank run is not a con win; it is a tie a different
+judge would break either way.
+
+So the defensible statement is: **a team file changes what a side argues far more
+than it changes whether the side wins — and on the pro side of this motion it
+did not change what was argued from at all.**
+
+## What this earns, and what it does not
+
+- The field-by-field ablation (`voice` alone, `values` alone) is now worth
+  running **only on the con side**, where there is an effect to attribute. On pro
+  there is nothing to ablate.
+- One motion, one judge, one seed, N=1 per cell. The asymmetry between pro and
+  con may be a property of *this* motion's passages rather than of sides.
+- The cheapest next test is the same three runs on a second motion. If pro is
+  again persona-proof and con is not, that is a finding about sides. If it
+  flips, it is a finding about corpora.
