@@ -246,3 +246,84 @@ about sides that nothing here predicts.
 say the effect is corpus *quality*, not side, and would put motion 1's clean
 pro/con asymmetry down to the corpus being good rather than to the sides being
 different.
+
+
+## Motion 2 results — the effect is the corpus, not the side
+
+Same personas, same models, same seed, same floor; only the motion changed, to
+the **45%-on-topic** one. Gate passed: all six preps finished, 1598–2168 of 6000.
+All three runs carry prompt fingerprint `ac1725e3ed914781` and corpus digest
+`93adf200b6751ecf`, so only the team file differed.
+
+### Evidence selection, both motions side by side
+
+Jaccard against the blank floor, same side, same ten passages:
+
+| | motion 1 — healthcare, **100% on-topic** | motion 2 — medicaid, **45% on-topic** |
+|---|---|---|
+| advocate as **pro** | **1.00** | **0.38** |
+| skeptic as **pro** | **1.00** | **0.50** |
+| skeptic as **con** | 0.75 | 0.50 |
+| advocate as **con** | 0.83 | 0.75 |
+
+**The pro side is not persona-proof. Its corpus was.** On a clean, on-topic
+passage set three very different team files converge on the same five ids; on a
+noisy one they diverge to 0.38 and 0.50. Motion 1's clean pro/con asymmetry was a
+property of that motion's retrieval, not of arguing for versus against.
+
+### Scores
+
+| run | pro | con | gap | winner |
+|---|---|---|---|---|
+| advocate as pro | 88 | 87 | **+1** | pro |
+| skeptic as pro | — | — | — | **judge failed** |
+| blank | 68 | 85 | **−17** | con |
+
+Removing the personas costs the pro side **17 points** here, against a swing of
+roughly 8–11 on motion 1. The direction matches the evidence measure: where the
+corpus does not decide for you, the persona does, and it shows up in the score.
+
+### The prediction scorecard
+
+**Predicted: pro breaks, Jaccard 0.5–0.9.** Pro broke — direction right, and the
+proposed mechanism ("a clean corpus decides for you and a noisy one does not") is
+supported. The **magnitude was outside the band**: 0.38 and 0.50 against a 0.5
+floor. Both con cells also moved more than motion 1, which is the third outcome
+§Motion 2 named in advance — *"both sides moving a lot would say the effect is
+corpus quality, not side"* — and that is what happened.
+
+Running total across this ADR: of six recorded predictions, **two held, two were
+half right, two were falsified.**
+
+### `phi4:14b` failed again, and it is deterministic
+
+`m2-skeptic-pro` failed with `claims[3] is not_checkable but cites 1 passage(s)`
+and **failed identically on a retry** — same claim index, same violation. So this
+is not a sampling flake; the judge reproducibly cannot emit a valid ledger for
+that transcript.
+
+That is a **third distinct** `phi4:14b` failure mode, and the second that
+constrained decoding cannot reach: a `not_checkable` verdict is defined to cite
+nothing, and citing a passage contradicts it — a cross-field rule
+`_evidence_citations` enforces and JSON Schema cannot. Its failure rate is now
+**2 of 8 judgings attempted**.
+
+## Where this leaves the question
+
+**A team definition changes what a side argues from, and how much it matters
+depends on the corpus.**
+
+- With a clean, on-topic corpus the evidence largely selects itself and the
+  persona is close to inert on the side whose passages are cleanest.
+- With a noisy corpus the persona decides what gets used, moves half the cited
+  set, and is worth on the order of 17 points of score.
+
+**The practical reading**: persona is a lever you reach for when retrieval is
+weak, and a rounding error when retrieval is strong. Improving the corpus and
+writing a better persona are substitutes, not complements — and improving the
+corpus is the one that also makes the result checkable.
+
+Still N=1 per cell, one judge, two motions, and every score here comes from a
+judge with no Tau-C that fails one transcript in four. The **evidence-selection**
+half is solid; the **score** half is directionally consistent across two motions
+and nothing stronger.
