@@ -465,6 +465,34 @@ It is also the only judge tested this week that needed **no `num_ctx` capping** 
 `command-r:35b` does, with one of its cross-side contradictions already shown to
 be a false positive.
 
+### `phi4:14b` fails the citation rule too — 2026-09-19, one day after ADR-035
+
+The standing instrument, `--strict-json` on, judging three transcripts of one
+motion. Two succeeded (24 and 28 claims). The third **failed**:
+
+```
+judge: judging failed: claims[23] is contradicted but cites no passage,
+       so nothing can check it
+```
+
+That is the **same failure mode as Selene and `llama3.1:8b`** — a verdict with
+no citation — which `MODEL-COVERAGE` had recorded as their distinctive defect and
+as the one thing constrained decoding cannot reach (ADR-032 §6: a cross-field
+rule JSON Schema can only express with conditionals, which llama.cpp does not
+enforce). It is **three families, not two**, and `phi4:14b`'s previously
+recorded failure — doubled quotes — is the one `--strict-json` closed. The
+semantic one was underneath it all along.
+
+**This is a caveat on ADR-035, not a retraction of it.** The choice rested on
+`phi4:14b` being the only judge that uses all four verdicts and on the emphasis
+finding being unfalsifiable on `qwen3:8b`; neither depends on this. But the
+instrument fails on roughly 1 transcript in 3, so a prompt A/B must expect a
+failed cell and say so rather than quietly comparing the two that worked.
+
+`_evidence_citations` catching it is ADR-032 §6 earning its keep for the third
+time, and the failure named the claim index, the verdict and what was missing —
+which is the working rule about a failure carrying its own diagnosis.
+
 ### `qwen3:8b`'s frozen baselines, so ADR-034's closing test has a target
 
 `--strict-json` on, before and after ADR-034:
