@@ -230,6 +230,11 @@ Swift MLX in-process, `enable_thinking=false`, same prompt both times.
 |---|---|---|---|---|
 | `Qwen3-0.6B-4bit` | 0.4 GiB | **2.2 s** | **77.2 tok/s** | invented a legal framing |
 | `Qwen3-1.7B-4bit` | 1.1 GiB | **2.5 s** | **50.5 tok/s** | clean |
+| `Qwen3-4B-4bit` | 2.3 GiB | first run 254 s ¹ | **22.0 tok/s** | clean; names *determining the winner* |
+
+¹ That 254 s was the **download**, not a load. The probe timed the whole call, so
+a first run and a warm run reported the same field meaning different things. The
+probe now separates them; the warm load figure for 4b is not yet recorded.
 
 **The scaling is the useful part.** 2.75× the weights cost **+0.3 s of load and
 1.5× the decode time.** Both produce an answer in well under a second of
@@ -260,6 +265,35 @@ sentence on a phone, without a corpus or a judge.
   limit that is a fraction of RAM. That makes the model choice a correctness
   question on a phone and a performance one on a Mac.
 
-**Still unmeasured:** the jetsam ceiling. `4b` (2.3 GiB) is the next rung and
-plausibly fits an 8 GB phone; nothing has tested it, so every headroom figure
-here remains arithmetic.
+## The jetsam ceiling, partly measured
+
+**`4b` runs on an 8 GB iPhone.** It was not terminated. So the ceiling on this
+device is at least 2.3 GiB of weights plus its KV cache, and the earlier caution
+about a 2 GiB rung was too conservative.
+
+**But throughput is what rules it out, not memory.** Decode across the three
+rungs on one phone:
+
+| rung | weights | decode | ×0.6b |
+|---|---|---|---|
+| 0.6b | 0.4 GiB | 77.2 tok/s | — |
+| 1.7b | 1.1 GiB | 50.5 tok/s | 1.5× slower |
+| 4b | 2.3 GiB | 22.0 tok/s | **3.5× slower** |
+
+Throughput falls faster than weights rise. What that costs in this tool's own
+terms, since `debatebench` turns run to a 2,000-token budget and its judge to
+12,000:
+
+| work | at 50.5 tok/s (1.7b) | at 22.0 tok/s (4b) |
+|---|---|---|
+| one 300-token turn | ~6 s | ~14 s |
+| an 8-turn debate | ~48 s | ~1 m 50 s |
+| one judge call, 12,000 tokens | ~4 minutes | **~9 minutes** |
+
+**So `1.7b` remains the iOS recommendation** — not because 4b does not fit, but
+because a nine-minute judge call is not a product. 4b is the right choice for a
+phone doing one careful thing, and the wrong one for a phone running a debate
+and judging it.
+
+**Still unmeasured:** where the ceiling actually is. 4b fits; nothing larger has
+been tried, and nothing has been killed.
