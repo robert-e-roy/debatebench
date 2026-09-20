@@ -87,6 +87,8 @@ should be chosen deliberately:
 
 ## What is not measured, and needs a real machine
 
+- **iOS is measured now — two rungs, one device.** See the table below; this
+  bullet used to say iOS was untouched.
 - **No M1 of any size has been tested.** Every number here is M2 Pro. M1 has
   lower memory bandwidth, so throughput will differ; footprints should not.
 - **8 GB and 16 GB rows are extrapolated** from 32 GiB measurements plus the KV
@@ -215,3 +217,49 @@ different model.
 [Apple M5 — Wikipedia](https://en.wikipedia.org/wiki/Apple_M5),
 [Apple M6 — Wikipedia](https://en.wikipedia.org/wiki/Apple_M6),
 [Apple M4 — Wikipedia](https://en.wikipedia.org/wiki/Apple_M4).
+
+
+---
+
+# iOS, measured — iPhone 16 Pro, 2026-09-20
+
+The first iOS numbers this project has. Taken through `DebateStudio`'s S0 probe,
+Swift MLX in-process, `enable_thinking=false`, same prompt both times.
+
+| rung | weights | load | decode | answer quality |
+|---|---|---|---|---|
+| `Qwen3-0.6B-4bit` | 0.4 GiB | **2.2 s** | **77.2 tok/s** | invented a legal framing |
+| `Qwen3-1.7B-4bit` | 1.1 GiB | **2.5 s** | **50.5 tok/s** | clean |
+
+**The scaling is the useful part.** 2.75× the weights cost **+0.3 s of load and
+1.5× the decode time.** Both produce an answer in well under a second of
+generation, so on this device the smaller rung buys very little speed — and
+costs a fabrication:
+
+> 0.6b: "…ensure that both sides are equally represented and that **the legal
+> principles are upheld**."
+> 1.7b: "…ensure fairness, uphold the rules of the debate, and maintain a
+> respectful and structured environment."
+
+Debates are not legal proceedings. That is `debatebench`'s 0.6b finding — the
+rung that lost by 17–20 points once its claims could be checked — visible in one
+sentence on a phone, without a corpus or a judge.
+
+**So the iOS recommendation is `1.7b`, not the smallest thing that fits.**
+
+## What this changes about the tables above
+
+- **The Mac rows stand.** These are a different chip, a different OS and models
+  an order of magnitude smaller; nothing here transfers to the 8/16/32 GB Mac
+  arithmetic.
+- **A marketed "8 GB" phone reports 7.45 GiB.** `8 × 10⁹` bytes is 7.45 GiB, not
+  8. A threshold expressed in GiB must not be placed at a marketed size — doing
+  so sent an iPhone 16 Pro to `0.6b`, which is exactly the wrong rung.
+- **iOS terminates rather than slows.** The Mac tables assume an oversized model
+  is slow. On iOS it is killed, with no warning the app can catch, at a jetsam
+  limit that is a fraction of RAM. That makes the model choice a correctness
+  question on a phone and a performance one on a Mac.
+
+**Still unmeasured:** the jetsam ceiling. `4b` (2.3 GiB) is the next rung and
+plausibly fits an 8 GB phone; nothing has tested it, so every headroom figure
+here remains arithmetic.
