@@ -532,7 +532,7 @@ reason than it looks.
 | ADR-002, "Hardware" → B0 findings | **Does the 8B+24B debater pair fit?** Doubtful and unmeasured, not ruled out. Needs a quiet-machine B0 rerun before anything trusts the pair. Blocks any local run of the intended pairing; no B-session strictly (one model on both sides fits) |
 | ADR-002, "Hardware" | A separate inference engine for prefill-heavy prep |
 | ADR-002, "Scope discipline" | A source for the ~25% Aragora scope-creep figure — cite or drop |
-| ADR-002, "Language split" | DebateKit's license (a later, separate decision) |
+| ADR-002, "Language split" | DebateStudio's license (a later, separate decision) |
 | ADR-003 | TCP vs socket; how a refusal of the model's own output surfaces |
 | ADR-004 | Coverage tooling |
 | ADR-009 | How `seed` reaches each request (one value or derived per turn), and whether temperature gets a config field. Blocks B3 |

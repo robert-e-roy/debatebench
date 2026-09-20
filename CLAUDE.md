@@ -123,6 +123,16 @@ code. See ADR-002 for full scope.
   reaches a version number. `sources:` was previously recorded **nowhere**, which
   was the worst of the three gaps and the one a user raised. Team wording was
   already covered by `TeamSnapshot`).
+  **`ADR-039`** (the Swift side is **`DebateStudio`**, not `DebateKit` — amending
+  ADR-002's naming. `Kit` is this workspace's suffix for *libraries* (CorpusKit,
+  JsonHelpKit, PersonaKit) and `Studio` for the *app* on top of one
+  (CorpusKitStudio); the Swift side is the shipped product with a UI, so ADR-002
+  applied the right convention to the wrong noun. An engine package inside it may
+  still be a `Kit`. **Three historical references still say `DebateKit`
+  deliberately** — the R0 evidence really was moved from `~/Projects/DebateKit/`
+  on 2026-09-11, and rewriting that would make a true sentence false).
+- `ADR-038` and `HARDWARE-FLOOR.md` are the newest evidence documents; see also
+  `debates/PREP-BUDGET.md` in the run store.
 - `MODEL-COVERAGE.md` — which models have actually been run, at what size, as
   debater or judge, with the artifact behind each. **No large (24B+) model has
   ever produced a token here**; every quality finding in this repo comes from
@@ -363,14 +373,14 @@ This repo is **`debatebench` (Python only)**. It does not contain, and should
 never gain, Swift/Xcode code, app-target files, or anything specific to the
 companion Mac app.
 
-`DebateKit` (the Swift port, per ADR-002) lives in its **own, separate GitHub
+`DebateStudio` (the Swift app, per ADR-002 as amended by ADR-039) lives in its **own, separate**
 repo**, not started yet. When it exists, it depends on this project only in
 the sense that its design is ported from a stabilized version of this CLI's
 logic — there is no build-time or runtime dependency between the two repos.
 Do not add cross-repo tooling, shared CI, or a monorepo layout without a new
 ADR; the two-repo split is deliberate (see ADR-002, "Language split").
 
-If a task references "the Swift side," "DebateKit," or the companion app and
+If a task references "the Swift side," "DebateStudio," or the companion app and
 you're working in this repo, that's out of scope here — flag it rather than
 reaching across.
 

@@ -27,7 +27,7 @@ Fact-checking runs post-hoc, over the finished transcript, as part of
 command.
 
 **Real-time, per-turn fact-checking is a feature of the future Swift app
-(`DebateKit`), not this repo.** ADR-002's "Fact-checking is separate from
+(`DebateStudio`), not this repo.** ADR-002's "Fact-checking is separate from
 judging, and runs on a different clock" described the per-turn version; that
 description now applies to the Swift app. The CLI keeps the typed event
 seam B2 wired in (ADR-001's `events.py` lift) precisely so a live consumer
@@ -151,7 +151,7 @@ unauditable check this project has refused everywhere else.
   hardware row and the "B6: inside `debate` or its own command" row in the
   index are both closed.
 - **`CLAUDE.md`'s "What this project is"** drops "real-time".
-- **DebateKit**, when it starts, inherits the per-turn version as a feature
+- **DebateStudio**, when it starts, inherits the per-turn version as a feature
   requirement, attaching to the CLI's existing event seam.
 
 ## Prior art considered, and why it isn't a dependency (added 2026-09-12)

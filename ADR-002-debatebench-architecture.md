@@ -16,7 +16,7 @@ fact-checking is the Swift app's feature, not this repo's). It generalizes into 
 `~/Projects/metatool.md`, outside this repo) but this ADR scopes the concrete first
 implementation.
 
-A Swift port, `DebateKit`, is a later, separate effort once this design stops
+A Swift port, `DebateStudio`, is a later, separate effort once this design stops
 changing session to session (see "Language split" below). Not started yet.
 
 ## Why it exists
@@ -30,7 +30,7 @@ structured, verifiable, multi-turn tasks — not tied to the app.
 - **Python** owns everything exploratory: model/dataset evaluation, retrieval,
   rubric iteration, fact-checking logic. Mature ML tooling (`mlx-lm`, `datasets`,
   dataset ecosystem) makes iteration fast here.
-- **Swift** (`DebateKit`, future) owns the shipped product: privacy-first,
+- **Swift** (`DebateStudio`, future) owns the shipped product: privacy-first,
   on-device, no bundled Python runtime, consistent with the rest of the
   HomesteadAI portfolio. Ported only once the CLI's design has stabilized —
   porting a moving target wastes the port.
@@ -45,8 +45,11 @@ structured, verifiable, multi-turn tasks — not tied to the app.
   session). `bench` was chosen over `-cli` because it correctly signals
   "measures and compares models," matching existing conventions in this space
   (`lm-eval-harness`, similar `*-eval`/`*-bench` tools).
-- Swift library (future): `DebateKit`, consistent with existing `Kit`-suffixed
-  libraries (CorpusKit, JsonHelpKit).
+- Swift app (future): `DebateStudio` — **renamed from `DebateKit` by ADR-039**.
+  `Kit` is this workspace's suffix for libraries (CorpusKit, JsonHelpKit,
+  PersonaKit) and `Studio` for the app on top of one (CorpusKitStudio). The
+  Swift side is the shipped product with a UI, so it takes the app suffix; an
+  engine package inside it may still be a `Kit`.
 - Neither collides with any of the ten-plus adjacent "debate"-named projects
   checked this session (`debate`, `aragora-debate`, `arbiter-debate`,
   `ai-debate-chat`, `multi-model-debate`, `autodebater`, `debating-machine`,
@@ -240,7 +243,7 @@ choice:**
 
 **Superseded for the Python CLI by ADR-015 (2026-09-12).** The per-turn,
 real-time fact-check described below is now a feature of the future Swift
-app (`DebateKit`), attaching to the CLI's existing event seam. In this repo,
+app (`DebateStudio`), attaching to the CLI's existing event seam. In this repo,
 fact-checking is a post-hoc pass inside `judge`, checked against the
 recorded evidence, not "the world" — see ADR-015 §2 for what that means
 concretely. The bullets are kept as the description of the Swift-side

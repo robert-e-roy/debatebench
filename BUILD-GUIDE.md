@@ -540,7 +540,7 @@ substitutes for the other.
 ## Explicitly deferred, not part of this guide
 
 - UI/dashboard (separate repo/effort per CLAUDE.md).
-- `DebateKit` Swift port (separate repo, starts only once this design stops
+- `DebateStudio` Swift app (separate repo, starts only once this design stops
   changing session to session, per ADR-002).
 - Fallacy-detector as its own pass (open per ADR-002) and live-vs-static Prep
   retrieval as a user-facing choice (raised in B4 above, not in ADR-002) — decide

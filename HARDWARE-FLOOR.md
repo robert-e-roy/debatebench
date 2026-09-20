@@ -1,4 +1,4 @@
-# Hardware floor for the Mac app — what memory `DebateKit` actually needs
+# Hardware floor for the Mac app — what memory `DebateStudio` actually needs
 
 ADR-002 asks for "its own M0-style hardware probe" before the Swift app trusts
 any sizing. This is the answer that can be given from measurements already taken,
@@ -60,7 +60,7 @@ this machine (24.96 GiB) — **total RAM binds, not the GPU.** 14.8 baseline + 1
 = 34.4 GiB against 32 GiB installed. And B0's own line: *"adding a judge rules
 co-residence out at either size."*
 
-So `DebateKit` must load one model, finish a phase, release it, and load the
+So `DebateStudio` must load one model, finish a phase, release it, and load the
 next. Holding a debater and a judge in memory together is not a 32 GB feature; it
 is a feature of a machine nobody in the target audience has.
 
